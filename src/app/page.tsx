@@ -661,7 +661,7 @@ export default function Home() {
                 Leave Your Knives On<br />
                 Your Porch,<br />
                 I'll Make Them Sharper<br />
-                Than New in 24 Hours
+                Than New in 72 Hours
               </h1>
               <p className="text-lg md:text-xl mb-6" style={{color: '#1B1B1B'}}>
                 Professional Sharpening Service<br />
@@ -1263,7 +1263,7 @@ export default function Home() {
                   letterSpacing: '0.005em', 
                   lineHeight: '1.6'
                 }}>
-                  Enjoy razor-sharp knives delivered back in 24 hours
+                  Enjoy razor-sharp knives delivered back in 72 hours
                 </p>
               </div>
             </div>
@@ -1415,7 +1415,7 @@ export default function Home() {
                     letterSpacing: '0.005em', 
                     lineHeight: '1.6'
                   }}>
-                    Enjoy razor-sharp knives delivered back in 24 hours
+                    Enjoy razor-sharp knives delivered back in 72 hours
                   </p>
                 </div>
               </div>
@@ -2688,7 +2688,7 @@ export default function Home() {
                 I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
               </p>
               <p>
-                My mobile service means you don't have to worry about dropping off and picking up. Just leave your knives safely on your porch Monday morning, and I'll have them back to you sharp as new within 24 hours. It's that simple.
+                My mobile service means you don't have to worry about dropping off and picking up. Just leave your knives safely on your porch Monday morning, and I'll have them back to you sharp as new within 72 hours. It's that simple.
               </p>
               <p>
                 I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
