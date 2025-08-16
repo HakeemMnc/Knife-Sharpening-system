@@ -1,0 +1,25 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["syd1"],
+  "functions": {
+    "src/app/api/orders/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/orders/[id]/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/payments/create-intent/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/payments/webhook/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/payments/webhook-test/route.ts": {
+      "maxDuration": 10
+    }
+  }
+}
