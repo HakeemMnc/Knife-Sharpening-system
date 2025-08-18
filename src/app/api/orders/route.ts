@@ -4,6 +4,7 @@ import { DatabaseService, dbHelpers } from '@/lib/database';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('🔍 Orders API - Received request body:', JSON.stringify(body, null, 2));
     
     // Extract form data
     const {
@@ -23,9 +24,29 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
+    console.log('🔍 Validation check:', {
+      firstName: !!firstName,
+      lastName: !!lastName,
+      email: !!email,
+      phone: !!phone,
+      address: !!address,
+      totalItems: !!totalItems,
+      serviceDate: !!serviceDate
+    });
+    
     if (!firstName || !lastName || !email || !phone || !address || !totalItems || !serviceDate) {
+      const missingFields = [];
+      if (!firstName) missingFields.push('firstName');
+      if (!lastName) missingFields.push('lastName');
+      if (!email) missingFields.push('email');
+      if (!phone) missingFields.push('phone');
+      if (!address) missingFields.push('address');
+      if (!totalItems) missingFields.push('totalItems');
+      if (!serviceDate) missingFields.push('serviceDate');
+      
+      console.log('❌ Missing required fields:', missingFields);
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields', missing: missingFields },
         { status: 400 }
       );
     }
@@ -39,7 +60,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate order totals
+    console.log('🔍 Calculating totals for:', { totalItems, serviceLevel });
     const totals = dbHelpers.calculateOrderTotals(totalItems, serviceLevel);
+    console.log('🔍 Calculated totals:', totals);
 
     // Create order data
     const orderData = {
@@ -74,7 +97,9 @@ export async function POST(request: NextRequest) {
     };
 
     // Save order to database
+    console.log('🔍 Creating order with data:', JSON.stringify(orderData, null, 2));
     const order = await DatabaseService.createOrder(orderData);
+    console.log('✅ Order created successfully:', order.id);
 
     // Return success response
     return NextResponse.json({
@@ -89,9 +114,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating order:', error);
+    console.error('❌ Error creating order:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { 
+        error: 'Failed to create order',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
