@@ -10,6 +10,10 @@ interface Order {
   email: string;
   phone: string;
   pickup_address: string;
+  street_address?: string;
+  suburb?: string;
+  state?: string;
+  postal_code?: string;
   total_items: number;
   service_level: string;
   total_amount: number;

@@ -10,7 +10,11 @@ CREATE TABLE orders (
   last_name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL,
   phone VARCHAR(20) NOT NULL,
-  pickup_address TEXT NOT NULL,
+  pickup_address TEXT NOT NULL, -- Combined address for backward compatibility
+  street_address VARCHAR(255),
+  suburb VARCHAR(100),
+  state VARCHAR(10),
+  postal_code VARCHAR(4),
   special_instructions TEXT,
   
   -- Order Details
@@ -18,7 +22,7 @@ CREATE TABLE orders (
   service_level VARCHAR(20) NOT NULL DEFAULT 'standard', -- 'standard' or 'premium'
   
   -- Pricing Breakdown
-  base_amount DECIMAL(10,2) NOT NULL, -- total_items × $15
+  base_amount DECIMAL(10,2) NOT NULL, -- total_items × $17
   upgrade_amount DECIMAL(10,2) DEFAULT 0, -- $5 × items if premium
   delivery_fee DECIMAL(10,2) NOT NULL, -- $25 or $0
   total_amount DECIMAL(10,2) NOT NULL,
@@ -87,6 +91,7 @@ CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_payment_status ON orders(payment_status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
 CREATE INDEX idx_orders_stripe_payment_id ON orders(stripe_payment_id);
+CREATE INDEX idx_orders_postal_code ON orders(postal_code);
 
 -- SMS Logs Indexes
 CREATE INDEX idx_sms_logs_order_id ON sms_logs(order_id);

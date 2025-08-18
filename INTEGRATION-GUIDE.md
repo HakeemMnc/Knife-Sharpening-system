@@ -65,7 +65,7 @@ curl -X POST http://localhost:3000/api/orders \
     "address": "123 Test St, Byron Bay NSW 2481",
     "totalItems": 4,
     "serviceLevel": "standard",
-    "finalTotal": 85
+    "finalTotal": 93
   }'
 
 # Get all orders

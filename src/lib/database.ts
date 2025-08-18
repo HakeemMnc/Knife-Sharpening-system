@@ -8,6 +8,10 @@ export interface Order {
   email: string;
   phone: string;
   pickup_address: string;
+  street_address?: string;
+  suburb?: string;
+  state?: string;
+  postal_code?: string;
   special_instructions?: string;
   total_items: number;
   service_level: 'standard' | 'premium';
@@ -267,7 +271,7 @@ export const dbHelpers = {
     delivery_fee: number;
     total_amount: number;
   } => {
-    const baseAmount = totalItems * 15;
+    const baseAmount = totalItems * 17;
     const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0;
     const subtotal = baseAmount + upgradeAmount;
     const deliveryFee = subtotal >= 80 ? 0 : 25;

@@ -11,10 +11,15 @@ export default function Home() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState({
+    streetAddress: '',
+    suburb: '',
+    state: '',
+    postalCode: ''
+  });
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [quantities, setQuantities] = useState({
-    items: 4,
+    items: 5,
     scissors: 0,
     garden: 0,
     other: 0
@@ -96,9 +101,9 @@ export default function Home() {
     if (hasValidated) clearFieldError('phone');
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAddress(e.target.value);
-    if (hasValidated) clearFieldError('address');
+  const handleAddressChange = (field: string, value: string) => {
+    setAddress(prev => ({ ...prev, [field]: value }));
+    if (hasValidated) clearFieldError(field);
   };
 
   // Clear field error when user starts typing
@@ -127,10 +132,22 @@ export default function Home() {
     }
 
     // Address validation
-    if (!address || address.length < 10) {
-      newErrors.address = 'Please enter a complete address';
-    } else if (!/\d/.test(address) || !/[a-zA-Z]/.test(address)) {
-      newErrors.address = 'Please enter a complete address with street number and name';
+    if (!address.streetAddress || address.streetAddress.trim().length < 3) {
+      newErrors.streetAddress = 'Please enter a street address';
+    } else if (!/\d/.test(address.streetAddress) || !/[a-zA-Z]/.test(address.streetAddress)) {
+      newErrors.streetAddress = 'Please enter a complete street address with number and name';
+    }
+    
+    if (!address.suburb || address.suburb.trim().length < 2) {
+      newErrors.suburb = 'Please enter a suburb';
+    }
+    
+    if (!address.state || address.state.trim().length < 2) {
+      newErrors.state = 'Please enter a state';
+    }
+    
+    if (!address.postalCode || !/^\d{4}$/.test(address.postalCode.trim())) {
+      newErrors.postalCode = 'Please enter a valid 4-digit postal code';
     }
 
     // Name validation
@@ -218,7 +235,11 @@ export default function Home() {
         lastName,
         email,
         phone,
-        address,
+        address: `${address.streetAddress}, ${address.suburb}, ${address.state} ${address.postalCode}`,
+        streetAddress: address.streetAddress,
+        suburb: address.suburb,
+        state: address.state,
+        postalCode: address.postalCode,
         specialInstructions,
         totalItems: getItemCount(),
         serviceLevel: applyToAll,
@@ -267,9 +288,14 @@ export default function Home() {
     setLastName('');
     setEmail('');
     setPhone('');
-    setAddress('');
+    setAddress({
+      streetAddress: '',
+      suburb: '',
+      state: '',
+      postalCode: ''
+    });
     setSpecialInstructions('');
-    setQuantities({ items: 4, scissors: 0, garden: 0, other: 0 });
+    setQuantities({ items: 5, scissors: 0, garden: 0, other: 0 });
     setShowUpsells(false);
   };
 
@@ -341,7 +367,7 @@ export default function Home() {
 
   // Helper functions for calculations
   const getItemCount = () => Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
-  const getSubtotal = () => getItemCount() * 15;
+  const getSubtotal = () => getItemCount() * 17;
   const getUpsellsCost = () => Object.entries(selectedBundles).reduce((total, [category, bundle]) => {
     const cost = getBundleCost(category);
     return total + (isNaN(cost) ? 0 : cost);
@@ -441,9 +467,10 @@ export default function Home() {
   // Handle quantity changes
   const updateQuantity = (category: string, change: number) => {
     setQuantities(prev => {
+      const minValue = category === 'items' ? 5 : 0;
       const newQuantities = {
         ...prev,
-        [category]: Math.max(0, prev[category as keyof typeof prev] + change)
+        [category]: Math.max(minValue, prev[category as keyof typeof prev] + change)
       };
       return newQuantities;
     });
@@ -452,7 +479,7 @@ export default function Home() {
   // Calculate total
   useEffect(() => {
     const itemCount = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
-    setTotal(itemCount * 15);
+    setTotal(itemCount * 17);
   }, [quantities]);
 
   // Calculate final total with upsells and delivery
@@ -661,7 +688,7 @@ export default function Home() {
                 Leave Your Knives On<br />
                 Your Porch,<br />
                 I'll Make Them Sharper<br />
-                Than New in 72 Hours
+                Than New in 48 Hours
               </h1>
               <p className="text-lg md:text-xl mb-6" style={{color: '#1B1B1B'}}>
                 Professional Sharpening Service<br />
@@ -1263,7 +1290,7 @@ export default function Home() {
                   letterSpacing: '0.005em', 
                   lineHeight: '1.6'
                 }}>
-                  Enjoy razor-sharp knives delivered back in 72 hours
+                  Enjoy razor-sharp knives delivered back in 48 hours
                 </p>
               </div>
             </div>
@@ -1415,7 +1442,7 @@ export default function Home() {
                     letterSpacing: '0.005em', 
                     lineHeight: '1.6'
                   }}>
-                    Enjoy razor-sharp knives delivered back in 72 hours
+                    Enjoy razor-sharp knives delivered back in 48 hours
                   </p>
                 </div>
               </div>
@@ -1966,45 +1993,180 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{
-                  color: '#1B1B1B',
-                  fontWeight: 500,
-                  marginBottom: '6px'
-                }}>
-                  Address to Pick Up <span style={{color: '#d64f24'}}>*</span>
-                </label>
-                <input 
-                  type="text" 
-                  required 
-                  value={address}
-                  onChange={handleAddressChange}
-                  data-error={!!errors.address}
-                  placeholder="123 Main Street, Byron Bay NSW 2481"
-                  className="w-full focus:outline-none"
-                  style={{
-                    border: errors.address ? '1px solid #ef4444' : '1px solid #e2e8f0',
-                    borderRadius: '6px',
-                    padding: '12px',
-                    fontSize: '1rem',
-                    backgroundColor: '#ffffff',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.address) {
-                      e.target.style.borderColor = '#4983a6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(73, 131, 166, 0.1)';
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.address) {
-                      e.target.style.borderColor = '#e2e8f0';
-                      e.target.style.boxShadow = 'none';
-                    }
-                  }}
-                />
-                {errors.address && (
-                  <p className="mt-1 text-sm text-red-600">{errors.address}</p>
-                )}
+                {/* Street Address */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1" style={{
+                    color: '#1B1B1B',
+                    fontWeight: 500,
+                    marginBottom: '4px'
+                  }}>
+                    Street Address (For Pick-up) <span style={{color: '#d64f24'}}>*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={address.streetAddress}
+                    onChange={(e) => handleAddressChange('streetAddress', e.target.value)}
+                    data-error={!!errors.streetAddress}
+                    placeholder="123 Main Street"
+                    className="w-full focus:outline-none"
+                    style={{
+                      border: errors.streetAddress ? '1px solid #ef4444' : '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '12px',
+                      fontSize: '1rem',
+                      backgroundColor: '#ffffff',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      if (!errors.streetAddress) {
+                        e.target.style.borderColor = '#4983a6';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(73, 131, 166, 0.1)';
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!errors.streetAddress) {
+                        e.target.style.borderColor = '#e2e8f0';
+                        e.target.style.boxShadow = 'none';
+                      }
+                    }}
+                  />
+                  {errors.streetAddress && (
+                    <p className="mt-1 text-sm text-red-600">{errors.streetAddress}</p>
+                  )}
+                </div>
+
+                {/* Suburb, State, and Postal Code row */}
+                <div className="grid grid-cols-4 gap-3 mb-3">
+                  {/* Suburb - larger field */}
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1" style={{
+                      color: '#1B1B1B',
+                      fontWeight: 500,
+                      marginBottom: '4px'
+                    }}>
+                      Suburb <span style={{color: '#d64f24'}}>*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={address.suburb}
+                      onChange={(e) => handleAddressChange('suburb', e.target.value)}
+                      data-error={!!errors.suburb}
+                      placeholder="Byron Bay"
+                      className="w-full focus:outline-none"
+                      style={{
+                        border: errors.suburb ? '1px solid #ef4444' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        fontSize: '1rem',
+                        backgroundColor: '#ffffff',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        if (!errors.suburb) {
+                          e.target.style.borderColor = '#4983a6';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(73, 131, 166, 0.1)';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.suburb) {
+                          e.target.style.borderColor = '#e2e8f0';
+                          e.target.style.boxShadow = 'none';
+                        }
+                      }}
+                    />
+                    {errors.suburb && (
+                      <p className="mt-1 text-sm text-red-600">{errors.suburb}</p>
+                    )}
+                  </div>
+                  
+                  {/* State */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{
+                      color: '#1B1B1B',
+                      fontWeight: 500,
+                      marginBottom: '4px'
+                    }}>
+                      State <span style={{color: '#d64f24'}}>*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={address.state}
+                      onChange={(e) => handleAddressChange('state', e.target.value)}
+                      data-error={!!errors.state}
+                      placeholder="NSW"
+                      className="w-full focus:outline-none"
+                      style={{
+                        border: errors.state ? '1px solid #ef4444' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        fontSize: '1rem',
+                        backgroundColor: '#ffffff',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        if (!errors.state) {
+                          e.target.style.borderColor = '#4983a6';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(73, 131, 166, 0.1)';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.state) {
+                          e.target.style.borderColor = '#e2e8f0';
+                          e.target.style.boxShadow = 'none';
+                        }
+                      }}
+                    />
+                    {errors.state && (
+                      <p className="mt-1 text-sm text-red-600">{errors.state}</p>
+                    )}
+                  </div>
+                  
+                  {/* Postal Code */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{
+                      color: '#1B1B1B',
+                      fontWeight: 500,
+                      marginBottom: '4px'
+                    }}>
+                      Postcode <span style={{color: '#d64f24'}}>*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={address.postalCode}
+                      onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                      data-error={!!errors.postalCode}
+                      placeholder="2481"
+                      className="w-full focus:outline-none"
+                      style={{
+                        border: errors.postalCode ? '1px solid #ef4444' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        fontSize: '1rem',
+                        backgroundColor: '#ffffff',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        if (!errors.postalCode) {
+                          e.target.style.borderColor = '#4983a6';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(73, 131, 166, 0.1)';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.postalCode) {
+                          e.target.style.borderColor = '#e2e8f0';
+                          e.target.style.boxShadow = 'none';
+                        }
+                      }}
+                    />
+                    {errors.postalCode && (
+                      <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
+                    )}
+                  </div>
+                </div>
                 <div className="mt-6 mb-6" style={{marginTop: '24px', marginBottom: '24px'}}>
                   <div style={{
                     backgroundColor: '#f0f9ff',
@@ -2019,7 +2181,7 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="text-sm font-medium" style={{color: '#1B1B1B'}}>
-                      2481, 2482, 2483, 2480, 2478, 2477, 2489
+                      2477, 2478, 2479, 2481, 2482, 2483, 2489
                     </div>
                   </div>
                   <div className="mt-3 text-sm" style={{color: '#4a5568'}}>
@@ -2062,7 +2224,7 @@ export default function Home() {
                     color: '#4a5568',
                     marginBottom: '8px'
                   }}>
-                    Professional sharpening service - $15 per item
+                    Professional sharpening service - $17 per item
                   </p>
                   <p className="mb-6" style={{
                     marginBottom: 'clamp(16px, 4vw, 24px)'
@@ -2177,7 +2339,7 @@ export default function Home() {
                     color: '#6b7280',
                     fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                   }}>
-                    Minimum 4 items
+                    Minimum 5 items
                   </p>
                 </div>
 
@@ -2239,7 +2401,7 @@ export default function Home() {
                         color: '#d64f24', 
                         fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                       }}>✓</span>
-                      24H Turnaround
+                      48H Turnaround
                     </div>
                   </div>
                 </div>
@@ -2275,7 +2437,7 @@ export default function Home() {
                       lineHeight: '1.5',
                       fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                     }}>
-                      {quantities.items} items × $15 each
+                      {quantities.items} items × $17 each
                     </p>
                   </div>
                 </div>
@@ -2349,7 +2511,7 @@ export default function Home() {
                             Delivering to: {firstName} {lastName}
                           </div>
                           <div className="text-sm" style={{color: '#4a5568', lineHeight: '1.5'}}>
-                            {address}
+                            {`${address.streetAddress}, ${address.suburb}, ${address.state} ${address.postalCode}`}
                           </div>
                         </div>
                         <button 
@@ -2590,7 +2752,7 @@ export default function Home() {
                       <span className="text-base font-medium">${getSubtotal().toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center" style={{color: '#4a5568', lineHeight: '1.5'}}>
-                      <span className="text-base">Additional Services:</span>
+                      <span className="text-base">Upgrade:</span>
                       <span className="text-base font-medium">${getUpsellsCost().toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center" style={{color: '#4a5568', lineHeight: '1.5'}}>
@@ -2688,7 +2850,7 @@ export default function Home() {
                 I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
               </p>
               <p>
-                My mobile service means you don't have to worry about dropping off and picking up. Just leave your knives safely on your porch Monday morning, and I'll have them back to you sharp as new within 72 hours. It's that simple.
+                My mobile service means you don't have to worry about dropping off and picking up. Just leave your knives safely on your porch Monday morning, and I'll have them back to you sharp as new within 48 hours. It's that simple.
               </p>
               <p>
                 I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
@@ -2888,7 +3050,7 @@ export default function Home() {
               <div className="bg-white rounded-2xl p-6 shadow-md">
                 <h4 className="font-semibold mb-3" style={{color: '#013350'}}>Service Area</h4>
                 <p className="text-sm" style={{color: '#4a5568', lineHeight: '1.6'}}>
-                  🚚 Serving postcodes 2481-2489 • 24-hour turnaround
+                  🚚 Serving postcodes 2481-2489 • 48-hour turnaround
                 </p>
                 <p className="text-sm mt-2" style={{color: '#4a5568', lineHeight: '1.6'}}>
                   ⏰ Available 7 days a week

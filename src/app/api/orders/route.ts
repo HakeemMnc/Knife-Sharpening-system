@@ -12,6 +12,10 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       address,
+      streetAddress,
+      suburb,
+      state,
+      postalCode,
       specialInstructions,
       totalItems,
       serviceLevel = 'standard'
@@ -21,6 +25,14 @@ export async function POST(request: NextRequest) {
     if (!firstName || !lastName || !email || !phone || !address || !totalItems) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Validate address components if provided
+    if (streetAddress && (!suburb || !state || !postalCode)) {
+      return NextResponse.json(
+        { error: 'Incomplete address information' },
         { status: 400 }
       );
     }
@@ -35,6 +47,10 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase(),
       phone: phone.replace(/\s/g, ''), // Remove spaces
       pickup_address: address,
+      street_address: streetAddress || null,
+      suburb: suburb || null,
+      state: state || null,
+      postal_code: postalCode || null,
       special_instructions: specialInstructions || null,
       total_items: totalItems,
       service_level: serviceLevel,
