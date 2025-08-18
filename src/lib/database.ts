@@ -264,7 +264,7 @@ export const dbHelpers = {
     return nextMonday.toISOString().split('T')[0];
   },
 
-  // Calculate order totals
+  // Calculate order totals (mobile service - no delivery fees)
   calculateOrderTotals: (totalItems: number, serviceLevel: 'standard' | 'premium'): {
     base_amount: number;
     upgrade_amount: number;
@@ -273,14 +273,12 @@ export const dbHelpers = {
   } => {
     const baseAmount = totalItems * 17;
     const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0;
-    const subtotal = baseAmount + upgradeAmount;
-    const deliveryFee = subtotal >= 80 ? 0 : 25;
-    const totalAmount = subtotal + deliveryFee;
+    const totalAmount = baseAmount + upgradeAmount;
 
     return {
       base_amount: baseAmount,
       upgrade_amount: upgradeAmount,
-      delivery_fee: deliveryFee,
+      delivery_fee: 0, // Mobile service - no delivery fees
       total_amount: totalAmount,
     };
   },

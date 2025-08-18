@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import Card from '@/components/ui/Card'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { PaymentForm } from '@/components/PaymentForm'
+import ServiceScheduler from '@/components/ServiceScheduler'
 
 export default function Home() {
   // Form state management
@@ -40,8 +41,15 @@ export default function Home() {
   });
   const [applyToAll, setApplyToAll] = useState<string>('standard');
   const [finalTotal, setFinalTotal] = useState(0);
-  const [nextPickupDay, setNextPickupDay] = useState('');
   const [showSharpenPopup, setShowSharpenPopup] = useState(false);
+  
+  // Service scheduling state
+  const [selectedServiceDate, setSelectedServiceDate] = useState<Date | null>(null);
+  
+  // Memoized date selection handler to prevent infinite re-renders
+  const handleDateSelect = useCallback((date: Date) => {
+    setSelectedServiceDate(date);
+  }, []);
 
   // Payment state
   const [showPayment, setShowPayment] = useState(false);
@@ -58,26 +66,7 @@ export default function Home() {
     success: ''
   });
 
-  // Calculate next Monday pickup day
-  const getNextMonday = () => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilMonday = dayOfWeek === 1 ? 7 : (8 - dayOfWeek) % 7;
-    const nextMonday = new Date(today);
-    nextMonday.setDate(today.getDate() + daysUntilMonday);
-    return nextMonday;
-  };
-
-  // Set next pickup day on component mount
-  useEffect(() => {
-    const nextMonday = getNextMonday();
-    const formattedDate = nextMonday.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: '2-digit', 
-      day: '2-digit' 
-    });
-    setNextPickupDay(formattedDate);
-  }, []);
+  // Mobile service scheduling - dates handled by ServiceScheduler component
 
 
     // Handle input changes
@@ -453,16 +442,7 @@ export default function Home() {
     return Object.entries(quantities).filter(([_, qty]) => qty > 0);
   };
 
-  // STEP 1: Smart Delivery Fee Logic
-  const getCurrentSubtotal = () => {
-    const subtotal = getSubtotal();
-    const upsellsCost = getUpsellsCost();
-    const total = subtotal + upsellsCost;
-    return isNaN(total) ? 0 : total;
-  };
-  const getDeliveryFee = () => getCurrentSubtotal() >= 80 ? 0 : 25;
-  const getRemainingForFreeDelivery = () => Math.max(0, 80 - getCurrentSubtotal());
-  const hasFreeDelivery = () => getCurrentSubtotal() >= 80;
+  // Mobile service pricing - no delivery fees
 
   // Handle quantity changes
   const updateQuantity = (category: string, change: number) => {
@@ -486,9 +466,8 @@ export default function Home() {
   useEffect(() => {
     const subtotal = getSubtotal();
     const upsellsCost = getUpsellsCost();
-    const deliveryFee = getDeliveryFee();
     
-    setFinalTotal(subtotal + upsellsCost + deliveryFee);
+    setFinalTotal(subtotal + upsellsCost);
   }, [quantities, selectedBundles]);
 
   // Carousel state management
@@ -2645,64 +2624,13 @@ export default function Home() {
 
                 </div>
 
-                {/* DELIVERY */}
+                {/* SERVICE SCHEDULING */}
                 <div className="border-b pb-6" style={{marginBottom: '32px'}}>
-                  <h3 className="text-xl font-semibold mb-6" style={{color: '#1B1B1B'}}>DELIVERY</h3>
-                  
-                  {/* Unified Delivery Card */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6" style={{
-                    backgroundColor: '#f8fafc',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                  }}>
-                    {/* Current Delivery Fee */}
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-semibold" style={{color: '#1B1B1B'}}>Delivery Fee:</span>
-                      <span className={`text-xl font-bold ${hasFreeDelivery() ? 'text-green-600' : ''}`}>
-                        {hasFreeDelivery() ? 'FREE' : `$${getDeliveryFee().toFixed(2)}`}
-                      </span>
-                    </div>
-
-                    {/* Next Pickup Date */}
-                    <div className="flex items-center space-x-2 mb-4">
-                      <span className="text-lg">🚚</span>
-                      <span className="text-base font-medium" style={{color: '#1B1B1B', lineHeight: '1.5'}}>
-                        Next pickup: {nextPickupDay}
-                      </span>
-                    </div>
-
-                    {/* Progress Bar for Free Delivery */}
-                    {!hasFreeDelivery() && (
-                      <div className="mb-3">
-                        <div className="flex justify-between text-sm mb-2">
-                          <span style={{color: '#4a5568', lineHeight: '1.5'}}>Progress to free delivery:</span>
-                          <span style={{color: '#4a5568', lineHeight: '1.5'}}>${getCurrentSubtotal().toFixed(2)} / $80.00</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${Math.min((getCurrentSubtotal() / 80) * 100, 100)}%`,
-                              backgroundColor: '#d64f24'
-                            }}
-                          ></div>
-                        </div>
-                        <div className="text-sm mt-2" style={{color: '#4a5568', lineHeight: '1.5'}}>
-                          Add ${getRemainingForFreeDelivery().toFixed(2)} more for FREE pickup & delivery
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Free Delivery Achieved */}
-                    {hasFreeDelivery() && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-600 text-lg">✅</span>
-                        <span className="text-sm font-medium text-green-800">
-                          Free pickup & delivery included
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  <ServiceScheduler
+                    postcode={address.postalCode}
+                    selectedDate={selectedServiceDate}
+                    onDateSelect={handleDateSelect}
+                  />
                 </div>
 
                 {/* SPECIAL INSTRUCTIONS */}
@@ -2756,10 +2684,8 @@ export default function Home() {
                       <span className="text-base font-medium">${getUpsellsCost().toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center" style={{color: '#4a5568', lineHeight: '1.5'}}>
-                      <span className="text-base">Delivery:</span>
-                      <span className={`text-base font-medium ${hasFreeDelivery() ? "text-green-600" : ""}`}>
-                        {hasFreeDelivery() ? 'FREE' : `$${getDeliveryFee().toFixed(2)}`}
-                      </span>
+                      <span className="text-base">Service:</span>
+                      <span className="text-base font-medium text-green-600">Mobile (included)</span>
                     </div>
                     <div className="border-t border-gray-300 pt-4 flex justify-between items-center">
                       <span className="text-lg font-semibold" style={{color: '#1B1B1B'}}>Total:</span>

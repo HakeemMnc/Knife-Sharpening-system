@@ -11,3 +11,26 @@ export interface ServiceInfo {
   title: string
   description: string
 }
+
+export interface BookingState {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: {
+    streetAddress: string;
+    suburb: string;
+    state: string;
+    postalCode: string;
+  };
+  specialInstructions: string;
+  quantities: {
+    items: number;
+    scissors: number;
+    garden: number;
+    other: number;
+  };
+  selectedServiceDate: Date | null;
+  serviceLevel: 'standard' | 'premium';
+  total: number;
+}
