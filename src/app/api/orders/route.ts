@@ -18,11 +18,12 @@ export async function POST(request: NextRequest) {
       postalCode,
       specialInstructions,
       totalItems,
-      serviceLevel = 'standard'
+      serviceLevel = 'standard',
+      serviceDate
     } = body;
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !phone || !address || !totalItems) {
+    if (!firstName || !lastName || !email || !phone || !address || !totalItems || !serviceDate) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -58,7 +59,8 @@ export async function POST(request: NextRequest) {
       upgrade_amount: totals.upgrade_amount,
       delivery_fee: totals.delivery_fee,
       total_amount: totals.total_amount,
-      pickup_date: dbHelpers.getNextMonday(),
+      service_date: serviceDate,
+      pickup_date: dbHelpers.getNextMonday(), // Legacy compatibility
       pickup_time_slot: 'morning' as const,
       status: 'pending' as const,
       payment_status: 'unpaid' as const,
@@ -80,7 +82,8 @@ export async function POST(request: NextRequest) {
       order: {
         id: order.id,
         total: order.total_amount,
-        pickupDate: order.pickup_date,
+        serviceDate: order.service_date,
+        pickupDate: order.pickup_date, // Legacy compatibility
         status: order.status
       }
     });

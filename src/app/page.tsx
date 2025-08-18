@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PaymentForm } from '@/components/PaymentForm'
 import ServiceScheduler from '@/components/ServiceScheduler'
+import { getSpotsRemaining } from '@/utils/scheduling'
 
 export default function Home() {
   // Form state management
@@ -51,6 +52,24 @@ export default function Home() {
     setSelectedServiceDate(date);
   }, []);
 
+  // Check if form can be submitted (postal code and required fields)
+  const canSubmitForm = () => {
+    if (!address.postalCode || !/^\d{4}$/.test(address.postalCode.trim())) {
+      return false;
+    }
+    if (!SUPPORTED_POSTCODES.includes(address.postalCode.trim())) {
+      return false;
+    }
+    if (!firstName || !lastName || !email || !phone) {
+      return false;
+    }
+    const totalItems = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
+    if (totalItems === 0) {
+      return false;
+    }
+    return true;
+  };
+
   // Payment state
   const [showPayment, setShowPayment] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<{id: number; total: number; pickupDate: string} | null>(null);
@@ -67,6 +86,10 @@ export default function Home() {
   });
 
   // Mobile service scheduling - dates handled by ServiceScheduler component
+  
+  // Service area validation
+  const SUPPORTED_POSTCODES = ['2477', '2478', '2479', '2481', '2482', '2483', '2489'];
+  const [postalCodeError, setPostalCodeError] = useState<string | null>(null);
 
 
     // Handle input changes
@@ -137,6 +160,8 @@ export default function Home() {
     
     if (!address.postalCode || !/^\d{4}$/.test(address.postalCode.trim())) {
       newErrors.postalCode = 'Please enter a valid 4-digit postal code';
+    } else if (!SUPPORTED_POSTCODES.includes(address.postalCode.trim())) {
+      newErrors.postalCode = 'Sorry, we currently service areas: 2477, 2478, 2479, 2481, 2482, 2483, 2489';
     }
 
     // Name validation
@@ -232,7 +257,8 @@ export default function Home() {
         specialInstructions,
         totalItems: getItemCount(),
         serviceLevel: applyToAll,
-        finalTotal
+        finalTotal,
+        serviceDate: selectedServiceDate?.toISOString().split('T')[0] // YYYY-MM-DD format
       };
 
       // Submit order to database
@@ -2343,7 +2369,7 @@ export default function Home() {
                       gap: '6px'
                     }}>
                       <span style={{
-                        color: '#d64f24', 
+                        color: '#22c55e', 
                         fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                       }}>✓</span>
                       Expert Assessment
@@ -2360,7 +2386,7 @@ export default function Home() {
                       gap: '6px'
                     }}>
                       <span style={{
-                        color: '#d64f24', 
+                        color: '#22c55e', 
                         fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                       }}>✓</span>
                       Results Guaranteed
@@ -2377,10 +2403,10 @@ export default function Home() {
                       gap: '6px'
                     }}>
                       <span style={{
-                        color: '#d64f24', 
+                        color: '#22c55e', 
                         fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                       }}>✓</span>
-                      48H Turnaround
+                      On-site sharpening
                     </div>
                   </div>
                 </div>
@@ -2442,20 +2468,28 @@ export default function Home() {
               <div className="text-center" style={{marginTop: '24px'}}>
                 <button 
                   type="submit"
-                  className="text-white rounded-lg transition-all duration-200 cursor-pointer"
+                  disabled={!canSubmitForm()}
+                  className={`text-white rounded-lg transition-all duration-200 ${
+                    canSubmitForm() ? 'cursor-pointer' : 'cursor-not-allowed'
+                  }`}
                   style={{
-                    backgroundColor: '#d64f24',
+                    backgroundColor: canSubmitForm() ? '#d64f24' : '#9ca3af',
                     padding: '16px 32px',
                     fontSize: '1.1rem',
                     fontWeight: 600,
                     borderRadius: '6px',
-                    minHeight: '44px'
+                    minHeight: '44px',
+                    opacity: canSubmitForm() ? 1 : 0.6
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#b8431f';
+                    if (canSubmitForm()) {
+                      e.currentTarget.style.backgroundColor = '#b8431f';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#d64f24';
+                    if (canSubmitForm()) {
+                      e.currentTarget.style.backgroundColor = '#d64f24';
+                    }
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.outline = '3px solid #4983a6';
@@ -2467,6 +2501,20 @@ export default function Home() {
                 >
                   NEXT
                 </button>
+                
+                {/* Error message for unsupported postal codes */}
+                {address.postalCode && 
+                 /^\d{4}$/.test(address.postalCode.trim()) && 
+                 !SUPPORTED_POSTCODES.includes(address.postalCode.trim()) && (
+                  <div className="mt-3 text-center">
+                    <p className="text-red-600 text-sm font-medium">
+                      Sorry, we currently don't service postcode {address.postalCode}
+                    </p>
+                    <p className="text-gray-600 text-xs mt-1">
+                      We service: Byron Bay (2481), Ballina (2478), Mullumbimby (2482), Bangalow (2479), Pottsville (2489), Alstonville (2477), Brunswick Heads(2483)
+                    </p>
+                  </div>
+                )}
               </div>
             </form>
               </div>
@@ -2487,7 +2535,7 @@ export default function Home() {
                                           <div className="flex justify-between items-start mb-4">
                         <div>
                           <div className="text-lg font-semibold mb-1" style={{color: '#1B1B1B'}}>
-                            Delivering to: {firstName} {lastName}
+                            Service for: {firstName} {lastName}
                           </div>
                           <div className="text-sm" style={{color: '#4a5568', lineHeight: '1.5'}}>
                             {`${address.streetAddress}, ${address.suburb}, ${address.state} ${address.postalCode}`}
@@ -2512,6 +2560,18 @@ export default function Home() {
                       <div className="text-sm mb-3" style={{color: '#4a5568', lineHeight: '1.5'}}>
                         {getItemCount()} items selected for sharpening
                       </div>
+                      {selectedServiceDate && (
+                        <div className="text-sm mb-3" style={{color: '#4a5568', lineHeight: '1.5'}}>
+                          <strong>Service Date:</strong> {selectedServiceDate.toLocaleDateString('en-AU', { 
+                            weekday: 'long', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                          <span className="ml-2 text-red-600 font-medium">
+                            ({getSpotsRemaining(selectedServiceDate)} spots left)
+                          </span>
+                        </div>
+                      )}
                       <div className="text-lg font-semibold" style={{color: '#1B1B1B'}}>
                         Subtotal: ${getSubtotal().toFixed(2)}
                       </div>
@@ -2660,9 +2720,7 @@ export default function Home() {
                         e.target.style.boxShadow = 'none';
                       }}
                     />
-                    <div className="text-xs text-gray-500 mt-2" style={{color: '#4a5568'}}>
-                      Optional: Add any special instructions for pickup or delivery
-                    </div>
+
                   </div>
                 </div>
 
@@ -2682,10 +2740,6 @@ export default function Home() {
                     <div className="flex justify-between items-center" style={{color: '#4a5568', lineHeight: '1.5'}}>
                       <span className="text-base">Upgrade:</span>
                       <span className="text-base font-medium">${getUpsellsCost().toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center" style={{color: '#4a5568', lineHeight: '1.5'}}>
-                      <span className="text-base">Service:</span>
-                      <span className="text-base font-medium text-green-600">Mobile (included)</span>
                     </div>
                     <div className="border-t border-gray-300 pt-4 flex justify-between items-center">
                       <span className="text-lg font-semibold" style={{color: '#1B1B1B'}}>Total:</span>

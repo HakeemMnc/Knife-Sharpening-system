@@ -27,9 +27,9 @@ CREATE TABLE orders (
   delivery_fee DECIMAL(10,2) NOT NULL, -- $25 or $0
   total_amount DECIMAL(10,2) NOT NULL,
   
-  -- Scheduling
-  pickup_date DATE NOT NULL, -- Next Monday
-  pickup_time_slot VARCHAR(20) DEFAULT 'morning', -- 'morning', 'afternoon', 'evening'
+  -- Mobile Service Scheduling
+  service_date DATE NOT NULL, -- Selected service date from mobile route
+  pickup_date DATE, -- Legacy field - kept for backward compatibility
   
   -- Status Tracking
   status VARCHAR(20) DEFAULT 'pending', -- pending, paid, picked_up, sharpening, ready, delivered, completed
@@ -86,7 +86,8 @@ CREATE TABLE customers (
 -- Performance Indexes
 CREATE INDEX idx_orders_email ON orders(email);
 CREATE INDEX idx_orders_phone ON orders(phone);
-CREATE INDEX idx_orders_pickup_date ON orders(pickup_date);
+CREATE INDEX idx_orders_service_date ON orders(service_date);
+CREATE INDEX idx_orders_pickup_date ON orders(pickup_date); -- Legacy compatibility
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_payment_status ON orders(payment_status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
@@ -104,7 +105,8 @@ CREATE INDEX idx_customers_email ON customers(email);
 CREATE INDEX idx_customers_phone ON customers(phone);
 
 -- Composite Indexes for Common Queries
-CREATE INDEX idx_orders_status_pickup_date ON orders(status, pickup_date);
+CREATE INDEX idx_orders_status_service_date ON orders(status, service_date);
+CREATE INDEX idx_orders_status_pickup_date ON orders(status, pickup_date); -- Legacy compatibility
 CREATE INDEX idx_orders_payment_status_created_at ON orders(payment_status, created_at);
 
 -- Trigger to update updated_at timestamp

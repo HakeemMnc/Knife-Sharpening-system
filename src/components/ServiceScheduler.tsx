@@ -159,7 +159,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect 
                 
                 {/* Spots remaining */}
                 <div className="text-sm" style={{ 
-                  color: spotsRemaining <= 1 ? '#ef4444' : '#6b7280' 
+                  color: '#ef4444' 
                 }}>
                   {spotsRemaining === 1 
                     ? '1 spot left' 
@@ -172,10 +172,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect 
         })}
       </div>
       
-      {/* Helper text */}
-      <div className="mt-4 text-sm text-center" style={{ color: '#6b7280' }}>
-        📍 Mobile service available in your area • 🚐 We come to you
-      </div>
+
     </div>
   );
 }

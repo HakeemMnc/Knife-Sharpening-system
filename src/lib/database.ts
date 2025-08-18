@@ -19,7 +19,8 @@ export interface Order {
   upgrade_amount: number;
   delivery_fee: number;
   total_amount: number;
-  pickup_date: string;
+  service_date: string;
+  pickup_date: string; // Legacy compatibility
   pickup_time_slot: 'morning' | 'afternoon' | 'evening';
   status: 'pending' | 'paid' | 'picked_up' | 'sharpening' | 'ready' | 'delivered' | 'completed';
   payment_status: 'unpaid' | 'paid' | 'refunded' | 'failed';
@@ -130,6 +131,17 @@ export class DatabaseService {
       .select('*')
       .eq('status', status)
       .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getOrdersByServiceDate(date: string): Promise<Order[]> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('service_date', date)
+      .order('created_at', { ascending: true });
 
     if (error) throw error;
     return data || [];
