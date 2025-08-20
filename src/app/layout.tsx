@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
   title: "Northern Rivers Knife Sharpening",
@@ -37,6 +38,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased" suppressHydrationWarning={true}>
         {children}
+        <Footer />
       </body>
     </html>
   );

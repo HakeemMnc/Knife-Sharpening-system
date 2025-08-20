@@ -782,7 +782,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 2 - Testimonials */}
-      <section className="py-12" style={{
+      <section id="testimonials" className="py-12 scroll-mt-20" style={{
         backgroundColor: '#013350', 
         paddingTop: '45px', 
         paddingBottom: '45px',
@@ -1097,7 +1097,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 3 - How We Work */}
-      <section className="py-16 md:py-20 lg:py-24 relative overflow-hidden" style={{
+      <section id="how-it-works" className="py-16 md:py-20 lg:py-24 relative overflow-hidden scroll-mt-20" style={{
         backgroundColor: '#fff8e8',
         paddingTop: '80px',
         paddingBottom: '80px',
@@ -1862,7 +1862,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 5 - Main Booking Form */}
-      <section id="booking" className="py-16 md:py-20 lg:py-24" style={{backgroundColor: '#fff8e8', paddingTop: '80px', paddingBottom: '80px'}}>
+      <section id="booking" className="py-16 md:py-20 lg:py-24 scroll-mt-20" style={{backgroundColor: '#fff8e8', paddingTop: '80px', paddingBottom: '80px'}}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                           <div className="text-center mb-16" style={{marginBottom: '40px'}}>
                             <h2 className="text-3xl md:text-4xl font-bold text-center" style={{
@@ -2883,7 +2883,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 6 - About Me */}
-      <section className="py-16 md:py-20 lg:py-24" style={{
+      <section id="about" className="py-16 md:py-20 lg:py-24 scroll-mt-20" style={{
         backgroundColor: '#013350',
         paddingTop: '80px',
         paddingBottom: '80px',
@@ -2924,200 +2924,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION 7 - Contact Form */}
-      <section id="contact" className="py-16 md:py-20 lg:py-24" style={{
-        backgroundColor: '#fff8e8',
-        paddingTop: '80px',
-        paddingBottom: '80px'
-      }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center mb-12" style={{
-            color: '#013350',
-            fontSize: 'clamp(2rem, 5vw, 2.5rem)',
-            fontWeight: 700,
-            letterSpacing: '1px',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
-          }}>Questions? Get in Touch</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Contact Form */}
-            <div className="bg-white rounded-3xl shadow-lg p-8">
-              <form onSubmit={handleContactSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="contact-name" className="block text-sm font-medium mb-2" style={{color: '#013350'}}>
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="contact-name"
-                    name="name"
-                    value={contactForm.name}
-                    onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    style={{
-                      backgroundColor: '#f8fafc',
-                      color: '#1B1B1B'
-                    }}
-                    placeholder="Your name"
-                    required
-                    disabled={contactForm.isSubmitting}
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="contact-email" className="block text-sm font-medium mb-2" style={{color: '#013350'}}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="contact-email"
-                    name="email"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    style={{
-                      backgroundColor: '#f8fafc',
-                      color: '#1B1B1B'
-                    }}
-                    placeholder="your.email@example.com"
-                    required
-                    disabled={contactForm.isSubmitting}
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="contact-message" className="block text-sm font-medium mb-2" style={{color: '#013350'}}>
-                    Message
-                  </label>
-                  <textarea
-                    id="contact-message"
-                    name="message"
-                    rows={4}
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                    style={{
-                      backgroundColor: '#f8fafc',
-                      color: '#1B1B1B'
-                    }}
-                    placeholder="How can I help you?"
-                    required
-                    disabled={contactForm.isSubmitting}
-                  ></textarea>
-                </div>
-
-                {/* Error Message */}
-                {contactForm.error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-red-600 text-sm">{contactForm.error}</p>
-                  </div>
-                )}
-
-                {/* Success Message */}
-                {contactForm.success && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-green-600 text-sm">{contactForm.success}</p>
-                  </div>
-                )}
-                
-                <button
-                  type="submit"
-                  disabled={contactForm.isSubmitting}
-                  className="w-full text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: '#d64f24',
-                    padding: '14px 32px',
-                    fontSize: '1rem',
-                    fontWeight: 600
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!contactForm.isSubmitting) {
-                      e.currentTarget.style.backgroundColor = '#b8431f';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!contactForm.isSubmitting) {
-                      e.currentTarget.style.backgroundColor = '#d64f24';
-                    }
-                  }}
-                >
-                  {contactForm.isSubmitting ? 'Sending...' : 'Send Message'}
-                </button>
-              </form>
-            </div>
-            
-            {/* Contact Information */}
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-2xl font-bold mb-6" style={{color: '#013350'}}>
-                  Other Ways to Reach Us
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{backgroundColor: '#013350'}}>
-                      <span style={{fontSize: '20px'}}>📞</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold" style={{color: '#013350'}}>Phone</p>
-                      <a 
-                        href="tel:0451494922"
-                        className="text-lg hover:text-blue-600 transition-colors duration-200"
-                        style={{color: '#d64f24'}}
-                      >
-                        0451 494 922
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{backgroundColor: '#013350'}}>
-                      <span style={{fontSize: '20px'}}>✉️</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold" style={{color: '#013350'}}>Email</p>
-                      <a 
-                        href="mailto:manco.hakeem@gmail.com"
-                        className="text-lg hover:text-blue-600 transition-colors duration-200"
-                        style={{color: '#d64f24'}}
-                      >
-                        manco.hakeem@gmail.com
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{backgroundColor: '#013350'}}>
-                      <span style={{fontSize: '20px'}}>📘</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold" style={{color: '#013350'}}>Facebook</p>
-                      <a 
-                        href="https://www.facebook.com/northernriversknifesharpening"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-lg hover:text-blue-600 transition-colors duration-200"
-                        style={{color: '#d64f24'}}
-                      >
-                        Northern Rivers Knife Sharpening
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-2xl p-6 shadow-md">
-                <h4 className="font-semibold mb-3" style={{color: '#013350'}}>Service Area</h4>
-                <p className="text-sm" style={{color: '#4a5568', lineHeight: '1.6'}}>
-                  🚚 Serving postcodes 2481-2489 • 48-hour turnaround
-                </p>
-                <p className="text-sm mt-2" style={{color: '#4a5568', lineHeight: '1.6'}}>
-                  ⏰ Available 7 days a week
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
 
 
