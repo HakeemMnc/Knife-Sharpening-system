@@ -526,7 +526,7 @@ export default function Home() {
       stars: 5
     },
     {
-      text: "Quick, professional, and convenient. Left my knives on the porch Monday morning, picked them up Tuesday evening perfectly sharp. Couldn't be happier.",
+      text: "Quick, professional, and convenient. Left my knives on the porch Monday morning, picked them up 1 hour later perfectly sharp. Couldn't be happier.",
       name: "Mark R.",
       date: "December 2024",
       stars: 5
@@ -693,10 +693,10 @@ export default function Home() {
                 Leave Your Knives On<br />
                 Your Porch,<br />
                 I'll Make Them Sharper<br />
-                Than New in 48 Hours
+                Than New in 1 Hour
               </h1>
               <p className="text-lg md:text-xl mb-6" style={{color: '#1B1B1B'}}>
-                Professional Sharpening Service<br />
+                Professional Mobile Sharpening Service<br />
                 in the Northern Rivers Region
               </p>
               
@@ -760,7 +760,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-sm" style={{color: '#1B1B1B'}}>
-                Based on Google Reviews
+                Based on 30+ Reviews
               </p>
             </div>
             
@@ -1104,7 +1104,7 @@ export default function Home() {
         borderTop: '3px solid #4983a6'
       }}>
         
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
             <h1 className="text-xl md:text-5xl lg:text-6xl font-bold mb-5" style={{
               fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
@@ -1134,7 +1134,7 @@ export default function Home() {
               background: 'linear-gradient(to right, transparent, #4983a6, transparent)'
             }}></div>
             
-            <div className="grid md:grid-cols-4 gap-8 relative z-10">
+            <div className="grid md:grid-cols-5 gap-6 relative z-10">
               {/* Step 1 */}
               <div className="bg-white rounded-2xl p-6 text-center h-full border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" style={{
                 boxShadow: '0 8px 32px rgba(1,51,80,0.15)',
@@ -1279,6 +1279,48 @@ export default function Home() {
                     backgroundColor: '#013350'
                   }}>
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold mb-3" style={{
+                  color: '#013350', 
+                  fontWeight: 600, 
+                  letterSpacing: '0.01em'
+                }}>
+                  4. Mobile Workshop
+                </h3>
+                <p className="text-sm" style={{
+                  color: '#4a5568', 
+                  letterSpacing: '0.005em', 
+                  lineHeight: '1.6'
+                }}>
+                  I work my magic in mobile workshop
+                </p>
+              </div>
+
+              {/* Step 5 */}
+              <div className="bg-white rounded-2xl p-6 text-center h-full border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" style={{
+                boxShadow: '0 8px 32px rgba(1,51,80,0.15)',
+                background: '#ffffff',
+                minHeight: '220px',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(1,51,80,0.15)';
+                e.currentTarget.style.borderColor = '#d64f24';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(1,51,80,0.1)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}>
+
+                <div className="mb-4">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{
+                    backgroundColor: '#013350'
+                  }}>
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
                   </div>
@@ -1288,14 +1330,14 @@ export default function Home() {
                   fontWeight: 600, 
                   letterSpacing: '0.01em'
                 }}>
-                  4. Perfect Results
+                  5. Perfect Results
                 </h3>
                 <p className="text-sm" style={{
                   color: '#4a5568', 
                   letterSpacing: '0.005em', 
                   lineHeight: '1.6'
                 }}>
-                  Enjoy razor-sharp knives delivered back in 48 hours
+                  Enjoy razor-sharp knives delivered back in less than 1 hour
                 </p>
               </div>
             </div>
@@ -1431,6 +1473,42 @@ export default function Home() {
                       backgroundColor: '#013350'
                     }}>
                       <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold md:font-semibold mb-3" style={{
+                    color: '#013350', 
+                    fontWeight: 600, 
+                    letterSpacing: '0.01em'
+                  }}>
+                    4. Mobile Workshop
+                  </h3>
+                  <p className="text-sm font-semibold md:font-normal" style={{
+                    color: '#1B1B1B', 
+                    letterSpacing: '0.005em', 
+                    lineHeight: '1.6'
+                  }}>
+                    Professional sharpening in my mobile workshop
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="flex-shrink-0 w-80 snap-start pr-4">
+                <div className="bg-white rounded-2xl p-6 md:p-4 text-center h-full border-2 md:border md:border-gray-200 transition-all duration-300" style={{
+                  background: '#ffffff',
+                  minHeight: '260px',
+                  position: 'relative',
+                  borderColor: '#013350'
+                }}>
+
+                  <div className="mb-4">
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{
+                      backgroundColor: '#013350'
+                    }}>
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
                     </div>
@@ -1440,7 +1518,7 @@ export default function Home() {
                     fontWeight: 600, 
                     letterSpacing: '0.01em'
                   }}>
-                    4. Perfect Results
+                    5. Perfect Results
                   </h3>
                   <p className="text-sm font-semibold md:font-normal" style={{
                     color: '#1B1B1B', 
@@ -1455,7 +1533,7 @@ export default function Home() {
             
             {/* Mobile Scroll Indicator - Optimized */}
             <div className="flex justify-center mt-8 space-x-3 px-4">
-              {[0, 1, 2, 3].map((index) => (
+              {[0, 1, 2, 3, 4].map((index) => (
                 <button
                   key={index}
                   onClick={() => goToSlide(index)}
@@ -2830,7 +2908,7 @@ export default function Home() {
                 I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
               </p>
               <p>
-                My mobile service means you don't have to worry about dropping off and picking up. Just leave your knives safely on your porch Monday morning, and I'll have them back to you sharp as new within 48 hours. It's that simple.
+                My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
               </p>
               <p>
                 I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
