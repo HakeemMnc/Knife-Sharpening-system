@@ -5,42 +5,32 @@ import { DatabaseService } from '@/lib/database';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderId } = body;
+    const { amount, orderData } = body;
 
-    if (!orderId) {
+    if (!amount || !orderData) {
       return NextResponse.json(
-        { error: 'Order ID is required' },
+        { error: 'Amount and order data are required' },
         { status: 400 }
       );
     }
 
-    // Get the order from database
-    const order = await DatabaseService.getOrder(orderId);
-    if (!order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
-    }
+    console.log('💳 Creating payment intent for amount:', amount);
 
-    // Check if order is already paid
-    if (order.payment_status === 'paid') {
-      return NextResponse.json(
-        { error: 'Order is already paid' },
-        { status: 400 }
-      );
-    }
-
-    // Create or retrieve Stripe customer
-    const customerId = await StripeService.createOrRetrieveCustomer(order);
-    
-    // Update order with customer ID
-    await DatabaseService.updateOrder(orderId, {
-      stripe_customer_id: customerId,
+    // Create or retrieve Stripe customer using new method
+    const customerId = await StripeService.createOrRetrieveCustomerFromData({
+      email: orderData.email,
+      firstName: orderData.firstName,
+      lastName: orderData.lastName,
+      phone: orderData.phone,
+      address: orderData.address,
     });
-
-    // Create payment intent
-    const { clientSecret, paymentIntentId } = await StripeService.createPaymentIntent(order);
+    
+    // Create payment intent directly with amount
+    const { clientSecret, paymentIntentId } = await StripeService.createPaymentIntentWithAmount(
+      amount, 
+      customerId,
+      orderData
+    );
 
     return NextResponse.json({
       success: true,
@@ -49,9 +39,14 @@ export async function POST(request: NextRequest) {
       customerId,
     });
   } catch (error) {
-    console.error('Error creating payment intent:', error);
+    console.error('❌ Error creating payment intent:', error);
+    console.error('❌ Error details:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
-      { error: 'Failed to create payment intent' },
+      { 
+        error: 'Failed to create payment intent',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

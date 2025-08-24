@@ -236,6 +236,50 @@ export default function AdminDashboard() {
     }
   };
 
+  const bulkDeleteOrders = async () => {
+    if (selectedOrders.size === 0) {
+      alert('Please select orders to delete');
+      return;
+    }
+
+    const orderCount = selectedOrders.size;
+    const confirmMessage = `⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE ${orderCount} orders?\n\nThis action cannot be undone and will completely remove the orders from the database.`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setBulkUpdating(true);
+      const selectedOrderIds = Array.from(selectedOrders);
+      
+      const deletePromises = selectedOrderIds.map(orderId =>
+        fetch(`/api/orders/${orderId}`, {
+          method: 'DELETE',
+        })
+      );
+
+      const results = await Promise.all(deletePromises);
+      const successful = results.filter(r => r.ok).length;
+      const failed = results.length - successful;
+
+      if (failed > 0) {
+        alert(`Deleted ${successful} orders successfully. ${failed} orders failed to delete.`);
+      } else {
+        alert(`Successfully deleted ${successful} orders permanently`);
+      }
+
+      // Clear selections and refresh orders
+      setSelectedOrders(new Set());
+      fetchOrders();
+    } catch (error) {
+      console.error('Error bulk deleting orders:', error);
+      alert('Error deleting orders. Please try again.');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const getSelectedOrdersForDay = (dayGroup: DayGroup): number => {
     return dayGroup.orders.filter(order => selectedOrders.has(order.id)).length;
   };
@@ -825,7 +869,7 @@ export default function AdminDashboard() {
                   <span className="text-sm text-gray-600">Active filters:</span>
                   {searchQuery && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                      Search: "{searchQuery}"
+                      Search: &quot;{searchQuery}&quot;
                       <button
                         onClick={() => setSearchQuery('')}
                         className="ml-1 text-blue-600 hover:text-blue-800"
@@ -927,6 +971,13 @@ export default function AdminDashboard() {
                     className="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-900 disabled:opacity-50 touch-manipulation col-span-2 md:col-span-1"
                   >
                     {bulkUpdating ? 'Updating...' : isMobileView ? 'Completed' : 'Mark as Completed'}
+                  </button>
+                  <button
+                    onClick={bulkDeleteOrders}
+                    disabled={bulkUpdating}
+                    className="px-3 py-2 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 touch-manipulation col-span-2 md:col-span-1"
+                  >
+                    {bulkUpdating ? 'Deleting...' : isMobileView ? '🗑️ Delete' : '🗑️ Permanent Delete'}
                   </button>
                 </div>
               </div>

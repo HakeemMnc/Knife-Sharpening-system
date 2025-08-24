@@ -158,6 +158,15 @@ export class DatabaseService {
     return data || [];
   }
 
+  static async deleteOrder(id: number): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('orders')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
   // SMS operations
   static async createSMSLog(smsData: Omit<SMSLog, 'id' | 'sent_at'>): Promise<SMSLog> {
     const { data, error } = await supabaseAdmin

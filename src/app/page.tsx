@@ -72,7 +72,7 @@ export default function Home() {
 
   // Payment state
   const [showPayment, setShowPayment] = useState(false);
-  const [currentOrder, setCurrentOrder] = useState<{id: number; total: number; pickupDate: string} | null>(null);
+  const [orderData, setOrderData] = useState<any | null>(null); // Will hold order data until payment succeeds
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   
   // Booking submission state
@@ -248,7 +248,7 @@ export default function Home() {
 
   // Handle complete booking
   const handleCompleteBooking = async () => {
-    console.log('🚨 handleCompleteBooking called - this WILL create an order');
+    console.log('✅ handleCompleteBooking called - preparing order data (NO order created yet)');
     console.log('📅 Selected service date:', selectedServiceDate);
     
     // Prevent double submissions
@@ -259,8 +259,8 @@ export default function Home() {
     
     setIsSubmittingBooking(true);
     try {
-      // Prepare order data
-      const orderData = {
+      // Prepare order data (but don't create order yet!)
+      const preparedOrderData = {
         firstName,
         lastName,
         email,
@@ -273,47 +273,70 @@ export default function Home() {
         specialInstructions,
         totalItems: getItemCount(),
         serviceLevel: applyToAll,
-        finalTotal,
+        totalAmount: finalTotal,
         serviceDate: selectedServiceDate?.toISOString().split('T')[0] // YYYY-MM-DD format
       };
 
-      // Submit order to database
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
+      console.log('💰 Order data prepared, showing payment form (order will be created after payment succeeds)');
 
-      const result = await response.json();
-
-      if (result.success) {
-        // Store order and show payment form
-        setCurrentOrder(result.order);
-        setShowPayment(true);
-        setPaymentStatus('idle');
-      } else {
-        alert(`Error: ${result.error || 'Failed to submit booking'}`);
-      }
+      // Store order data and show payment form (no order created yet!)
+      setOrderData(preparedOrderData);
+      setShowPayment(true);
+      setPaymentStatus('idle');
+      
     } catch (error) {
-      console.error('Error submitting booking:', error);
-      alert('Network error. Please try again.');
+      console.error('Error preparing booking:', error);
+      alert('Error preparing booking. Please try again.');
     } finally {
       setIsSubmittingBooking(false);
     }
   };
 
-  // Handle payment success
-  const handlePaymentSuccess = (paymentIntentId: string) => {
+  // Handle payment success - NOW create the order!
+  const handlePaymentSuccess = async (paymentIntentId: string) => {
+    console.log('🎉 Payment successful! Now creating the order...');
     setPaymentStatus('success');
-    if (currentOrder) {
-      alert(`Payment successful! Order #${currentOrder.id}\n\nPickup Date: ${currentOrder.pickupDate}\nTotal: $${currentOrder.total.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
+    
+    if (!orderData) {
+      console.error('No order data found!');
+      alert('Error: Order data missing. Please try again.');
+      return;
+    }
+
+    try {
+      // NOW create the order with paid status
+      const orderToCreate = {
+        ...orderData,
+        stripePaymentId: paymentIntentId, // Link to Stripe payment
+      };
+
+      console.log('💾 Creating paid order with data:', orderToCreate);
+
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderToCreate),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Order created successfully after payment:', result.order.id);
+        alert(`Payment successful! Order #${result.order.id}\n\nService Date: ${result.order.serviceDate}\nTotal: $${result.order.total.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
+      } else {
+        console.error('Failed to create order after payment:', result.error);
+        alert('Payment successful but failed to create order. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Error creating order after payment:', error);
+      alert('Payment successful but failed to create order. Please contact support.');
     }
     
     // Reset form and payment state
     setShowPayment(false);
-    setCurrentOrder(null);
+    setOrderData(null);
     setPaymentStatus('idle');
     
     // Reset form
@@ -640,12 +663,12 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Payment Modal */}
-      {showPayment && currentOrder && (
+      {showPayment && orderData && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-md transition-opacity duration-300 ease-in-out flex items-center justify-center z-50 p-4 animate-in fade-in-0">
           <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20">
             <PaymentForm
-              orderId={currentOrder.id}
-              amount={currentOrder.total}
+              orderData={orderData}
+              amount={orderData.totalAmount}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               onCancel={handlePaymentCancel}

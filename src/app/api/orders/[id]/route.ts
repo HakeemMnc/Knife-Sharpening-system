@@ -93,3 +93,43 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const orderId = parseInt(id);
+    
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        { error: 'Invalid order ID' },
+        { status: 400 }
+      );
+    }
+
+    // Check if order exists before deleting
+    const existingOrder = await DatabaseService.getOrder(orderId);
+    if (!existingOrder) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
+    await DatabaseService.deleteOrder(orderId);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order permanently deleted'
+    });
+
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete order' },
+      { status: 500 }
+    );
+  }
+}

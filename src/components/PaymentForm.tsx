@@ -15,7 +15,7 @@ import Card from '@/components/ui/Card';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface PaymentFormProps {
-  orderId: number;
+  orderData: any; // Order data to be created after payment
   amount: number;
   onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
@@ -41,7 +41,7 @@ const cardElementOptions = {
 };
 
 // Payment form component
-function PaymentFormContent({ orderId, amount, onSuccess, onError, onCancel }: PaymentFormProps) {
+function PaymentFormContent({ orderData, amount, onSuccess, onError, onCancel }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -66,13 +66,16 @@ function PaymentFormContent({ orderId, amount, onSuccess, onError, onCancel }: P
     setError(null);
 
     try {
-      // Create payment intent
+      // Create payment intent with order data (no order exists yet)
       const response = await fetch('/api/payments/create-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({ 
+          amount,
+          orderData, // Pass the order data for payment intent creation
+        }),
       });
 
       const result = await response.json();
@@ -103,32 +106,9 @@ function PaymentFormContent({ orderId, amount, onSuccess, onError, onCancel }: P
       }
 
       if (paymentIntent && paymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded, updating order status...');
+        console.log('💳 Payment succeeded! Order will be created by parent component.');
         
-        // Update order status directly as a fallback (in case webhook fails)
-        try {
-          const updateResponse = await fetch(`/api/orders/${orderId}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              payment_status: 'paid',
-              status: 'paid',
-              stripe_payment_id: paymentIntent.id,
-            }),
-          });
-
-          if (updateResponse.ok) {
-            console.log('Order status updated successfully');
-          } else {
-            console.warn('Failed to update order status directly, webhook should handle it');
-          }
-        } catch (updateError) {
-          console.warn('Error updating order status directly:', updateError);
-          // Don't fail the payment if direct update fails - webhook should handle it
-        }
-
+        // Call success handler - parent will create the order
         onSuccess(paymentIntent.id);
       } else {
         throw new Error('Payment was not successful');

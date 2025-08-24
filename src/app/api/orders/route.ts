@@ -22,8 +22,10 @@ export async function POST(request: NextRequest) {
       postalCode,
       specialInstructions,
       totalItems,
+      totalAmount,
       serviceLevel = 'standard',
-      serviceDate
+      serviceDate,
+      stripePaymentId // If provided, this is a paid order
     } = body;
 
     // Validate required fields
@@ -62,10 +64,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate order totals
-    console.log('🔍 Calculating totals for:', { totalItems, serviceLevel });
-    const totals = dbHelpers.calculateOrderTotals(totalItems, serviceLevel);
-    console.log('🔍 Calculated totals:', totals);
+    // Calculate order totals or use provided amount
+    let finalTotals;
+    if (totalAmount && stripePaymentId) {
+      // For paid orders, use the amount that was actually paid
+      console.log('💰 Using provided total amount for paid order:', totalAmount);
+      finalTotals = {
+        base_amount: totalAmount,
+        upgrade_amount: 0,
+        delivery_fee: 0,
+        total_amount: totalAmount,
+      };
+    } else {
+      // Calculate totals normally for unpaid orders
+      console.log('🔍 Calculating totals for:', { totalItems, serviceLevel });
+      finalTotals = dbHelpers.calculateOrderTotals(totalItems, serviceLevel);
+      console.log('🔍 Calculated totals:', finalTotals);
+    }
+
+    // Determine order status based on payment
+    const isPaymentCompleted = !!stripePaymentId;
+    console.log(isPaymentCompleted ? '✅ Creating PAID order' : '⚠️ Creating PENDING order');
 
     // Create order data
     const orderData = {
@@ -81,15 +100,16 @@ export async function POST(request: NextRequest) {
       special_instructions: specialInstructions || null,
       total_items: totalItems,
       service_level: serviceLevel,
-      base_amount: totals.base_amount,
-      upgrade_amount: totals.upgrade_amount,
-      delivery_fee: totals.delivery_fee,
-      total_amount: totals.total_amount,
+      base_amount: finalTotals.base_amount,
+      upgrade_amount: finalTotals.upgrade_amount,
+      delivery_fee: finalTotals.delivery_fee,
+      total_amount: finalTotals.total_amount,
       service_date: serviceDate,
       pickup_date: dbHelpers.getNextMonday(), // Legacy compatibility
       pickup_time_slot: 'morning' as const,
-      status: 'pending' as const,
-      payment_status: 'unpaid' as const,
+      status: isPaymentCompleted ? 'paid' as const : 'pending' as const,
+      payment_status: isPaymentCompleted ? 'paid' as const : 'unpaid' as const,
+      stripe_payment_id: stripePaymentId || undefined,
       confirmation_sms_sent: false,
       reminder_24h_sent: false,
       reminder_1h_sent: false,

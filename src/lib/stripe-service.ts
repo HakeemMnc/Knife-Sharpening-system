@@ -52,6 +52,99 @@ export class StripeService {
     }
   }
 
+  // Create a payment intent with amount (before order exists)
+  static async createPaymentIntentWithAmount(
+    amount: number, 
+    customerId: string, 
+    orderData: any
+  ): Promise<{
+    clientSecret: string;
+    paymentIntentId: string;
+  }> {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: 'aud',
+        customer: customerId,
+        metadata: {
+          customerEmail: orderData.email,
+          customerName: `${orderData.firstName} ${orderData.lastName}`,
+          serviceDate: orderData.serviceDate,
+          totalItems: orderData.totalItems?.toString() || '0',
+          serviceLevel: orderData.serviceLevel || 'standard',
+          // Store order data for webhook processing
+          orderDataJSON: JSON.stringify(orderData),
+        },
+        description: `Knife Sharpening Service - ${orderData.totalItems} items`,
+        receipt_email: orderData.email,
+        automatic_payment_methods: {
+          enabled: true,
+        },
+        // Configure for Australian payments
+        payment_method_options: {
+          card: {
+            request_three_d_secure: 'automatic',
+          },
+        },
+      });
+
+      return {
+        clientSecret: paymentIntent.client_secret!,
+        paymentIntentId: paymentIntent.id,
+      };
+    } catch (error) {
+      console.error('Error creating payment intent with amount:', error);
+      throw new Error('Failed to create payment intent');
+    }
+  }
+
+  // Create or retrieve a Stripe customer from order data (before order exists)
+  static async createOrRetrieveCustomerFromData(orderData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    address?: string;
+  }): Promise<string> {
+    try {
+      // Check if customer already exists
+      const existingCustomers = await stripe.customers.list({
+        email: orderData.email,
+        limit: 1,
+      });
+
+      if (existingCustomers.data.length > 0) {
+        const customer = existingCustomers.data[0];
+        
+        // Update customer with latest info
+        await stripe.customers.update(customer.id, {
+          name: `${orderData.firstName} ${orderData.lastName}`,
+          phone: orderData.phone,
+          metadata: {
+            address: orderData.address || 'Unknown',
+          },
+        });
+
+        return customer.id;
+      }
+
+      // Create new customer
+      const customer = await stripe.customers.create({
+        email: orderData.email,
+        name: `${orderData.firstName} ${orderData.lastName}`,
+        phone: orderData.phone,
+        metadata: {
+          address: orderData.address || 'Unknown',
+        },
+      });
+
+      return customer.id;
+    } catch (error) {
+      console.error('Error creating/retrieving Stripe customer from data:', error);
+      throw new Error('Failed to create/retrieve customer');
+    }
+  }
+
   // Create or retrieve a Stripe customer
   static async createOrRetrieveCustomer(order: Order): Promise<string> {
     try {
