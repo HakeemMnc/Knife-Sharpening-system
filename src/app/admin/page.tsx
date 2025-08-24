@@ -44,6 +44,8 @@ export default function AdminDashboard() {
   const [areaFilter, setAreaFilter] = useState('all');
   const [isMobileView, setIsMobileView] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [optimizedRoutes, setOptimizedRoutes] = useState<{[key: string]: Order[]}>({});
+  const [routeOptimizing, setRouteOptimizing] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     fetchOrders();
@@ -410,9 +412,22 @@ export default function AdminDashboard() {
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600 truncate flex-1">
-            {order.street_address || order.pickup_address}
-          </span>
+          <div className="flex items-center space-x-2 flex-1">
+            <span className="text-gray-600 truncate">
+              {order.street_address || order.pickup_address}
+            </span>
+            {/* Show route order number if optimized */}
+            {(() => {
+              const orderNum = getOptimizedOrderNumber(groupOrdersByDay().find(dg => 
+                dg.orders.some(o => o.id === order.id)
+              )!, order);
+              return orderNum ? (
+                <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
+                  #{orderNum}
+                </span>
+              ) : null;
+            })()}
+          </div>
           <button
             onClick={() => openGoogleMaps(getFullAddress(order))}
             className="ml-2 p-1 text-blue-500 hover:text-blue-700 touch-manipulation"
@@ -463,6 +478,201 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+
+  // Route Optimization Functions
+  const getCurrentLocation = (): Promise<{lat: number, lng: number}> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser.'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    });
+  };
+
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = deg2rad(lat2 - lat1);
+    const dLng = deg2rad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in kilometers
+    return d;
+  };
+
+  const deg2rad = (deg: number): number => {
+    return deg * (Math.PI / 180);
+  };
+
+  const getApproximateCoordinates = async (address: string): Promise<{lat: number, lng: number} | null> => {
+    // This is a simplified geocoding for the Northern Rivers area
+    // In production, use Google Geocoding API with your API key
+    const addressLower = address.toLowerCase();
+    
+    // Northern Rivers approximate coordinates
+    if (addressLower.includes('byron bay') || addressLower.includes('2481')) {
+      return { lat: -28.6474, lng: 153.6020 };
+    } else if (addressLower.includes('bangalow') || addressLower.includes('2479')) {
+      return { lat: -28.6877, lng: 153.5367 };
+    } else if (addressLower.includes('mullumbimby') || addressLower.includes('2482')) {
+      return { lat: -28.5543, lng: 153.4951 };
+    } else if (addressLower.includes('brunswick heads') || addressLower.includes('2483')) {
+      return { lat: -28.5414, lng: 153.5526 };
+    } else if (addressLower.includes('pottsville') || addressLower.includes('2489')) {
+      return { lat: -28.3906, lng: 153.5632 };
+    } else if (addressLower.includes('ballina') || addressLower.includes('2478')) {
+      return { lat: -28.8669, lng: 153.5634 };
+    } else if (addressLower.includes('alstonville') || addressLower.includes('2477')) {
+      return { lat: -28.8433, lng: 153.4370 };
+    }
+    
+    // Default to Byron Bay area center if no match
+    return { lat: -28.6474, lng: 153.6020 };
+  };
+
+  const optimizeRoute = (
+    startLocation: {lat: number, lng: number}, 
+    destinations: {order: Order, coords: {lat: number, lng: number}}[]
+  ): Order[] => {
+    if (destinations.length === 0) return [];
+    if (destinations.length === 1) return [destinations[0].order];
+
+    // Nearest neighbor algorithm for route optimization
+    const optimizedOrder: Order[] = [];
+    const remaining = [...destinations];
+    let currentLocation = startLocation;
+
+    while (remaining.length > 0) {
+      let nearestIndex = 0;
+      let shortestDistance = calculateDistance(
+        currentLocation.lat,
+        currentLocation.lng,
+        remaining[0].coords.lat,
+        remaining[0].coords.lng
+      );
+
+      for (let i = 1; i < remaining.length; i++) {
+        const distance = calculateDistance(
+          currentLocation.lat,
+          currentLocation.lng,
+          remaining[i].coords.lat,
+          remaining[i].coords.lng
+        );
+        if (distance < shortestDistance) {
+          shortestDistance = distance;
+          nearestIndex = i;
+        }
+      }
+
+      const nearest = remaining.splice(nearestIndex, 1)[0];
+      optimizedOrder.push(nearest.order);
+      currentLocation = nearest.coords;
+    }
+
+    return optimizedOrder;
+  };
+
+  const optimizeRouteForDay = async (dayGroup: DayGroup) => {
+    if (dayGroup.orders.length === 0) {
+      alert('No orders to optimize for this day');
+      return;
+    }
+
+    try {
+      setRouteOptimizing(prev => ({ ...prev, [dayGroup.dayName]: true }));
+
+      // Get current location
+      const currentLocation = await getCurrentLocation();
+
+      // Get coordinates for all addresses
+      const destinations: {order: Order, coords: {lat: number, lng: number}}[] = [];
+      
+      for (const order of dayGroup.orders) {
+        const address = getFullAddress(order);
+        const coords = await getApproximateCoordinates(address);
+        if (coords) {
+          destinations.push({ order, coords });
+        }
+      }
+
+      if (destinations.length === 0) {
+        alert('Could not geocode any addresses');
+        return;
+      }
+
+      // Optimize the route
+      const optimizedOrders = optimizeRoute(currentLocation, destinations);
+      
+      // Store optimized route
+      setOptimizedRoutes(prev => ({ ...prev, [dayGroup.dayName]: optimizedOrders }));
+
+      alert(`Route optimized! ${optimizedOrders.length} stops in optimal order.`);
+
+    } catch (error) {
+      console.error('Route optimization error:', error);
+      if (error instanceof GeolocationPositionError) {
+        alert('Could not get your location. Please enable location services and try again.');
+      } else {
+        alert('Error optimizing route. Please try again.');
+      }
+    } finally {
+      setRouteOptimizing(prev => ({ ...prev, [dayGroup.dayName]: false }));
+    }
+  };
+
+  const openFullRoute = (dayGroup: DayGroup) => {
+    const optimizedOrders = optimizedRoutes[dayGroup.dayName] || dayGroup.orders;
+    
+    if (optimizedOrders.length === 0) {
+      alert('No orders to navigate to');
+      return;
+    }
+
+    // Create Google Maps URL with multiple waypoints
+    const firstAddress = encodeURIComponent(getFullAddress(optimizedOrders[0]));
+    
+    if (optimizedOrders.length === 1) {
+      // Single destination
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${firstAddress}`;
+      window.open(mapsUrl, '_blank');
+      return;
+    }
+
+    // Multiple destinations with waypoints
+    const waypoints = optimizedOrders.slice(1).map(order => 
+      encodeURIComponent(getFullAddress(order))
+    ).join('|');
+    
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${firstAddress}&waypoints=${waypoints}&travelmode=driving&dir_action=navigate`;
+    window.open(mapsUrl, '_blank');
+  };
+
+  const getOptimizedOrderNumber = (dayGroup: DayGroup, order: Order): number | null => {
+    const optimizedOrdersForDay = optimizedRoutes[dayGroup.dayName];
+    if (!optimizedOrdersForDay) return null;
+    
+    const index = optimizedOrdersForDay.findIndex(o => o.id === order.id);
+    return index !== -1 ? index + 1 : null;
+  };
 
   if (loading) {
     return (
@@ -794,18 +1004,49 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center space-x-2">
                         {dayGroup.orders.length > 0 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              selectAllOrdersForDay(dayGroup);
-                            }}
-                            className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded touch-manipulation"
-                          >
-                            {dayGroup.orders.every(order => selectedOrders.has(order.id)) 
-                              ? (isMobileView ? 'Clear' : 'Deselect All') 
-                              : (isMobileView ? 'All' : 'Select All')
-                            }
-                          </button>
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                selectAllOrdersForDay(dayGroup);
+                              }}
+                              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded touch-manipulation"
+                            >
+                              {dayGroup.orders.every(order => selectedOrders.has(order.id)) 
+                                ? (isMobileView ? 'Clear' : 'Deselect All') 
+                                : (isMobileView ? 'All' : 'Select All')
+                              }
+                            </button>
+                            
+                            {/* Route Optimization Buttons */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                optimizeRouteForDay(dayGroup);
+                              }}
+                              disabled={routeOptimizing[dayGroup.dayName]}
+                              className="text-xs px-2 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded touch-manipulation disabled:opacity-50"
+                              title="Optimize route from your current location"
+                            >
+                              {routeOptimizing[dayGroup.dayName] 
+                                ? (isMobileView ? '⟳' : 'Optimizing...') 
+                                : (isMobileView ? '🗺️' : 'Optimize Route')
+                              }
+                            </button>
+                            
+                            {optimizedRoutes[dayGroup.dayName] && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openFullRoute(dayGroup);
+                                }}
+                                className="text-xs px-2 py-1 bg-green-600 text-white hover:bg-green-700 rounded touch-manipulation"
+                                title="Open full route in Google Maps"
+                              >
+                                {isMobileView ? '📍' : 'Open Route'}
+                              </button>
+                            )}
+                          </>
                         )}
                         <svg 
                           className={`w-5 h-5 text-gray-400 transform transition-transform ${
@@ -933,8 +1174,19 @@ export default function AdminDashboard() {
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs">
                                       <div className="flex items-start space-x-2">
                                         <div className="flex-1">
-                                          <div className="truncate">
-                                            {order.street_address || order.pickup_address}
+                                          <div className="flex items-center space-x-2">
+                                            <div className="truncate">
+                                              {order.street_address || order.pickup_address}
+                                            </div>
+                                            {/* Show route order number if optimized */}
+                                            {(() => {
+                                              const orderNum = getOptimizedOrderNumber(dayGroup, order);
+                                              return orderNum ? (
+                                                <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
+                                                  #{orderNum}
+                                                </span>
+                                              ) : null;
+                                            })()}
                                           </div>
                                           {order.suburb && (
                                             <div className="text-xs text-gray-500">
