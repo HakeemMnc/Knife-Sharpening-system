@@ -4,7 +4,10 @@ import { DatabaseService, dbHelpers } from '@/lib/database';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('🚨🚨 ORDERS API CALLED - Someone is creating an order!');
     console.log('🔍 Orders API - Received request body:', JSON.stringify(body, null, 2));
+    console.log('🔍 Request URL:', request.url);
+    console.log('🔍 Timestamp:', new Date().toISOString());
     
     // Extract form data
     const {

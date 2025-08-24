@@ -17,6 +17,7 @@ interface Order {
   total_items: number;
   service_level: string;
   total_amount: number;
+  service_date: string;
   pickup_date: string;
   status: string;
   payment_status: string;
@@ -135,9 +136,9 @@ export default function AdminDashboard() {
     const weekDays = getWeekDays();
     const filteredOrders = filterOrders(orders);
     
-    // Group filtered orders by their pickup date
+    // Group filtered orders by their service date
     filteredOrders.forEach(order => {
-      const orderDate = new Date(order.pickup_date).toISOString().split('T')[0];
+      const orderDate = new Date(order.service_date).toISOString().split('T')[0];
       const dayGroup = weekDays.find(day => day.date === orderDate);
       
       if (dayGroup) {

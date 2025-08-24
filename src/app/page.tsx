@@ -74,6 +74,9 @@ export default function Home() {
   const [showPayment, setShowPayment] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<{id: number; total: number; pickupDate: string} | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  
+  // Booking submission state
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -188,9 +191,12 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔍 handleSubmit called - this should only show upsells, NOT create orders');
+    
     if (validateForm()) {
       // All validation passed - show upsells step
       setShowUpsells(true);
+      console.log('✅ Form validation passed, showing upsells (NO orders should be created here)');
       
       // Scroll to top of the booking section to show ORDER SUMMARY heading
       setTimeout(() => {
@@ -242,6 +248,16 @@ export default function Home() {
 
   // Handle complete booking
   const handleCompleteBooking = async () => {
+    console.log('🚨 handleCompleteBooking called - this WILL create an order');
+    console.log('📅 Selected service date:', selectedServiceDate);
+    
+    // Prevent double submissions
+    if (isSubmittingBooking) {
+      console.log('⚠️ Duplicate submission prevented');
+      return;
+    }
+    
+    setIsSubmittingBooking(true);
     try {
       // Prepare order data
       const orderData = {
@@ -283,6 +299,8 @@ export default function Home() {
     } catch (error) {
       console.error('Error submitting booking:', error);
       alert('Network error. Please try again.');
+    } finally {
+      setIsSubmittingBooking(false);
     }
   };
 
@@ -2852,18 +2870,27 @@ export default function Home() {
                   </button>
                   <button
                     onClick={handleCompleteBooking}
-                    className="text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    disabled={isSubmittingBooking}
+                    className={`text-white rounded-lg transition-all duration-200 shadow-lg ${
+                      isSubmittingBooking 
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'hover:shadow-xl transform hover:scale-105'
+                    }`}
                     style={{
-                      backgroundColor: '#d64f24',
+                      backgroundColor: isSubmittingBooking ? '#9ca3af' : '#d64f24',
                       padding: '16px 40px',
                       fontSize: '1.1rem',
                       fontWeight: 'bold'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#b8431f';
+                      if (!isSubmittingBooking) {
+                        e.currentTarget.style.backgroundColor = '#b8431f';
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#d64f24';
+                      if (!isSubmittingBooking) {
+                        e.currentTarget.style.backgroundColor = '#d64f24';
+                      }
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.outline = '3px solid #4983a6';
@@ -2873,7 +2900,7 @@ export default function Home() {
                       e.currentTarget.style.outline = 'none';
                     }}
                   >
-                    Complete Booking
+                    {isSubmittingBooking ? 'Submitting...' : 'Complete Booking'}
                   </button>
                 </div>
               </div>
