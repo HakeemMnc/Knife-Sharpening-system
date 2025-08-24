@@ -8,9 +8,10 @@ interface ServiceSchedulerProps {
   postcode: string;
   selectedDate: Date | null;
   onDateSelect: (date: Date) => void;
+  isVisible?: boolean;
 }
 
-export default function ServiceScheduler({ postcode, selectedDate, onDateSelect }: ServiceSchedulerProps) {
+export default function ServiceScheduler({ postcode, selectedDate, onDateSelect, isVisible = true }: ServiceSchedulerProps) {
   const [availableSlots, setAvailableSlots] = useState<Date[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect 
       const slots = getNextAvailableSlots(postcode);
       setAvailableSlots(slots);
       
-      // Auto-select first available date only if none selected and we haven't auto-selected before
+      // Auto-select first available date if none is currently selected and we haven't auto-selected before
       if (!selectedDate && slots.length > 0 && !hasAutoSelected.current) {
         hasAutoSelected.current = true;
         onDateSelect(slots[0]);
@@ -52,6 +53,14 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect 
   useEffect(() => {
     hasAutoSelected.current = false;
   }, [postcode]);
+
+  // Auto-select first date when component becomes visible (for step 2)
+  useEffect(() => {
+    if (isVisible && !selectedDate && availableSlots.length > 0 && !hasAutoSelected.current) {
+      hasAutoSelected.current = true;
+      onDateSelect(availableSlots[0]);
+    }
+  }, [isVisible, selectedDate, availableSlots, onDateSelect]);
 
   if (!postcode) {
     return (

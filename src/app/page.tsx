@@ -50,7 +50,8 @@ export default function Home() {
   // Memoized date selection handler to prevent infinite re-renders
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedServiceDate(date);
-  }, []);
+    if (hasValidated) clearFieldError('serviceDate');
+  }, [hasValidated]);
 
   // Check if form can be submitted (postal code and required fields)
   const canSubmitForm = () => {
@@ -250,6 +251,26 @@ export default function Home() {
   const handleCompleteBooking = async () => {
     console.log('✅ handleCompleteBooking called - preparing order data (NO order created yet)');
     console.log('📅 Selected service date:', selectedServiceDate);
+    
+    // Validate service date is selected
+    if (!selectedServiceDate) {
+      setErrors(prev => ({ ...prev, serviceDate: 'Please select a service date' }));
+      // Scroll to service date section
+      setTimeout(() => {
+        const serviceSection = document.querySelector('[data-service-scheduler]');
+        if (serviceSection) {
+          serviceSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+      return;
+    }
+    
+    // Clear any service date error if date is selected
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.serviceDate;
+      return newErrors;
+    });
     
     // Prevent double submissions
     if (isSubmittingBooking) {
@@ -2804,12 +2825,16 @@ export default function Home() {
                 </div>
 
                 {/* SERVICE SCHEDULING */}
-                <div className="border-b pb-6" style={{marginBottom: '32px'}}>
+                <div className="border-b pb-6" style={{marginBottom: '32px'}} data-service-scheduler>
                   <ServiceScheduler
                     postcode={address.postalCode}
                     selectedDate={selectedServiceDate}
                     onDateSelect={handleDateSelect}
+                    isVisible={showUpsells}
                   />
+                  {errors.serviceDate && (
+                    <div className="mt-2 text-red-600 text-sm">{errors.serviceDate}</div>
+                  )}
                 </div>
 
                 {/* SPECIAL INSTRUCTIONS */}
