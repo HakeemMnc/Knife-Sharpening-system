@@ -42,6 +42,8 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
   const [areaFilter, setAreaFilter] = useState('all');
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -50,6 +52,16 @@ export default function AdminDashboard() {
     const interval = setInterval(fetchOrders, 30000);
     
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    handleResize(); // Check initial size
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchOrders = async () => {
@@ -350,6 +362,108 @@ export default function AdminDashboard() {
     return filterOrders(orders).length;
   };
 
+  const MobileOrderCard = ({ order }: { order: Order }) => (
+    <div className={`p-4 bg-white border rounded-lg ${
+      selectedOrders.has(order.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+    }`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start space-x-3">
+          <input
+            type="checkbox"
+            checked={selectedOrders.has(order.id)}
+            onChange={() => toggleOrderSelection(order.id)}
+            className="mt-1 rounded border-gray-300 touch-manipulation"
+          />
+          <div>
+            <h3 className="font-medium text-gray-900">
+              {order.first_name} {order.last_name}
+            </h3>
+            <p className="text-sm text-gray-500">#{order.id}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="font-medium text-gray-900">${order.total_amount.toFixed(2)}</p>
+          <p className="text-xs text-gray-500">{order.total_items} items</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            order.status === 'paid' ? 'bg-green-100 text-green-800' :
+            order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
+            order.status === 'sharpening' ? 'bg-purple-100 text-purple-800' :
+            order.status === 'ready' ? 'bg-indigo-100 text-indigo-800' :
+            order.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {order.status.replace('_', ' ')}
+          </span>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            order.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+            order.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {order.payment_status}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600 truncate flex-1">
+            {order.street_address || order.pickup_address}
+          </span>
+          <button
+            onClick={() => openGoogleMaps(getFullAddress(order))}
+            className="ml-2 p-1 text-blue-500 hover:text-blue-700 touch-manipulation"
+            title="Navigate"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => handleCallCustomer(order.phone, `${order.first_name} ${order.last_name}`)}
+              className="p-2 text-green-500 hover:text-green-700 bg-green-50 rounded-lg touch-manipulation"
+              title="Call"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => handleSMSCustomer(order.phone, `${order.first_name} ${order.last_name}`, order.id)}
+              className="p-2 text-blue-500 hover:text-blue-700 bg-blue-50 rounded-lg touch-manipulation"
+              title="SMS"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
+          </div>
+          <select
+            value={order.status}
+            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+            className="text-xs border border-gray-300 rounded-lg px-2 py-1 touch-manipulation"
+          >
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="picked_up">Picked Up</option>
+            <option value="sharpening">Sharpening</option>
+            <option value="ready">Ready</option>
+            <option value="delivered">Delivered</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -367,28 +481,49 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-3xl font-bold mb-6">Northern Rivers Knife Sharpening - Admin Dashboard</h1>
+        <div className="bg-white rounded-lg shadow-lg p-3 md:p-6">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              {isMobileView ? 'NRKS Admin' : 'Northern Rivers Knife Sharpening - Admin Dashboard'}
+            </h1>
+            {isMobileView && (
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-2 bg-blue-600 text-white rounded-lg"
+                title="Toggle filters"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+                </svg>
+              </button>
+            )}
+          </div>
           
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">
-              Orders ({getFilteredOrdersCount()} of {orders.length})
-            </h2>
-            <button 
-              onClick={fetchOrders}
-              disabled={refreshing}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <p className="text-sm text-gray-500 mt-1">Auto-refreshes every 30 seconds</p>
+          <div className="mb-4 md:mb-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg md:text-xl font-semibold">
+                Orders ({getFilteredOrdersCount()}{!isMobileView && ` of ${orders.length}`})
+              </h2>
+              <button 
+                onClick={fetchOrders}
+                disabled={refreshing}
+                className="bg-blue-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+              >
+                {refreshing ? (isMobileView ? '⟳' : 'Refreshing...') : (isMobileView ? '⟳' : 'Refresh')}
+              </button>
+            </div>
+            {!isMobileView && (
+              <p className="text-sm text-gray-500 mt-1">Auto-refreshes every 30 seconds</p>
+            )}
           </div>
 
           {/* Search and Filters */}
-          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className={`mb-4 md:mb-6 p-3 md:p-4 bg-gray-50 border border-gray-200 rounded-lg ${
+            isMobileView && !showMobileFilters ? 'hidden' : ''
+          }`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
               {/* Search Bar */}
               <div className="lg:col-span-2">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -533,54 +668,54 @@ export default function AdminDashboard() {
           </div>
 
           {selectedOrders.size > 0 && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center space-x-2">
+            <div className="mb-4 md:mb-6 p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0 md:gap-4">
+                <div className="flex items-center justify-between md:justify-start md:space-x-2">
                   <span className="text-sm font-medium text-blue-900">
-                    {selectedOrders.size} orders selected
+                    {selectedOrders.size} selected
                   </span>
                   <button
                     onClick={() => setSelectedOrders(new Set())}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
                   >
-                    Clear selection
+                    Clear
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
                   <button
                     onClick={() => bulkUpdateOrderStatus('picked_up')}
                     disabled={bulkUpdating}
-                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                    className="px-3 py-2 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 touch-manipulation"
                   >
-                    {bulkUpdating ? 'Updating...' : 'Mark as Picked Up'}
+                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Picked Up' : 'Mark as Picked Up'}
                   </button>
                   <button
                     onClick={() => bulkUpdateOrderStatus('sharpening')}
                     disabled={bulkUpdating}
-                    className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 disabled:opacity-50"
+                    className="px-3 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 disabled:opacity-50 touch-manipulation"
                   >
-                    {bulkUpdating ? 'Updating...' : 'Mark as Sharpening'}
+                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Sharpening' : 'Mark as Sharpening'}
                   </button>
                   <button
                     onClick={() => bulkUpdateOrderStatus('ready')}
                     disabled={bulkUpdating}
-                    className="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 disabled:opacity-50"
+                    className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 disabled:opacity-50 touch-manipulation"
                   >
-                    {bulkUpdating ? 'Updating...' : 'Mark as Ready'}
+                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Ready' : 'Mark as Ready'}
                   </button>
                   <button
                     onClick={() => bulkUpdateOrderStatus('delivered')}
                     disabled={bulkUpdating}
-                    className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 disabled:opacity-50"
+                    className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 disabled:opacity-50 touch-manipulation"
                   >
-                    {bulkUpdating ? 'Updating...' : 'Mark as Delivered'}
+                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Delivered' : 'Mark as Delivered'}
                   </button>
                   <button
                     onClick={() => bulkUpdateOrderStatus('completed')}
                     disabled={bulkUpdating}
-                    className="px-3 py-1 bg-gray-800 text-white text-xs rounded hover:bg-gray-900 disabled:opacity-50"
+                    className="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-900 disabled:opacity-50 touch-manipulation col-span-2 md:col-span-1"
                   >
-                    {bulkUpdating ? 'Updating...' : 'Mark as Completed'}
+                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Completed' : 'Mark as Completed'}
                   </button>
                 </div>
               </div>
@@ -610,46 +745,52 @@ export default function AdminDashboard() {
               </button>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {groupOrdersByDay().map((dayGroup) => (
                 <div key={dayGroup.dayName} className={`bg-white border rounded-lg shadow-sm ${
                   dayGroup.isToday ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
                 }`}>
                   <div 
-                    className={`px-6 py-4 border-b border-gray-200 cursor-pointer ${
+                    className={`px-3 md:px-6 py-3 md:py-4 border-b border-gray-200 cursor-pointer ${
                       dayGroup.isToday ? 'bg-blue-50' : 'bg-gray-50'
                     }`}
                     onClick={() => toggleDay(dayGroup.dayName)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <h3 className={`text-lg font-semibold ${
-                          dayGroup.isToday ? 'text-blue-900' : 'text-gray-900'
-                        }`}>
-                          {dayGroup.dayName}
-                        </h3>
-                        {dayGroup.isToday && (
-                          <span className="bg-blue-500 text-white text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            TODAY
+                      <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <h3 className={`text-base md:text-lg font-semibold ${
+                            dayGroup.isToday ? 'text-blue-900' : 'text-gray-900'
+                          }`}>
+                            {dayGroup.dayName}
+                          </h3>
+                          {dayGroup.isToday && (
+                            <span className="bg-blue-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                              TODAY
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm">
+                          {!isMobileView && (
+                            <span className="text-gray-500">
+                              {new Date(dayGroup.date).toLocaleDateString()}
+                            </span>
+                          )}
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            dayGroup.orders.length > 0 
+                              ? dayGroup.isToday 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {dayGroup.orders.length} orders
                           </span>
-                        )}
-                        <span className="text-sm text-gray-500">
-                          {new Date(dayGroup.date).toLocaleDateString()}
-                        </span>
-                        <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
-                          dayGroup.orders.length > 0 
-                            ? dayGroup.isToday 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {dayGroup.orders.length} orders
-                        </span>
-                        {getSelectedOrdersForDay(dayGroup) > 0 && (
-                          <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            {getSelectedOrdersForDay(dayGroup)} selected
-                          </span>
-                        )}
+                          {getSelectedOrdersForDay(dayGroup) > 0 && (
+                            <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                              {getSelectedOrdersForDay(dayGroup)} selected
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         {dayGroup.orders.length > 0 && (
@@ -658,9 +799,12 @@ export default function AdminDashboard() {
                               e.stopPropagation();
                               selectAllOrdersForDay(dayGroup);
                             }}
-                            className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                            className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded touch-manipulation"
                           >
-                            {dayGroup.orders.every(order => selectedOrders.has(order.id)) ? 'Deselect All' : 'Select All'}
+                            {dayGroup.orders.every(order => selectedOrders.has(order.id)) 
+                              ? (isMobileView ? 'Clear' : 'Deselect All') 
+                              : (isMobileView ? 'All' : 'Select All')
+                            }
                           </button>
                         )}
                         <svg 
@@ -678,195 +822,205 @@ export default function AdminDashboard() {
                   </div>
 
                   {expandedDays.has(dayGroup.dayName) && (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="bg-gray-50">
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              <input
-                                type="checkbox"
-                                checked={dayGroup.orders.length > 0 && dayGroup.orders.every(order => selectedOrders.has(order.id))}
-                                onChange={() => selectAllOrdersForDay(dayGroup)}
-                                className="rounded border-gray-300"
-                              />
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {dayGroup.orders.length === 0 ? (
-                            <tr>
-                              <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
-                                No orders scheduled for {dayGroup.dayName}
-                              </td>
-                            </tr>
-                          ) : (
-                            dayGroup.orders.map((order) => (
-                              <tr key={order.id} className={`hover:bg-gray-50 ${selectedOrders.has(order.id) ? 'bg-blue-50' : ''}`}>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedOrders.has(order.id)}
-                                    onChange={() => toggleOrderSelection(order.id)}
-                                    className="rounded border-gray-300"
-                                  />
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  #{order.id}
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {order.first_name} {order.last_name}
-                                  </div>
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-sm text-gray-500">{order.email}</span>
-                                    <button
-                                      onClick={() => copyToClipboard(order.email, 'Email')}
-                                      className="text-gray-400 hover:text-gray-600"
-                                      title="Copy email"
-                                    >
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                      </svg>
-                                    </button>
-                                    <a
-                                      href={`mailto:${order.email}?subject=Northern Rivers Knife Sharpening - Order #${order.id}`}
-                                      className="text-blue-500 hover:text-blue-700"
-                                      title="Send email"
-                                    >
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                      </svg>
-                                    </a>
-                                  </div>
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-sm text-gray-500">{order.phone}</span>
-                                    <button
-                                      onClick={() => copyToClipboard(order.phone, 'Phone number')}
-                                      className="text-gray-400 hover:text-gray-600"
-                                      title="Copy phone number"
-                                    >
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      onClick={() => handleCallCustomer(order.phone, `${order.first_name} ${order.last_name}`)}
-                                      className="text-green-500 hover:text-green-700"
-                                      title="Call customer"
-                                    >
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      onClick={() => handleSMSCustomer(order.phone, `${order.first_name} ${order.last_name}`, order.id)}
-                                      className="text-blue-500 hover:text-blue-700"
-                                      title="Send SMS"
-                                    >
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs">
-                                  <div className="flex items-start space-x-2">
-                                    <div className="flex-1">
-                                      <div className="truncate">
-                                        {order.street_address || order.pickup_address}
+                    <div className="p-3 md:p-0">
+                      {dayGroup.orders.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          No orders scheduled for {dayGroup.dayName}
+                        </div>
+                      ) : (
+                        <>
+                          {/* Mobile Card View */}
+                          <div className="md:hidden space-y-3">
+                            {dayGroup.orders.map((order) => (
+                              <MobileOrderCard key={order.id} order={order} />
+                            ))}
+                          </div>
+                          
+                          {/* Desktop Table View */}
+                          <div className="hidden md:block overflow-x-auto">
+                            <table className="min-w-full">
+                              <thead>
+                                <tr className="bg-gray-50">
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <input
+                                      type="checkbox"
+                                      checked={dayGroup.orders.length > 0 && dayGroup.orders.every(order => selectedOrders.has(order.id))}
+                                      onChange={() => selectAllOrdersForDay(dayGroup)}
+                                      className="rounded border-gray-300"
+                                    />
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {dayGroup.orders.map((order) => (
+                                  <tr key={order.id} className={`hover:bg-gray-50 ${selectedOrders.has(order.id) ? 'bg-blue-50' : ''}`}>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedOrders.has(order.id)}
+                                        onChange={() => toggleOrderSelection(order.id)}
+                                        className="rounded border-gray-300"
+                                      />
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                      #{order.id}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      <div className="text-sm font-medium text-gray-900">
+                                        {order.first_name} {order.last_name}
                                       </div>
-                                      {order.suburb && (
-                                        <div className="text-xs text-gray-500">
-                                          {order.suburb} {order.postal_code}
+                                      <div className="flex items-center space-x-2 mt-1">
+                                        <span className="text-sm text-gray-500">{order.email}</span>
+                                        <button
+                                          onClick={() => copyToClipboard(order.email, 'Email')}
+                                          className="text-gray-400 hover:text-gray-600"
+                                          title="Copy email"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                        </button>
+                                        <a
+                                          href={`mailto:${order.email}?subject=Northern Rivers Knife Sharpening - Order #${order.id}`}
+                                          className="text-blue-500 hover:text-blue-700"
+                                          title="Send email"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                          </svg>
+                                        </a>
+                                      </div>
+                                      <div className="flex items-center space-x-2 mt-1">
+                                        <span className="text-sm text-gray-500">{order.phone}</span>
+                                        <button
+                                          onClick={() => copyToClipboard(order.phone, 'Phone number')}
+                                          className="text-gray-400 hover:text-gray-600"
+                                          title="Copy phone number"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => handleCallCustomer(order.phone, `${order.first_name} ${order.last_name}`)}
+                                          className="text-green-500 hover:text-green-700"
+                                          title="Call customer"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => handleSMSCustomer(order.phone, `${order.first_name} ${order.last_name}`, order.id)}
+                                          className="text-blue-500 hover:text-blue-700"
+                                          title="Send SMS"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs">
+                                      <div className="flex items-start space-x-2">
+                                        <div className="flex-1">
+                                          <div className="truncate">
+                                            {order.street_address || order.pickup_address}
+                                          </div>
+                                          {order.suburb && (
+                                            <div className="text-xs text-gray-500">
+                                              {order.suburb} {order.postal_code}
+                                            </div>
+                                          )}
                                         </div>
-                                      )}
-                                    </div>
-                                    <div className="flex flex-col space-y-1">
-                                      <button
-                                        onClick={() => openGoogleMaps(getFullAddress(order))}
-                                        className="text-blue-500 hover:text-blue-700"
-                                        title="Open in Google Maps"
+                                        <div className="flex flex-col space-y-1">
+                                          <button
+                                            onClick={() => openGoogleMaps(getFullAddress(order))}
+                                            className="text-blue-500 hover:text-blue-700"
+                                            title="Open in Google Maps"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            onClick={() => copyToClipboard(getFullAddress(order), 'Address')}
+                                            className="text-gray-400 hover:text-gray-600"
+                                            title="Copy address"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                                        {getRouteInfo(order)}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {order.total_items} items
+                                      <div className="text-xs text-gray-500">{order.service_level}</div>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                      ${order.total_amount.toFixed(2)}
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                        order.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                        order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
+                                        order.status === 'sharpening' ? 'bg-purple-100 text-purple-800' :
+                                        order.status === 'ready' ? 'bg-indigo-100 text-indigo-800' :
+                                        order.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {order.status.replace('_', ' ')}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                        order.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                                        order.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {order.payment_status}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                      <select
+                                        value={order.status}
+                                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                        className="border border-gray-300 rounded px-2 py-1 text-xs"
                                       >
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                      </button>
-                                      <button
-                                        onClick={() => copyToClipboard(getFullAddress(order), 'Address')}
-                                        className="text-gray-400 hover:text-gray-600"
-                                        title="Copy address"
-                                      >
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                                    {getRouteInfo(order)}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {order.total_items} items
-                                  <div className="text-xs text-gray-500">{order.service_level}</div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  ${order.total_amount.toFixed(2)}
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                    order.status === 'paid' ? 'bg-green-100 text-green-800' :
-                                    order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
-                                    order.status === 'sharpening' ? 'bg-purple-100 text-purple-800' :
-                                    order.status === 'ready' ? 'bg-indigo-100 text-indigo-800' :
-                                    order.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {order.status.replace('_', ' ')}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    order.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                                    order.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {order.payment_status}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                                  <select
-                                    value={order.status}
-                                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                    className="border border-gray-300 rounded px-2 py-1 text-xs"
-                                  >
-                                    <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="picked_up">Picked Up</option>
-                                    <option value="sharpening">Sharpening</option>
-                                    <option value="ready">Ready</option>
-                                    <option value="delivered">Delivered</option>
-                                    <option value="completed">Completed</option>
-                                  </select>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
+                                        <option value="pending">Pending</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="picked_up">Picked Up</option>
+                                        <option value="sharpening">Sharpening</option>
+                                        <option value="ready">Ready</option>
+                                        <option value="delivered">Delivered</option>
+                                        <option value="completed">Completed</option>
+                                      </select>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
