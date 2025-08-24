@@ -38,6 +38,10 @@ export default function AdminDashboard() {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
+  const [areaFilter, setAreaFilter] = useState('all');
 
   useEffect(() => {
     fetchOrders();
@@ -115,9 +119,10 @@ export default function AdminDashboard() {
 
   const groupOrdersByDay = (): DayGroup[] => {
     const weekDays = getWeekDays();
+    const filteredOrders = filterOrders(orders);
     
-    // Group orders by their pickup date
-    orders.forEach(order => {
+    // Group filtered orders by their pickup date
+    filteredOrders.forEach(order => {
       const orderDate = new Date(order.pickup_date).toISOString().split('T')[0];
       const dayGroup = weekDays.find(day => day.date === orderDate);
       
@@ -287,6 +292,64 @@ export default function AdminDashboard() {
     return `${address}${suburb}${state}${postcode}`;
   };
 
+  const filterOrders = (orders: Order[]): Order[] => {
+    return orders.filter(order => {
+      // Search query filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          order.first_name.toLowerCase().includes(query) ||
+          order.last_name.toLowerCase().includes(query) ||
+          order.email.toLowerCase().includes(query) ||
+          order.phone.includes(query) ||
+          order.id.toString().includes(query) ||
+          getFullAddress(order).toLowerCase().includes(query) ||
+          getRouteInfo(order).toLowerCase().includes(query);
+        
+        if (!matchesSearch) return false;
+      }
+
+      // Status filter
+      if (statusFilter !== 'all' && order.status !== statusFilter) {
+        return false;
+      }
+
+      // Payment status filter
+      if (paymentStatusFilter !== 'all' && order.payment_status !== paymentStatusFilter) {
+        return false;
+      }
+
+      // Area filter
+      if (areaFilter !== 'all') {
+        const orderArea = getRouteInfo(order);
+        if (orderArea !== areaFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  const getUniqueAreas = (): string[] => {
+    const areas = new Set<string>();
+    orders.forEach(order => {
+      areas.add(getRouteInfo(order));
+    });
+    return Array.from(areas).filter(area => area !== 'Unknown Area').sort();
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setPaymentStatusFilter('all');
+    setAreaFilter('all');
+  };
+
+  const getFilteredOrdersCount = (): number => {
+    return filterOrders(orders).length;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -310,7 +373,9 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold mb-6">Northern Rivers Knife Sharpening - Admin Dashboard</h1>
           
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Orders ({orders.length})</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              Orders ({getFilteredOrdersCount()} of {orders.length})
+            </h2>
             <button 
               onClick={fetchOrders}
               disabled={refreshing}
@@ -319,6 +384,152 @@ export default function AdminDashboard() {
               {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
             <p className="text-sm text-gray-500 mt-1">Auto-refreshes every 30 seconds</p>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Search Bar */}
+              <div className="lg:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Search Orders
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, phone, order ID, or address..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="picked_up">Picked Up</option>
+                  <option value="sharpening">Sharpening</option>
+                  <option value="ready">Ready</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              {/* Payment Status Filter */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Payment
+                </label>
+                <select
+                  value={paymentStatusFilter}
+                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Payments</option>
+                  <option value="unpaid">Unpaid</option>
+                  <option value="paid">Paid</option>
+                  <option value="failed">Failed</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </div>
+
+              {/* Area Filter */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Area
+                </label>
+                <select
+                  value={areaFilter}
+                  onChange={(e) => setAreaFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Areas</option>
+                  {getUniqueAreas().map(area => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Active Filters Display & Clear Button */}
+            {(searchQuery || statusFilter !== 'all' || paymentStatusFilter !== 'all' || areaFilter !== 'all') && (
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm text-gray-600">Active filters:</span>
+                  {searchQuery && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                      Search: "{searchQuery}"
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="ml-1 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {statusFilter !== 'all' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                      Status: {statusFilter.replace('_', ' ')}
+                      <button
+                        onClick={() => setStatusFilter('all')}
+                        className="ml-1 text-green-600 hover:text-green-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {paymentStatusFilter !== 'all' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                      Payment: {paymentStatusFilter}
+                      <button
+                        onClick={() => setPaymentStatusFilter('all')}
+                        className="ml-1 text-purple-600 hover:text-purple-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {areaFilter !== 'all' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
+                      Area: {areaFilter}
+                      <button
+                        onClick={() => setAreaFilter('all')}
+                        className="ml-1 text-orange-600 hover:text-orange-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={clearAllFilters}
+                  className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
           </div>
 
           {selectedOrders.size > 0 && (
@@ -379,6 +590,24 @@ export default function AdminDashboard() {
           {orders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No orders found
+            </div>
+          ) : getFilteredOrdersCount() === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="mb-4">
+                <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47.94-6.02 2.47M3 17.5l9-9 9 9" />
+                </svg>
+              </div>
+              <p className="text-lg font-medium text-gray-900 mb-2">No orders match your filters</p>
+              <p className="text-sm text-gray-500 mb-4">
+                Try adjusting your search criteria or clearing some filters
+              </p>
+              <button
+                onClick={clearAllFilters}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Clear All Filters
+              </button>
             </div>
           ) : (
             <div className="space-y-6">
