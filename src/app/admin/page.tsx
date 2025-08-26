@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [optimizedRoutes, setOptimizedRoutes] = useState<{[key: string]: Order[]}>({});
   const [routeOptimizing, setRouteOptimizing] = useState<{[key: string]: boolean}>({});
+  const [updatingOrderStatus, setUpdatingOrderStatus] = useState<{[key: number]: boolean}>({});
   const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
   const [modalInstructions, setModalInstructions] = useState<{orderId: number, instructions: string, customerName: string} | null>(null);
 
@@ -84,18 +85,46 @@ export default function AdminDashboard() {
   const fetchOrders = async () => {
     try {
       setRefreshing(true);
+      // Clear previous errors when retrying
+      if (error) setError('');
+      
       const response = await fetch('/api/orders');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const result = await response.json();
 
-      if (result.success) {
-        setOrders(result.orders);
-        console.log(`Fetched ${result.orders.length} orders`);
+      if (result.success && Array.isArray(result.orders)) {
+        // Validate and sanitize all orders
+        const validatedOrders = result.orders
+          .map(validateAndSanitizeOrder)
+          .filter((order): order is Order => order !== null);
+        
+        const skippedCount = result.orders.length - validatedOrders.length;
+        if (skippedCount > 0) {
+          console.warn(`Skipped ${skippedCount} invalid orders out of ${result.orders.length}`);
+        }
+        
+        setOrders(validatedOrders);
+        console.log(`Fetched ${validatedOrders.length} valid orders (${skippedCount} skipped)`);
+        
+        // Clear any previous errors on successful fetch
+        if (error) setError('');
       } else {
-        setError(result.error || 'Failed to fetch orders');
+        setError(result.error || 'Invalid response format from server');
       }
     } catch (error) {
-      setError('Network error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown network error';
+      setError(`Failed to load orders: ${errorMessage}`);
       console.error('Error fetching orders:', error);
+      
+      // Keep existing orders if this was a refresh (don't clear the UI)
+      // Only clear orders if this was the initial load
+      if (orders.length === 0) {
+        setOrders([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,6 +132,9 @@ export default function AdminDashboard() {
   };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
+    // Set loading state for this specific order
+    setUpdatingOrderStatus(prev => ({ ...prev, [orderId]: true }));
+    
     try {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: 'PATCH',
@@ -112,19 +144,59 @@ export default function AdminDashboard() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (response.ok) {
-        // Refresh orders
-        fetchOrders();
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to update order`);
       }
+
+      // Refresh orders on success
+      fetchOrders();
     } catch (error) {
       console.error('Error updating order:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to update order #${orderId}: ${errorMessage}`);
+    } finally {
+      // Clear loading state for this order
+      setUpdatingOrderStatus(prev => {
+        const newState = { ...prev };
+        delete newState[orderId];
+        return newState;
+      });
     }
   };
 
   const getWeekDays = (): DayGroup[] => {
+    // Use local timezone consistently for business operations
     const today = new Date();
     const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+    
+    // Handle Sunday edge case: getDay() returns 0 for Sunday, but we want Monday-based weeks
+    // For Sunday (0), we want to go back 6 days to get the previous Monday
+    // For Monday (1), we want to stay on the same day (go back 0 days)
+    // For Tuesday (2), we want to go back 1 day, etc.
+    const dayOfWeek = today.getDay();
+    const daysToGoBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    currentWeekStart.setDate(today.getDate() - daysToGoBack);
+    
+    // Log for debugging week boundary calculations
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Week calculation:', {
+        today: today.toDateString(),
+        dayOfWeek,
+        daysToGoBack,
+        currentWeekStart: currentWeekStart.toDateString()
+      });
+    }
+    
+    // Helper function to get YYYY-MM-DD in local timezone (not UTC)
+    const getLocalDateString = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    const todayDateString = getLocalDateString(today);
     
     const weekDays = [];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -134,11 +206,19 @@ export default function AdminDashboard() {
       const date = new Date(currentWeekStart);
       date.setDate(currentWeekStart.getDate() + i);
       
+      // Validate that the date was created successfully
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date generated for day', i, 'from base date', currentWeekStart);
+        continue; // Skip invalid dates
+      }
+      
+      const dateString = getLocalDateString(date);
+      
       const dayGroup: DayGroup = {
         dayName: dayNames[i % 7],
-        date: date.toISOString().split('T')[0], // YYYY-MM-DD format
+        date: dateString,
         orders: [],
-        isToday: date.toDateString() === today.toDateString()
+        isToday: dateString === todayDateString
       };
       
       weekDays.push(dayGroup);
@@ -147,14 +227,93 @@ export default function AdminDashboard() {
     return weekDays;
   };
 
+  // Helper function to validate and sanitize order data
+  const validateAndSanitizeOrder = (order: any): Order | null => {
+    try {
+      // Check required fields
+      if (!order || typeof order.id !== 'number' || order.id <= 0) {
+        console.warn('Invalid order: missing or invalid ID', order);
+        return null;
+      }
+
+      // Sanitize strings and provide defaults
+      const sanitizeString = (value: any, fallback: string = 'N/A'): string => {
+        if (typeof value !== 'string') return fallback;
+        return value.trim() || fallback;
+      };
+
+      const sanitizeOptionalString = (value: any): string | undefined => {
+        if (typeof value !== 'string') return undefined;
+        const trimmed = value.trim();
+        return trimmed === '' ? undefined : trimmed;
+      };
+
+      const sanitizeNumber = (value: any, fallback: number = 0): number => {
+        const num = Number(value);
+        return isNaN(num) || num < 0 ? fallback : num;
+      };
+
+      return {
+        id: order.id,
+        first_name: sanitizeString(order.first_name, 'Unknown'),
+        last_name: sanitizeString(order.last_name, 'Customer'),
+        email: sanitizeString(order.email, 'no-email@example.com'),
+        phone: sanitizeString(order.phone, 'No phone'),
+        pickup_address: sanitizeString(order.pickup_address, 'No address provided'),
+        street_address: sanitizeOptionalString(order.street_address),
+        suburb: sanitizeOptionalString(order.suburb),
+        state: sanitizeOptionalString(order.state),
+        postal_code: sanitizeOptionalString(order.postal_code),
+        special_instructions: sanitizeOptionalString(order.special_instructions),
+        total_items: sanitizeNumber(order.total_items, 1),
+        service_level: sanitizeString(order.service_level, 'standard'),
+        total_amount: sanitizeNumber(order.total_amount, 0),
+        service_date: sanitizeString(order.service_date, new Date().toISOString().split('T')[0]),
+        pickup_date: sanitizeString(order.pickup_date, new Date().toISOString().split('T')[0]),
+        status: sanitizeString(order.status, 'pending'),
+        payment_status: sanitizeString(order.payment_status, 'unpaid'),
+        created_at: sanitizeString(order.created_at, new Date().toISOString())
+      };
+    } catch (error) {
+      console.error('Error validating order:', order, error);
+      return null;
+    }
+  };
+
+  // Helper function to safely convert date to local YYYY-MM-DD format
+  const safeGetLocalDateString = (dateInput: string | Date | null | undefined): string | null => {
+    if (!dateInput) return null;
+    
+    try {
+      const date = new Date(dateInput);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return null;
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.warn('Invalid date format:', dateInput, error);
+      return null;
+    }
+  };
+
   const groupOrdersByDay = (): DayGroup[] => {
     const weekDays = getWeekDays();
     const filteredOrders = filterOrders(orders);
     
     // Group filtered orders by their service date
     filteredOrders.forEach(order => {
-      const orderDate = new Date(order.service_date).toISOString().split('T')[0];
-      const dayGroup = weekDays.find(day => day.date === orderDate);
+      const orderDateString = safeGetLocalDateString(order.service_date);
+      
+      // Skip orders with invalid dates
+      if (!orderDateString) {
+        console.warn('Skipping order with invalid service_date:', order.id, order.service_date);
+        return;
+      }
+      
+      const dayGroup = weekDays.find(day => day.date === orderDateString);
       
       // Only add orders to non-Sunday days (customers can't book on Sunday)
       if (dayGroup && dayGroup.dayName !== 'Sunday') {
@@ -456,9 +615,15 @@ export default function AdminDashboard() {
   };
 
   const MobileOrderCard = ({ order }: { order: Order }) => (
-    <div className={`p-4 bg-white border rounded-lg ${
+    <div className={`relative p-4 bg-white border rounded-lg ${
       selectedOrders.has(order.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-    }`}>
+    } ${updatingOrderStatus[order.id] ? 'opacity-75' : ''}`}>
+      {/* Loading overlay */}
+      {updatingOrderStatus[order.id] && (
+        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg flex items-center justify-center z-10">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        </div>
+      )}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start space-x-3">
           <input
@@ -582,7 +747,10 @@ export default function AdminDashboard() {
           <select
             value={order.status}
             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-2 py-1 touch-manipulation"
+            disabled={updatingOrderStatus[order.id]}
+            className={`text-xs border border-gray-300 rounded-lg px-2 py-1 touch-manipulation ${
+              updatingOrderStatus[order.id] ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
@@ -710,14 +878,16 @@ export default function AdminDashboard() {
   };
 
   const optimizeRouteForDay = async (dayGroup: DayGroup) => {
+    // Early validation before setting state
     if (dayGroup.orders.length === 0) {
       alert('No orders to optimize for this day');
       return;
     }
 
-    try {
-      setRouteOptimizing(prev => ({ ...prev, [dayGroup.dayName]: true }));
+    // Set optimizing state
+    setRouteOptimizing(prev => ({ ...prev, [dayGroup.dayName]: true }));
 
+    try {
       // Get current location
       const currentLocation = await getCurrentLocation();
 
@@ -733,12 +903,15 @@ export default function AdminDashboard() {
       }
 
       if (destinations.length === 0) {
-        alert('Could not geocode any addresses');
-        return;
+        throw new Error('Could not geocode any addresses. Please check the addresses and try again.');
       }
 
       // Optimize the route
       const optimizedOrders = optimizeRoute(currentLocation, destinations);
+      
+      if (optimizedOrders.length === 0) {
+        throw new Error('Route optimization failed to return any results.');
+      }
       
       // Store optimized route
       setOptimizedRoutes(prev => ({ ...prev, [dayGroup.dayName]: optimizedOrders }));
@@ -747,12 +920,30 @@ export default function AdminDashboard() {
 
     } catch (error) {
       console.error('Route optimization error:', error);
+      
+      let errorMessage = 'Error optimizing route. Please try again.';
+      
       if (error instanceof GeolocationPositionError) {
-        alert('Could not get your location. Please enable location services and try again.');
-      } else {
-        alert('Error optimizing route. Please try again.');
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location services and try again.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location unavailable. Please check your GPS and try again.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMessage = 'Could not get your location. Please enable location services and try again.';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+      
+      alert(`Route Optimization Failed: ${errorMessage}`);
     } finally {
+      // Always clear the optimizing state, even if there were early returns or errors
       setRouteOptimizing(prev => ({ ...prev, [dayGroup.dayName]: false }));
     }
   };
@@ -795,15 +986,40 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading orders...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-xl font-medium text-gray-900 mb-2">Loading Admin Dashboard</div>
+          <div className="text-sm text-gray-500">Fetching orders and preparing your 2-week view...</div>
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  // Show error as a banner instead of blocking the entire UI (if we have existing orders)
+  if (error && orders.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-red-600">Error: {error}</div>
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-red-600 text-lg font-medium mb-2">Unable to Load Orders</div>
+            <div className="text-gray-600 text-sm mb-4">{error}</div>
+            <div className="space-y-3">
+              <button 
+                onClick={fetchOrders}
+                disabled={refreshing}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {refreshing ? 'Retrying...' : 'Try Again'}
+              </button>
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+              >
+                Refresh Page
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -813,13 +1029,13 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-3 md:p-6">
           <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900 flex-1 mr-3">
               {isMobileView ? 'NRKS Admin' : 'Northern Rivers Knife Sharpening - Admin Dashboard'}
             </h1>
             {isMobileView && (
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="p-2 bg-blue-600 text-white rounded-lg"
+                className="p-2 bg-blue-600 text-white rounded-lg flex-shrink-0"
                 title="Toggle filters"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -828,6 +1044,42 @@ export default function AdminDashboard() {
               </button>
             )}
           </div>
+
+          {/* Error Banner - show if there's an error but we have existing orders */}
+          {error && orders.length > 0 && (
+            <div className="mb-4 md:mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-red-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h3 className="text-sm font-medium text-red-800">Sync Error</h3>
+                    <p className="text-sm text-red-700 mt-1">{error}</p>
+                    <p className="text-xs text-red-600 mt-1">Showing cached data. Some information may be outdated.</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={fetchOrders}
+                    disabled={refreshing}
+                    className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {refreshing ? 'Retrying...' : 'Retry'}
+                  </button>
+                  <button
+                    onClick={() => setError('')}
+                    className="text-red-500 hover:text-red-700"
+                    title="Dismiss"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="mb-4 md:mb-6">
             <div className="flex items-center justify-between">
@@ -1085,9 +1337,9 @@ export default function AdminDashboard() {
                 <div key={`${dayGroup.dayName}-${dayGroup.date}`}>
                   {/* Add divider before next week */}
                   {index === 7 && (
-                    <div className="flex items-center my-6">
+                    <div className="flex items-center my-4 md:my-6">
                       <div className="flex-grow border-t border-gray-300"></div>
-                      <span className="px-4 text-sm text-gray-500 font-medium">Next Week</span>
+                      <span className="px-2 md:px-4 text-xs md:text-sm text-gray-500 font-medium">Next Week</span>
                       <div className="flex-grow border-t border-gray-300"></div>
                     </div>
                   )}
@@ -1428,7 +1680,10 @@ export default function AdminDashboard() {
                                       <select
                                         value={order.status}
                                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                                        disabled={updatingOrderStatus[order.id]}
+                                        className={`border border-gray-300 rounded px-2 py-1 text-xs ${
+                                          updatingOrderStatus[order.id] ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                       >
                                         <option value="pending">Pending</option>
                                         <option value="paid">Paid</option>
