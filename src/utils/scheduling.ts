@@ -8,6 +8,7 @@ import { getRouteByPostcode, RouteArea } from '@/config/mobileRoutes';
 /**
  * Get the next available service slots for a given postcode
  * Returns the next 3 available service dates
+ * Implements 5pm cutoff rule: after 5pm, tomorrow's service is not available
  */
 export function getNextAvailableSlots(postcode: string): Date[] {
   const route = getRouteByPostcode(postcode);
@@ -16,21 +17,32 @@ export function getNextAvailableSlots(postcode: string): Date[] {
   }
 
   const slots: Date[] = [];
-  const today = new Date();
-  let currentDate = new Date(today);
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Determine starting point based on 5pm cutoff rule
+  let startDate = new Date(now);
+  if (currentHour >= 17) { // After 5pm
+    // Start checking from day after tomorrow
+    startDate.setDate(now.getDate() + 2);
+  } else {
+    // Before 5pm, start checking from tomorrow  
+    startDate.setDate(now.getDate() + 1);
+  }
   
   // Look ahead up to 4 weeks to find 3 available slots
   const maxDaysToCheck = 28;
   let daysChecked = 0;
   
   while (slots.length < 3 && daysChecked < maxDaysToCheck) {
-    currentDate.setDate(today.getDate() + daysChecked + 1); // Start from tomorrow
+    const checkDate = new Date(startDate);
+    checkDate.setDate(startDate.getDate() + daysChecked);
     
-    if (isServiceDay(postcode, currentDate)) {
+    if (isServiceDay(postcode, checkDate)) {
       // Check if there are spots remaining (mock data for now)
-      const spotsRemaining = getSpotsRemaining(currentDate);
+      const spotsRemaining = getSpotsRemaining(checkDate);
       if (spotsRemaining > 0) {
-        slots.push(new Date(currentDate));
+        slots.push(new Date(checkDate));
       }
     }
     
