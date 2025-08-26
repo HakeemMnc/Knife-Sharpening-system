@@ -2276,7 +2276,8 @@ export default function Home() {
                       fontWeight: 500,
                       marginBottom: '4px'
                     }}>
-                      Postcode <span style={{color: '#d64f24'}}>*</span>
+                      <span className="hidden sm:inline">Postcode</span>
+                      <span className="sm:hidden">Code</span> <span style={{color: '#d64f24'}}>*</span>
                     </label>
                     <input 
                       type="text" 
@@ -2494,59 +2495,67 @@ export default function Home() {
                 <div className="text-center mb-6" style={{
                   marginBottom: 'clamp(16px, 4vw, 24px)'
                 }}>
-                  <div className="flex flex-wrap justify-center gap-3" style={{
+                  <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3" style={{
                     gap: 'clamp(8px, 2vw, 12px)'
                   }}>
-                    <div style={{
-                      backgroundColor: 'rgba(248, 250, 252, 0.8)',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '20px',
-                      padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
-                      fontSize: 'clamp(0.8rem, 2.2vw, 0.9rem)',
-                      color: '#4a5568',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
+                    {/* First row on mobile */}
+                    <div className="flex justify-center gap-3" style={{
+                      gap: 'clamp(8px, 2vw, 12px)'
                     }}>
-                      <span style={{
-                        color: '#22c55e', 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-                      }}>✓</span>
-                      Expert Assessment
+                      <div style={{
+                        backgroundColor: 'rgba(248, 250, 252, 0.8)',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '20px',
+                        padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
+                        fontSize: 'clamp(0.8rem, 2.2vw, 0.9rem)',
+                        color: '#4a5568',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{
+                          color: '#22c55e', 
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}>✓</span>
+                        Expert Assessment
+                      </div>
+                      <div style={{
+                        backgroundColor: 'rgba(248, 250, 252, 0.8)',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '20px',
+                        padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
+                        fontSize: 'clamp(0.8rem, 2.2vw, 0.9rem)',
+                        color: '#4a5568',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{
+                          color: '#22c55e', 
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}>✓</span>
+                        Results Guaranteed
+                      </div>
                     </div>
-                    <div style={{
-                      backgroundColor: 'rgba(248, 250, 252, 0.8)',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '20px',
-                      padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
-                      fontSize: 'clamp(0.8rem, 2.2vw, 0.9rem)',
-                      color: '#4a5568',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}>
-                      <span style={{
-                        color: '#22c55e', 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-                      }}>✓</span>
-                      Results Guaranteed
-                    </div>
-                    <div style={{
-                      backgroundColor: 'rgba(248, 250, 252, 0.8)',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '20px',
-                      padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
-                      fontSize: 'clamp(0.8rem, 2.2vw, 0.9rem)',
-                      color: '#4a5568',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}>
-                      <span style={{
-                        color: '#22c55e', 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-                      }}>✓</span>
-                      On-site sharpening
+                    {/* Second row on mobile */}
+                    <div className="flex justify-center">
+                      <div style={{
+                        backgroundColor: 'rgba(248, 250, 252, 0.8)',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '20px',
+                        padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
+                        fontSize: 'clamp(0.8rem, 2.2vw, 0.9rem)',
+                        color: '#4a5568',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{
+                          color: '#22c55e', 
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}>✓</span>
+                        On-site sharpening
+                      </div>
                     </div>
                   </div>
                 </div>
