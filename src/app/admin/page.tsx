@@ -14,6 +14,7 @@ interface Order {
   suburb?: string;
   state?: string;
   postal_code?: string;
+  special_instructions?: string;
   total_items: number;
   service_level: string;
   total_amount: number;
@@ -47,6 +48,8 @@ export default function AdminDashboard() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [optimizedRoutes, setOptimizedRoutes] = useState<{[key: string]: Order[]}>({});
   const [routeOptimizing, setRouteOptimizing] = useState<{[key: string]: boolean}>({});
+  const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
+  const [modalInstructions, setModalInstructions] = useState<{orderId: number, instructions: string, customerName: string} | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -66,6 +69,17 @@ export default function AdminDashboard() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && modalInstructions) {
+        closeInstructionsModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [modalInstructions]);
 
   const fetchOrders = async () => {
     try {
@@ -409,6 +423,36 @@ export default function AdminDashboard() {
     return filterOrders(orders).length;
   };
 
+  const hasSpecialInstructions = (ordersList: Order[]): boolean => {
+    return ordersList.some(order => order.special_instructions && order.special_instructions.trim() !== '');
+  };
+
+  const toggleInstructionExpansion = (orderId: number) => {
+    const newExpanded = new Set(expandedInstructions);
+    if (newExpanded.has(orderId)) {
+      newExpanded.delete(orderId);
+    } else {
+      newExpanded.add(orderId);
+    }
+    setExpandedInstructions(newExpanded);
+  };
+
+  const shouldTruncateInstructions = (text: string): boolean => {
+    return text.length > 50; // Truncate if longer than 50 characters
+  };
+
+  const getTruncatedText = (text: string): string => {
+    return text.length > 50 ? text.substring(0, 47) + '...' : text;
+  };
+
+  const openInstructionsModal = (orderId: number, instructions: string, customerName: string) => {
+    setModalInstructions({ orderId, instructions, customerName });
+  };
+
+  const closeInstructionsModal = () => {
+    setModalInstructions(null);
+  };
+
   const MobileOrderCard = ({ order }: { order: Order }) => (
     <div className={`p-4 bg-white border rounded-lg ${
       selectedOrders.has(order.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
@@ -484,6 +528,33 @@ export default function AdminDashboard() {
             </svg>
           </button>
         </div>
+
+        {order.special_instructions && order.special_instructions.trim() !== '' && (
+          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-yellow-800">Special Instructions:</p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  {expandedInstructions.has(order.id) 
+                    ? order.special_instructions
+                    : getTruncatedText(order.special_instructions)
+                  }
+                </p>
+                {shouldTruncateInstructions(order.special_instructions) && (
+                  <button
+                    onClick={() => toggleInstructionExpansion(order.id)}
+                    className="text-yellow-600 hover:text-yellow-800 text-xs mt-1 underline font-medium touch-manipulation"
+                  >
+                    {expandedInstructions.has(order.id) ? 'Show less' : 'Show more'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -1145,6 +1216,9 @@ export default function AdminDashboard() {
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                  {hasSpecialInstructions(dayGroup.orders) && (
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Special Instructions</th>
+                                  )}
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
@@ -1269,6 +1343,31 @@ export default function AdminDashboard() {
                                         </div>
                                       </div>
                                     </td>
+                                    {hasSpecialInstructions(dayGroup.orders) && (
+                                      <td className="px-4 py-4 text-sm text-gray-900 max-w-xs">
+                                        {order.special_instructions && order.special_instructions.trim() !== '' ? (
+                                          <div>
+                                            <div className="truncate">
+                                              {getTruncatedText(order.special_instructions)}
+                                            </div>
+                                            {shouldTruncateInstructions(order.special_instructions) && (
+                                              <button
+                                                onClick={() => openInstructionsModal(
+                                                  order.id, 
+                                                  order.special_instructions, 
+                                                  `${order.first_name} ${order.last_name}`
+                                                )}
+                                                className="text-blue-500 hover:text-blue-700 text-xs mt-1 underline"
+                                              >
+                                                Read more
+                                              </button>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-400 italic">None</span>
+                                        )}
+                                      </td>
+                                    )}
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                                       <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
                                         {getRouteInfo(order)}
@@ -1332,6 +1431,54 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+
+        {/* Special Instructions Modal */}
+        {modalInstructions && (
+          <div 
+            className="fixed inset-0 backdrop-blur-sm bg-white/20 flex items-center justify-center z-50 p-4"
+            onClick={closeInstructionsModal}
+          >
+            <div 
+              className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-96 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Special Instructions</h3>
+                  <button
+                    onClick={closeInstructionsModal}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  Order #{modalInstructions.orderId} - {modalInstructions.customerName}
+                </p>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-60">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
+                    {modalInstructions.instructions}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                <button
+                  onClick={closeInstructionsModal}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
