@@ -127,14 +127,15 @@ export default function AdminDashboard() {
     currentWeekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
     
     const weekDays = [];
-    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
-    for (let i = 0; i < 6; i++) {
+    // Generate 2 weeks (14 days)
+    for (let i = 0; i < 14; i++) {
       const date = new Date(currentWeekStart);
       date.setDate(currentWeekStart.getDate() + i);
       
       const dayGroup: DayGroup = {
-        dayName: dayNames[i],
+        dayName: dayNames[i % 7],
         date: date.toISOString().split('T')[0], // YYYY-MM-DD format
         orders: [],
         isToday: date.toDateString() === today.toDateString()
@@ -155,7 +156,8 @@ export default function AdminDashboard() {
       const orderDate = new Date(order.service_date).toISOString().split('T')[0];
       const dayGroup = weekDays.find(day => day.date === orderDate);
       
-      if (dayGroup) {
+      // Only add orders to non-Sunday days (customers can't book on Sunday)
+      if (dayGroup && dayGroup.dayName !== 'Sunday') {
         dayGroup.orders.push(order);
       }
     });
@@ -1079,23 +1081,41 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4 md:space-y-6">
-              {groupOrdersByDay().map((dayGroup) => (
-                <div key={dayGroup.dayName} className={`bg-white border rounded-lg shadow-sm ${
-                  dayGroup.isToday ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
-                }`}>
+              {groupOrdersByDay().map((dayGroup, index) => (
+                <div key={`${dayGroup.dayName}-${dayGroup.date}`}>
+                  {/* Add divider before next week */}
+                  {index === 7 && (
+                    <div className="flex items-center my-6">
+                      <div className="flex-grow border-t border-gray-300"></div>
+                      <span className="px-4 text-sm text-gray-500 font-medium">Next Week</span>
+                      <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+                  )}
+                  
+                  <div className={`bg-white border rounded-lg shadow-sm ${
+                    dayGroup.isToday ? 'border-blue-500 ring-2 ring-blue-200' : 
+                    dayGroup.dayName === 'Sunday' ? 'border-gray-100 bg-gray-50' : 'border-gray-200'
+                  }`}>
                   <div 
-                    className={`px-3 md:px-6 py-3 md:py-4 border-b border-gray-200 cursor-pointer ${
-                      dayGroup.isToday ? 'bg-blue-50' : 'bg-gray-50'
+                    className={`px-3 md:px-6 py-3 md:py-4 border-b border-gray-200 ${
+                      dayGroup.dayName === 'Sunday' ? 'cursor-default' : 'cursor-pointer'
+                    } ${
+                      dayGroup.isToday ? 'bg-blue-50' : 
+                      dayGroup.dayName === 'Sunday' ? 'bg-gray-100' : 'bg-gray-50'
                     }`}
-                    onClick={() => toggleDay(dayGroup.dayName)}
+                    onClick={dayGroup.dayName === 'Sunday' ? undefined : () => toggleDay(dayGroup.dayName)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-3">
                         <div className="flex items-center space-x-2">
                           <h3 className={`text-base md:text-lg font-semibold ${
-                            dayGroup.isToday ? 'text-blue-900' : 'text-gray-900'
+                            dayGroup.isToday ? 'text-blue-900' : 
+                            dayGroup.dayName === 'Sunday' ? 'text-gray-400' : 'text-gray-900'
                           }`}>
                             {dayGroup.dayName}
+                            {dayGroup.dayName === 'Sunday' && (
+                              <span className="ml-2 text-xs font-normal text-gray-400">(Off Day)</span>
+                            )}
                           </h3>
                           {dayGroup.isToday && (
                             <span className="bg-blue-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
@@ -1126,7 +1146,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {dayGroup.orders.length > 0 && (
+                        {dayGroup.orders.length > 0 && dayGroup.dayName !== 'Sunday' && (
                           <>
                             <button
                               onClick={(e) => {
@@ -1171,21 +1191,23 @@ export default function AdminDashboard() {
                             )}
                           </>
                         )}
-                        <svg 
-                          className={`w-5 h-5 text-gray-400 transform transition-transform ${
-                            expandedDays.has(dayGroup.dayName) ? 'rotate-180' : ''
-                          }`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        {dayGroup.dayName !== 'Sunday' && (
+                          <svg 
+                            className={`w-5 h-5 text-gray-400 transform transition-transform ${
+                              expandedDays.has(dayGroup.dayName) ? 'rotate-180' : ''
+                            }`}
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {expandedDays.has(dayGroup.dayName) && (
+                  {expandedDays.has(dayGroup.dayName) && dayGroup.dayName !== 'Sunday' && (
                     <div className="p-3 md:p-0">
                       {dayGroup.orders.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
@@ -1426,6 +1448,7 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   )}
+                  </div>
                 </div>
               ))}
             </div>
