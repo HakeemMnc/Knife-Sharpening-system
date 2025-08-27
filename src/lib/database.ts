@@ -28,10 +28,26 @@ export interface Order {
   stripe_customer_id?: string;
   confirmation_sms_sent: boolean;
   reminder_24h_sent: boolean;
-  reminder_1h_sent: boolean;
-  pickup_confirmation_sent: boolean;
-  delivery_confirmation_sent: boolean;
+  morning_reminder_sent: boolean;
+  pickup_sms_sent: boolean;
+  delivery_sms_sent: boolean;
   followup_sms_sent: boolean;
+  
+  // SMS Status Tracking
+  confirmation_sms_status: 'pending' | 'sent' | 'delivered' | 'failed';
+  reminder_24h_status: 'pending' | 'sent' | 'delivered' | 'failed';
+  morning_reminder_status: 'pending' | 'sent' | 'delivered' | 'failed';
+  pickup_sms_status: 'pending' | 'sent' | 'delivered' | 'failed';
+  delivery_sms_status: 'pending' | 'sent' | 'delivered' | 'failed';
+  followup_sms_status: 'pending' | 'sent' | 'delivered' | 'failed';
+  
+  // SMS Timestamps
+  confirmation_sms_sent_at?: string;
+  reminder_24h_sent_at?: string;
+  morning_reminder_sent_at?: string;
+  pickup_sms_sent_at?: string;
+  delivery_sms_sent_at?: string;
+  followup_sms_sent_at?: string;
   internal_notes?: string;
   created_at: string;
   updated_at: string;
@@ -40,7 +56,7 @@ export interface Order {
 export interface SMSLog {
   id: number;
   order_id: number;
-  sms_type: 'confirmation' | 'reminder_24h' | 'reminder_1h' | 'pickup_confirmation' | 'delivery_confirmation' | 'followup';
+  sms_type: 'confirmation' | 'reminder_24h' | 'morning_reminder' | 'pickup' | 'delivery' | 'followup';
   phone_number: string;
   message_content: string;
   status: 'sent' | 'failed' | 'delivered' | 'undelivered';
@@ -48,6 +64,30 @@ export interface SMSLog {
   error_message?: string;
   sent_at: string;
   delivered_at?: string;
+  direction: 'outbound' | 'inbound';
+}
+
+export interface SMSConversation {
+  id: number;
+  order_id: number;
+  phone_number: string;
+  message_content: string;
+  direction: 'inbound' | 'outbound';
+  twilio_sid?: string;
+  admin_user?: string;
+  created_at: string;
+  read_at?: string;
+}
+
+export interface SMSTemplate {
+  id: number;
+  template_name: string;
+  template_content: string;
+  description?: string;
+  placeholders: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Customer {
