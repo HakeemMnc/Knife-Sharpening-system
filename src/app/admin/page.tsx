@@ -2,28 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { getRouteByPostcode } from '@/config/mobileRoutes';
-
-interface Order {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  pickup_address: string;
-  street_address?: string;
-  suburb?: string;
-  state?: string;
-  postal_code?: string;
-  special_instructions?: string;
-  total_items: number;
-  service_level: string;
-  total_amount: number;
-  service_date: string;
-  pickup_date: string;
-  status: string;
-  payment_status: string;
-  created_at: string;
-}
+import { Order } from '@/lib/database';
+import { SMSStatusIndicator } from '@/components/SMSStatusIndicator';
+import { SMSActionDropdown } from '@/components/SMSActionDropdown';
 
 interface DayGroup {
   dayName: string;
@@ -49,6 +30,8 @@ export default function AdminDashboard() {
   const [optimizedRoutes, setOptimizedRoutes] = useState<{[key: string]: Order[]}>({});
   const [routeOptimizing, setRouteOptimizing] = useState<{[key: string]: boolean}>({});
   const [updatingOrderStatus, setUpdatingOrderStatus] = useState<{[key: number]: boolean}>({});
+  const [sendingSMS, setSendingSMS] = useState<{[key: number]: boolean}>({});
+  const [bulkSMSAction, setBulkSMSAction] = useState<string>('');
   const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
   const [modalInstructions, setModalInstructions] = useState<{orderId: number, instructions: string, customerName: string} | null>(null);
 
@@ -459,6 +442,114 @@ export default function AdminDashboard() {
     return dayGroup.orders.filter(order => selectedOrders.has(order.id)).length;
   };
 
+  // SMS Action Handlers
+  const handleSMSAction = async (orderId: number, action: string) => {
+    setSendingSMS(prev => ({ ...prev, [orderId]: true }));
+    
+    try {
+      const response = await fetch(`/api/sms/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          smsType: action,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send SMS');
+      }
+
+      if (result.success) {
+        alert(`SMS sent successfully!`);
+        fetchOrders(); // Refresh to show updated SMS status
+      } else {
+        throw new Error(result.error || 'Failed to send SMS');
+      }
+    } catch (error) {
+      console.error('Error sending SMS:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to send SMS: ${errorMessage}`);
+    } finally {
+      setSendingSMS(prev => {
+        const newState = { ...prev };
+        delete newState[orderId];
+        return newState;
+      });
+    }
+  };
+
+  const handleBulkSMS = async (smsType: string) => {
+    if (selectedOrders.size === 0) {
+      alert('Please select orders to send SMS');
+      return;
+    }
+
+    const orderCount = selectedOrders.size;
+    const smsTypeLabel = getSMSTypeLabel(smsType);
+    const confirmMessage = `Send "${smsTypeLabel}" SMS to ${orderCount} customers?`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setBulkUpdating(true);
+      const selectedOrderIds = Array.from(selectedOrders);
+      
+      const response = await fetch(`/api/sms/bulk-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderIds: selectedOrderIds,
+          smsType,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send bulk SMS');
+      }
+
+      const { success, failed, results } = result;
+      
+      if (failed > 0) {
+        alert(`Sent SMS to ${success} customers successfully. ${failed} failed.`);
+      } else {
+        alert(`Successfully sent "${smsTypeLabel}" SMS to ${success} customers`);
+      }
+
+      // Clear selections and refresh orders
+      setSelectedOrders(new Set());
+      fetchOrders();
+    } catch (error) {
+      console.error('Error sending bulk SMS:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to send bulk SMS: ${errorMessage}`);
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const getSMSTypeLabel = (smsType: string): string => {
+    const labels: { [key: string]: string } = {
+      'confirmation': 'Confirmation',
+      'reminder_24h': 'D-1 Reminder',
+      'morning_reminder': 'Morning Reminder',
+      'pickup': 'Pickup Confirmation',
+      'delivery': 'Delivery Confirmation',
+      'followup': 'Follow-up',
+    };
+    return labels[smsType] || smsType;
+  };
+
   const canProgressStatus = (fromStatus: string, toStatus: string): boolean => {
     const validTransitions: { [key: string]: string[] } = {
       'pending': ['paid'],
@@ -493,6 +584,34 @@ export default function AdminDashboard() {
     const defaultMessage = `Hi ${customerName.split(' ')[0]}, this is Northern Rivers Knife Sharpening regarding your order #${orderId}. `;
     const smsUrl = `${phoneUrl}?body=${encodeURIComponent(defaultMessage)}`;
     window.open(smsUrl, '_self');
+  };
+
+  // Simple SMS test function
+  const handleTestSMS = async (orderId: number) => {
+    try {
+      const response = await fetch('/api/sms/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          smsType: 'confirmation'
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ SMS sent successfully!');
+        fetchOrders(); // Refresh to see updated status
+      } else {
+        alert('❌ SMS failed: ' + result.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error);
+      console.error('SMS test error:', error);
+    }
   };
 
   const copyToClipboard = async (text: string, type: string) => {
@@ -1261,49 +1380,88 @@ export default function AdminDashboard() {
                     Clear
                   </button>
                 </div>
-                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-                  <button
-                    onClick={() => bulkUpdateOrderStatus('picked_up')}
-                    disabled={bulkUpdating}
-                    className="px-3 py-2 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 touch-manipulation"
-                  >
-                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Picked Up' : 'Mark as Picked Up'}
-                  </button>
-                  <button
-                    onClick={() => bulkUpdateOrderStatus('sharpening')}
-                    disabled={bulkUpdating}
-                    className="px-3 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 disabled:opacity-50 touch-manipulation"
-                  >
-                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Sharpening' : 'Mark as Sharpening'}
-                  </button>
-                  <button
-                    onClick={() => bulkUpdateOrderStatus('ready')}
-                    disabled={bulkUpdating}
-                    className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 disabled:opacity-50 touch-manipulation"
-                  >
-                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Ready' : 'Mark as Ready'}
-                  </button>
-                  <button
-                    onClick={() => bulkUpdateOrderStatus('delivered')}
-                    disabled={bulkUpdating}
-                    className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 disabled:opacity-50 touch-manipulation"
-                  >
-                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Delivered' : 'Mark as Delivered'}
-                  </button>
-                  <button
-                    onClick={() => bulkUpdateOrderStatus('completed')}
-                    disabled={bulkUpdating}
-                    className="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-900 disabled:opacity-50 touch-manipulation col-span-2 md:col-span-1"
-                  >
-                    {bulkUpdating ? 'Updating...' : isMobileView ? 'Completed' : 'Mark as Completed'}
-                  </button>
-                  <button
-                    onClick={bulkDeleteOrders}
-                    disabled={bulkUpdating}
-                    className="px-3 py-2 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 touch-manipulation col-span-2 md:col-span-1"
-                  >
-                    {bulkUpdating ? 'Deleting...' : isMobileView ? '🗑️ Delete' : '🗑️ Permanent Delete'}
-                  </button>
+                <div className="space-y-3 md:space-y-0">
+                  {/* Status Update Actions */}
+                  <div>
+                    <h4 className="text-xs font-medium text-blue-800 mb-2 md:hidden">Status Updates</h4>
+                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+                      <button
+                        onClick={() => bulkUpdateOrderStatus('picked_up')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Picked Up' : 'Mark as Picked Up'}
+                      </button>
+                      <button
+                        onClick={() => bulkUpdateOrderStatus('sharpening')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Sharpening' : 'Mark as Sharpening'}
+                      </button>
+                      <button
+                        onClick={() => bulkUpdateOrderStatus('ready')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Ready' : 'Mark as Ready'}
+                      </button>
+                      <button
+                        onClick={() => bulkUpdateOrderStatus('delivered')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Delivered' : 'Mark as Delivered'}
+                      </button>
+                      <button
+                        onClick={() => bulkUpdateOrderStatus('completed')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-900 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Completed' : 'Mark as Completed'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SMS Actions */}
+                  <div>
+                    <h4 className="text-xs font-medium text-blue-800 mb-2 md:hidden">SMS Actions</h4>
+                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+                      <button
+                        onClick={() => handleBulkSMS('reminder_24h')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Sending...' : isMobileView ? 'D-1 SMS' : 'Send D-1 Reminder'}
+                      </button>
+                      <button
+                        onClick={() => handleBulkSMS('morning_reminder')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-yellow-600 text-white text-xs rounded-lg hover:bg-yellow-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Sending...' : isMobileView ? 'Morning SMS' : 'Send Morning Reminder'}
+                      </button>
+                      <button
+                        onClick={() => handleBulkSMS('followup')}
+                        disabled={bulkUpdating}
+                        className="px-3 py-2 bg-teal-600 text-white text-xs rounded-lg hover:bg-teal-700 disabled:opacity-50 touch-manipulation"
+                      >
+                        {bulkUpdating ? 'Sending...' : isMobileView ? 'Follow-up SMS' : 'Send Follow-up'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Danger Actions */}
+                  <div>
+                    <h4 className="text-xs font-medium text-red-800 mb-2 md:hidden">Danger Zone</h4>
+                    <button
+                      onClick={bulkDeleteOrders}
+                      disabled={bulkUpdating}
+                      className="px-3 py-2 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 touch-manipulation"
+                    >
+                      {bulkUpdating ? 'Deleting...' : isMobileView ? '🗑️ Delete' : '🗑️ Permanent Delete'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1568,6 +1726,13 @@ export default function AdminDashboard() {
                                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                           </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => handleTestSMS(order.id)}
+                                          className="text-green-500 hover:text-green-700"
+                                          title="Test SMS (Confirmation)"
+                                        >
+                                          <span className="text-xs font-bold">📧</span>
                                         </button>
                                       </div>
                                     </td>

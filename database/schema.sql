@@ -193,4 +193,4 @@ INSERT INTO sms_templates (template_name, template_content, description, placeho
 
 ('delivery', 'Hi {Name}, I''ve returned your professionally sharpened items. Thank you for choosing my service — I really appreciate it! Enjoy the cut. – Northern Rivers Knife Sharpening', 'Delivery confirmation message', ARRAY['Name']),
 
-('followup', 'Hi {Name}, I hope you''re happy with your freshly sharpened items! If you are, I''d be so grateful if you left me a quick Google review — it helps others in the area find me: {ReviewLink} Thank you – Northern Rivers Knife Sharpening', '48-hour follow-up message', ARRAY['Name', 'ReviewLink']);
+('followup', 'Hi {Name}, I hope you''re happy with your freshly sharpened items! If you are, I''d be so grateful if you left me a quick Google review — it helps others in the area find me: https://g.page/r/CdbW-qJy8Ic8EBM/review Thank you – Northern Rivers Knife Sharpening', '48-hour follow-up message', ARRAY['Name']);
