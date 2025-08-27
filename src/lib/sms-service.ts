@@ -1,7 +1,7 @@
-import { DatabaseService, SMSLog, Order, supabase } from './database';
+import { DatabaseService, SMSLog, Order, SMSTemplate, SMSConversation, supabase } from './database';
 import { dbHelpers } from './database';
 
-// SMS Service for automated communications
+// SMS Service for automated communications with template support
 export class SMSService {
   private static twilioClient: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   private static fromNumber: string;
@@ -25,12 +25,63 @@ export class SMSService {
     });
   }
 
-  // Send SMS message
-  static async sendSMS(to: string, message: string, orderId?: number, smsType?: SMSLog['sms_type']): Promise<boolean> {
+  // Get SMS template from database
+  static async getSMSTemplate(templateName: string): Promise<SMSTemplate | null> {
+    try {
+      const { data, error } = await supabase
+        .from('sms_templates')
+        .select('*')
+        .eq('template_name', templateName)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        console.error(`SMS template '${templateName}' not found:`, error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching SMS template:', error);
+      return null;
+    }
+  }
+
+  // Replace placeholders in template content
+  static replacePlaceholders(template: string, order: Order): string {
+    const serviceDate = new Date(order.service_date);
+    const formattedDate = serviceDate.toLocaleDateString('en-AU', { 
+      day: '2-digit', 
+      month: '2-digit' 
+    });
+
+    const placeholders: { [key: string]: string } = {
+      '{Name}': order.first_name,
+      '{DD/MM}': formattedDate,
+      '{ItemCount}': order.total_items === 1 ? `${order.total_items} item` : `${order.total_items} items`,
+      '{OrderId}': order.id.toString(),
+      '{TotalAmount}': `$${order.total_amount.toFixed(2)}`
+    };
+
+    let message = template;
+    Object.entries(placeholders).forEach(([placeholder, value]) => {
+      message = message.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
+    });
+
+    return message;
+  }
+
+  // Send SMS message with enhanced logging and status tracking
+  static async sendSMS(
+    to: string, 
+    message: string, 
+    orderId?: number, 
+    smsType?: SMSLog['sms_type']
+  ): Promise<{ success: boolean; sid?: string; error?: string }> {
     try {
       if (!this.twilioClient) {
         console.warn('Twilio client not initialized');
-        return false;
+        return { success: false, error: 'Twilio client not initialized' };
       }
 
       const formattedPhone = dbHelpers.formatPhoneForSMS(to);
@@ -50,12 +101,17 @@ export class SMSService {
           message_content: message,
           status: 'sent',
           twilio_sid: twilioMessage.sid,
+          direction: 'outbound'
         });
+
+        // Update order SMS status and timestamp
+        await this.updateOrderSMSStatus(orderId, smsType, 'sent');
       }
 
-      return true;
+      return { success: true, sid: twilioMessage.sid };
     } catch (error) {
       console.error('SMS sending failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       // Log failed SMS
       if (orderId && smsType) {
@@ -65,122 +121,230 @@ export class SMSService {
           phone_number: to,
           message_content: message,
           status: 'failed',
-          error_message: error instanceof Error ? error.message : 'Unknown error',
+          error_message: errorMessage,
+          direction: 'outbound'
         });
+
+        // Update order SMS status to failed
+        await this.updateOrderSMSStatus(orderId, smsType, 'failed');
       }
 
-      return false;
+      return { success: false, error: errorMessage };
     }
   }
 
-  // Order confirmation SMS
-  static async sendOrderConfirmation(order: Order): Promise<boolean> {
-    const message = `Hi ${order.first_name}! Your knife sharpening order #${order.id} has been confirmed for pickup on ${order.pickup_date}. Total: $${order.total_amount.toFixed(2)}. Please leave your items on your porch by 9am. Questions? Reply to this message.`;
-    
-    const success = await this.sendSMS(order.phone, message, order.id, 'confirmation');
-    
-    if (success) {
-      await DatabaseService.updateOrder(order.id, { confirmation_sms_sent: true });
+  // Update order SMS status and timestamp
+  static async updateOrderSMSStatus(
+    orderId: number, 
+    smsType: SMSLog['sms_type'], 
+    status: 'sent' | 'delivered' | 'failed'
+  ): Promise<void> {
+    try {
+      const updates: any = {};
+      const timestamp = new Date().toISOString();
+
+      // Map smsType to corresponding boolean and status fields
+      const fieldMapping: { [key: string]: { sent: string; status: string; timestamp: string } } = {
+        'confirmation': {
+          sent: 'confirmation_sms_sent',
+          status: 'confirmation_sms_status',
+          timestamp: 'confirmation_sms_sent_at'
+        },
+        'reminder_24h': {
+          sent: 'reminder_24h_sent',
+          status: 'reminder_24h_status',
+          timestamp: 'reminder_24h_sent_at'
+        },
+        'morning_reminder': {
+          sent: 'morning_reminder_sent',
+          status: 'morning_reminder_status',
+          timestamp: 'morning_reminder_sent_at'
+        },
+        'pickup': {
+          sent: 'pickup_sms_sent',
+          status: 'pickup_sms_status',
+          timestamp: 'pickup_sms_sent_at'
+        },
+        'delivery': {
+          sent: 'delivery_sms_sent',
+          status: 'delivery_sms_status',
+          timestamp: 'delivery_sms_sent_at'
+        },
+        'followup': {
+          sent: 'followup_sms_sent',
+          status: 'followup_sms_status',
+          timestamp: 'followup_sms_sent_at'
+        }
+      };
+
+      const fields = fieldMapping[smsType];
+      if (fields) {
+        updates[fields.sent] = status === 'sent' || status === 'delivered';
+        updates[fields.status] = status;
+        if (status === 'sent' || status === 'delivered') {
+          updates[fields.timestamp] = timestamp;
+        }
+      }
+
+      await DatabaseService.updateOrder(orderId, updates);
+    } catch (error) {
+      console.error('Error updating order SMS status:', error);
     }
-    
-    return success;
+  }
+
+  // Send SMS using template
+  static async sendTemplatedSMS(
+    order: Order, 
+    templateName: string
+  ): Promise<{ success: boolean; sid?: string; error?: string }> {
+    const template = await this.getSMSTemplate(templateName);
+    if (!template) {
+      return { success: false, error: `Template '${templateName}' not found` };
+    }
+
+    const message = this.replacePlaceholders(template.template_content, order);
+    return await this.sendSMS(
+      order.phone, 
+      message, 
+      order.id, 
+      templateName as SMSLog['sms_type']
+    );
+  }
+
+  // Confirmation SMS (triggered automatically when payment received)
+  static async sendOrderConfirmation(order: Order): Promise<boolean> {
+    const result = await this.sendTemplatedSMS(order, 'confirmation');
+    return result.success;
   }
 
   // 24-hour reminder SMS
   static async send24HourReminder(order: Order): Promise<boolean> {
-    const message = `Reminder: Your knife sharpening pickup is tomorrow (${order.pickup_date}). Please leave your ${order.total_items} items on your porch by 9am. Order #${order.id}`;
-    
-    const success = await this.sendSMS(order.phone, message, order.id, 'reminder_24h');
-    
-    if (success) {
-      await DatabaseService.updateOrder(order.id, { reminder_24h_sent: true });
-    }
-    
-    return success;
+    const result = await this.sendTemplatedSMS(order, 'reminder_24h');
+    return result.success;
   }
 
-  // 1-hour reminder SMS
-  static async send1HourReminder(order: Order): Promise<boolean> {
-    const message = `Your knife sharpening pickup is in 1 hour! Please ensure your ${order.total_items} items are on your porch. Order #${order.id}`;
-    
-    const success = await this.sendSMS(order.phone, message, order.id, 'reminder_1h');
-    
-    if (success) {
-      await DatabaseService.updateOrder(order.id, { reminder_1h_sent: true });
-    }
-    
-    return success;
+  // Morning reminder SMS
+  static async sendMorningReminder(order: Order): Promise<boolean> {
+    const result = await this.sendTemplatedSMS(order, 'morning_reminder');
+    return result.success;
   }
 
   // Pickup confirmation SMS
   static async sendPickupConfirmation(order: Order): Promise<boolean> {
-    const message = `Great news! Your ${order.total_items} items have been picked up and are now being sharpened. You'll receive a message when they're ready for delivery. Order #${order.id}`;
-    
-    const success = await this.sendSMS(order.phone, message, order.id, 'pickup_confirmation');
-    
-    if (success) {
-      await DatabaseService.updateOrder(order.id, { pickup_confirmation_sent: true });
-    }
-    
-    return success;
+    const result = await this.sendTemplatedSMS(order, 'pickup');
+    return result.success;
   }
 
   // Delivery confirmation SMS
   static async sendDeliveryConfirmation(order: Order): Promise<boolean> {
-    const message = `Your sharpened items have been delivered! Please check your porch. We hope you love the results. Order #${order.id}. Thank you for choosing Northern Rivers Knife Sharpening!`;
-    
-    const success = await this.sendSMS(order.phone, message, order.id, 'delivery_confirmation');
-    
-    if (success) {
-      await DatabaseService.updateOrder(order.id, { delivery_confirmation_sent: true });
-    }
-    
-    return success;
+    const result = await this.sendTemplatedSMS(order, 'delivery');
+    return result.success;
   }
 
-  // Follow-up SMS (sent 2 days after delivery)
+  // Follow-up SMS (sent 48 hours after delivery)
   static async sendFollowUpSMS(order: Order): Promise<boolean> {
-    const message = `Hi ${order.first_name}! How are your newly sharpened items performing? We'd love to hear your feedback. Order #${order.id}`;
-    
-    const success = await this.sendSMS(order.phone, message, order.id, 'followup');
-    
-    if (success) {
-      await DatabaseService.updateOrder(order.id, { followup_sms_sent: true });
-    }
-    
-    return success;
+    const result = await this.sendTemplatedSMS(order, 'followup');
+    return result.success;
   }
 
-  // Bulk SMS for reminders
-  static async sendBulkReminders(): Promise<{ success: number; failed: number }> {
-    const pendingReminders = await DatabaseService.getPendingSMSReminders();
-    let successCount = 0;
-    let failedCount = 0;
-
-    for (const order of pendingReminders) {
-      const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-      if (order.pickup_date === tomorrow && !order.reminder_24h_sent) {
-        const success = await this.send24HourReminder(order);
-        success ? successCount++ : failedCount++;
-      } else if (order.pickup_date === today && !order.reminder_1h_sent) {
-        const success = await this.send1HourReminder(order);
-        success ? successCount++ : failedCount++;
+  // Send custom SMS (for admin replies)
+  static async sendCustomSMS(
+    phone: string, 
+    message: string, 
+    orderId?: number
+  ): Promise<boolean> {
+    const result = await this.sendSMS(phone, message, orderId);
+    
+    // Also log in conversations table if order-related
+    if (orderId) {
+      try {
+        await supabase.from('sms_conversations').insert({
+          order_id: orderId,
+          phone_number: phone,
+          message_content: message,
+          direction: 'outbound',
+          twilio_sid: result.sid,
+          admin_user: 'admin' // TODO: Replace with actual admin user when auth is implemented
+        });
+      } catch (error) {
+        console.error('Error logging conversation:', error);
       }
     }
-
-    return { success: successCount, failed: failedCount };
+    
+    return result.success;
   }
 
-  // Custom SMS for special notifications
-  static async sendCustomSMS(order: Order, customMessage: string): Promise<boolean> {
-    return await this.sendSMS(order.phone, customMessage, order.id, 'confirmation');
+  // Handle incoming SMS (webhook)
+  static async handleIncomingSMS(
+    from: string, 
+    message: string, 
+    twilioSid: string
+  ): Promise<void> {
+    try {
+      // Find the order associated with this phone number
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('phone', from)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (orders && orders.length > 0) {
+        const order = orders[0];
+        
+        // Log in conversations table
+        await supabase.from('sms_conversations').insert({
+          order_id: order.id,
+          phone_number: from,
+          message_content: message,
+          direction: 'inbound',
+          twilio_sid: twilioSid
+        });
+
+        // Also log in sms_logs for record keeping
+        await DatabaseService.createSMSLog({
+          order_id: order.id,
+          sms_type: 'confirmation', // Generic type for customer replies
+          phone_number: from,
+          message_content: message,
+          status: 'sent',
+          twilio_sid: twilioSid,
+          direction: 'inbound'
+        });
+
+        // TODO: Forward SMS to admin's personal phone
+        await this.forwardSMSToAdmin(from, message, order.id);
+      }
+    } catch (error) {
+      console.error('Error handling incoming SMS:', error);
+    }
+  }
+
+  // Forward customer reply to admin's personal phone
+  static async forwardSMSToAdmin(
+    customerPhone: string, 
+    message: string, 
+    orderId: number
+  ): Promise<void> {
+    const adminPhone = process.env.ADMIN_PHONE_NUMBER;
+    if (!adminPhone) {
+      console.warn('Admin phone number not configured for SMS forwarding');
+      return;
+    }
+
+    const forwardMessage = `Customer Reply (Order #${orderId}): ${message}\n\nFrom: ${customerPhone}`;
+    
+    try {
+      await this.sendSMS(adminPhone, forwardMessage);
+    } catch (error) {
+      console.error('Error forwarding SMS to admin:', error);
+    }
   }
 
   // Update SMS delivery status (webhook handler)
   static async updateDeliveryStatus(twilioSid: string, status: 'delivered' | 'undelivered'): Promise<void> {
     try {
+      // Update sms_logs table
       const { data: smsLogs } = await supabase
         .from('sms_logs')
         .select('*')
@@ -189,45 +353,91 @@ export class SMSService {
       if (smsLogs && smsLogs.length > 0) {
         const smsLog = smsLogs[0];
         await DatabaseService.updateSMSLog(smsLog.id, {
-          status,
+          status: status === 'delivered' ? 'delivered' : 'undelivered',
           delivered_at: status === 'delivered' ? new Date().toISOString() : undefined,
         });
+
+        // Update order status if delivered
+        if (status === 'delivered' && smsLog.order_id) {
+          await this.updateOrderSMSStatus(
+            smsLog.order_id, 
+            smsLog.sms_type, 
+            'delivered'
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to update SMS delivery status:', error);
     }
   }
+
+  // Get SMS status for order (for UI display)
+  static getSMSStatus(order: Order): {
+    confirmation: { status: string; sent_at?: string };
+    reminder_24h: { status: string; sent_at?: string };
+    morning_reminder: { status: string; sent_at?: string };
+    pickup: { status: string; sent_at?: string };
+    delivery: { status: string; sent_at?: string };
+    followup: { status: string; sent_at?: string };
+  } {
+    return {
+      confirmation: {
+        status: order.confirmation_sms_status,
+        sent_at: order.confirmation_sms_sent_at
+      },
+      reminder_24h: {
+        status: order.reminder_24h_status,
+        sent_at: order.reminder_24h_sent_at
+      },
+      morning_reminder: {
+        status: order.morning_reminder_status,
+        sent_at: order.morning_reminder_sent_at
+      },
+      pickup: {
+        status: order.pickup_sms_status,
+        sent_at: order.pickup_sms_sent_at
+      },
+      delivery: {
+        status: order.delivery_sms_status,
+        sent_at: order.delivery_sms_sent_at
+      },
+      followup: {
+        status: order.followup_sms_status,
+        sent_at: order.followup_sms_sent_at
+      }
+    };
+  }
+
+  // Bulk SMS operations
+  static async sendBulkSMS(
+    orders: Order[], 
+    templateName: string
+  ): Promise<{ success: number; failed: number; results: any[] }> {
+    let successCount = 0;
+    let failedCount = 0;
+    const results: any[] = [];
+
+    for (const order of orders) {
+      const result = await this.sendTemplatedSMS(order, templateName);
+      results.push({
+        orderId: order.id,
+        customerName: `${order.first_name} ${order.last_name}`,
+        success: result.success,
+        error: result.error
+      });
+
+      if (result.success) {
+        successCount++;
+      } else {
+        failedCount++;
+      }
+    }
+
+    return { success: successCount, failed: failedCount, results };
+  }
 }
-
-// SMS Templates for different scenarios
-export const smsTemplates = {
-  orderConfirmation: (order: Order) => 
-    `Hi ${order.first_name}! Your knife sharpening order #${order.id} has been confirmed for pickup on ${order.pickup_date}. Total: $${order.total_amount.toFixed(2)}. Please leave your items on your porch by 9am. Questions? Reply to this message.`,
-
-  reminder24h: (order: Order) => 
-    `Reminder: Your knife sharpening pickup is tomorrow (${order.pickup_date}). Please leave your ${order.total_items} items on your porch by 9am. Order #${order.id}`,
-
-  reminder1h: (order: Order) => 
-    `Your knife sharpening pickup is in 1 hour! Please ensure your ${order.total_items} items are on your porch. Order #${order.id}`,
-
-  pickupConfirmation: (order: Order) => 
-    `Great news! Your ${order.total_items} items have been picked up and are now being sharpened. You'll receive a message when they're ready for delivery. Order #${order.id}`,
-
-  deliveryConfirmation: (order: Order) => 
-    `Your sharpened items have been delivered! Please check your porch. We hope you love the results. Order #${order.id}. Thank you for choosing Northern Rivers Knife Sharpening!`,
-
-  followUp: (order: Order) => 
-    `Hi ${order.first_name}! How are your newly sharpened items performing? We'd love to hear your feedback. Order #${order.id}`,
-
-  orderUpdate: (order: Order, update: string) => 
-    `Order #${order.id} Update: ${update}. Questions? Reply to this message.`,
-
-  paymentReminder: (order: Order) => 
-    `Hi ${order.first_name}! Your knife sharpening order #${order.id} is ready to process. Please complete payment to confirm your pickup on ${order.pickup_date}. Total: $${order.total_amount.toFixed(2)}`,
-
-  cancellation: (order: Order) => 
-    `Hi ${order.first_name}! Your knife sharpening order #${order.id} has been cancelled as requested. If you have any questions, please contact us.`,
-};
 
 // Initialize SMS service
 SMSService.initialize();
+
+export default SMSService;
