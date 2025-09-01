@@ -1,0 +1,428 @@
+/**
+ * Booking Limits Service
+ * Handles daily booking limits and availability checking
+ */
+
+import { DatabaseService } from './database';
+
+export type LimitType = 'customers' | 'items';
+export type AvailabilityStatus = 'available' | 'full' | 'closed';
+
+export interface DailyLimit {
+  id: number;
+  limit_date: string; // YYYY-MM-DD format
+  limit_type: LimitType;
+  max_customers: number;
+  max_items: number;
+  current_customers: number;
+  current_items: number;
+  is_active: boolean;
+  notes?: string;
+  spots_remaining: number;
+  availability_status: AvailabilityStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SystemSetting {
+  setting_key: string;
+  setting_value: string;
+  setting_type: 'string' | 'integer' | 'boolean' | 'json';
+  description?: string;
+}
+
+export class BookingLimitsService {
+  /**
+   * Check if booking is allowed for a specific date
+   */
+  static async canBookForDate(
+    serviceDate: string, 
+    customerCount: number = 1, 
+    itemCount: number = 1
+  ): Promise<boolean> {
+    try {
+      const result = await DatabaseService.query(
+        'SELECT can_book_for_date($1, $2, $3) as can_book',
+        [serviceDate, customerCount, itemCount]
+      );
+      return result.rows[0]?.can_book || false;
+    } catch (error) {
+      console.error('Error checking booking availability:', error);
+      return false; // Fail safe - deny booking if there's an error
+    }
+  }
+
+  /**
+   * Get daily limit information for a specific date
+   */
+  static async getDailyLimit(serviceDate: string): Promise<DailyLimit | null> {
+    try {
+      const result = await DatabaseService.query(
+        'SELECT * FROM daily_booking_status WHERE limit_date = $1',
+        [serviceDate]
+      );
+      
+      if (result.rows.length === 0) {
+        // Create limit for this date and return it
+        await DatabaseService.query(
+          'SELECT get_or_create_daily_limit($1)',
+          [serviceDate]
+        );
+        
+        // Now fetch the created limit
+        const newResult = await DatabaseService.query(
+          'SELECT * FROM daily_booking_status WHERE limit_date = $1',
+          [serviceDate]
+        );
+        
+        return newResult.rows[0] || null;
+      }
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error getting daily limit:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get daily limits for a date range
+   */
+  static async getDailyLimits(
+    startDate: string, 
+    endDate: string
+  ): Promise<DailyLimit[]> {
+    try {
+      const result = await DatabaseService.query(
+        `SELECT * FROM daily_booking_status 
+         WHERE limit_date >= $1 AND limit_date <= $2 
+         ORDER BY limit_date`,
+        [startDate, endDate]
+      );
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting daily limits range:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get available dates for booking within a date range
+   * Returns dates where bookings are still available
+   */
+  static async getAvailableDates(
+    startDate: string,
+    endDate: string,
+    customerCount: number = 1,
+    itemCount: number = 1
+  ): Promise<string[]> {
+    try {
+      // First ensure all dates in range have limit records
+      await this.ensureLimitsExist(startDate, endDate);
+      
+      // Get available dates
+      const result = await DatabaseService.query(
+        `SELECT limit_date 
+         FROM daily_booking_status 
+         WHERE limit_date >= $1 
+           AND limit_date <= $2 
+           AND is_active = true
+           AND (
+             (limit_type = 'customers' AND (current_customers + $3) <= max_customers)
+             OR (limit_type = 'items' AND (current_items + $4) <= max_items)
+             OR (limit_type NOT IN ('customers', 'items') 
+                 AND (current_customers + $3) <= max_customers 
+                 AND (current_items + $4) <= max_items)
+           )
+         ORDER BY limit_date`,
+        [startDate, endDate, customerCount, itemCount]
+      );
+      
+      return result.rows.map(row => row.limit_date);
+    } catch (error) {
+      console.error('Error getting available dates:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Increment booking count when an order is created
+   */
+  static async incrementBookingCount(
+    serviceDate: string,
+    customerCount: number = 1,
+    itemCount: number = 1
+  ): Promise<void> {
+    try {
+      await DatabaseService.query(
+        'SELECT increment_daily_booking_count($1, $2, $3)',
+        [serviceDate, customerCount, itemCount]
+      );
+    } catch (error) {
+      console.error('Error incrementing booking count:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Decrement booking count when an order is cancelled
+   */
+  static async decrementBookingCount(
+    serviceDate: string,
+    customerCount: number = 1,
+    itemCount: number = 1
+  ): Promise<void> {
+    try {
+      await DatabaseService.query(
+        'SELECT decrement_daily_booking_count($1, $2, $3)',
+        [serviceDate, customerCount, itemCount]
+      );
+    } catch (error) {
+      console.error('Error decrementing booking count:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update daily limit settings for a specific date
+   */
+  static async updateDailyLimit(
+    serviceDate: string,
+    updates: {
+      limit_type?: LimitType;
+      max_customers?: number;
+      max_items?: number;
+      is_active?: boolean;
+      notes?: string;
+    }
+  ): Promise<DailyLimit | null> {
+    try {
+      // Ensure limit exists first
+      await DatabaseService.query(
+        'SELECT get_or_create_daily_limit($1)',
+        [serviceDate]
+      );
+
+      // Build update query
+      const updateFields = [];
+      const values = [];
+      let paramIndex = 2;
+
+      if (updates.limit_type !== undefined) {
+        updateFields.push(`limit_type = $${paramIndex}`);
+        values.push(updates.limit_type);
+        paramIndex++;
+      }
+      if (updates.max_customers !== undefined) {
+        updateFields.push(`max_customers = $${paramIndex}`);
+        values.push(updates.max_customers);
+        paramIndex++;
+      }
+      if (updates.max_items !== undefined) {
+        updateFields.push(`max_items = $${paramIndex}`);
+        values.push(updates.max_items);
+        paramIndex++;
+      }
+      if (updates.is_active !== undefined) {
+        updateFields.push(`is_active = $${paramIndex}`);
+        values.push(updates.is_active);
+        paramIndex++;
+      }
+      if (updates.notes !== undefined) {
+        updateFields.push(`notes = $${paramIndex}`);
+        values.push(updates.notes);
+        paramIndex++;
+      }
+
+      if (updateFields.length === 0) {
+        return await this.getDailyLimit(serviceDate);
+      }
+
+      updateFields.push(`updated_at = NOW()`);
+
+      await DatabaseService.query(
+        `UPDATE daily_limits SET ${updateFields.join(', ')} WHERE limit_date = $1`,
+        [serviceDate, ...values]
+      );
+
+      return await this.getDailyLimit(serviceDate);
+    } catch (error) {
+      console.error('Error updating daily limit:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get system settings
+   */
+  static async getSystemSetting(key: string): Promise<SystemSetting | null> {
+    try {
+      const result = await DatabaseService.query(
+        'SELECT * FROM system_settings WHERE setting_key = $1',
+        [key]
+      );
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error getting system setting:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update system setting
+   */
+  static async updateSystemSetting(
+    key: string, 
+    value: string, 
+    type: 'string' | 'integer' | 'boolean' | 'json' = 'string'
+  ): Promise<void> {
+    try {
+      await DatabaseService.query(
+        `INSERT INTO system_settings (setting_key, setting_value, setting_type, updated_at)
+         VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (setting_key) 
+         DO UPDATE SET 
+           setting_value = EXCLUDED.setting_value,
+           setting_type = EXCLUDED.setting_type,
+           updated_at = NOW()`,
+        [key, value, type]
+      );
+    } catch (error) {
+      console.error('Error updating system setting:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all system settings as a key-value object
+   */
+  static async getAllSystemSettings(): Promise<Record<string, any>> {
+    try {
+      const result = await DatabaseService.query(
+        'SELECT setting_key, setting_value, setting_type FROM system_settings'
+      );
+      
+      const settings: Record<string, any> = {};
+      
+      for (const row of result.rows) {
+        let value: any = row.setting_value;
+        
+        // Convert value based on type
+        switch (row.setting_type) {
+          case 'integer':
+            value = parseInt(value, 10);
+            break;
+          case 'boolean':
+            value = value === 'true';
+            break;
+          case 'json':
+            try {
+              value = JSON.parse(value);
+            } catch {
+              value = row.setting_value;
+            }
+            break;
+          // string is default, no conversion needed
+        }
+        
+        settings[row.setting_key] = value;
+      }
+      
+      return settings;
+    } catch (error) {
+      console.error('Error getting all system settings:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Recalculate booking counts from actual orders
+   * Useful for data consistency after migrations or manual changes
+   */
+  static async recalculateBookingCounts(serviceDate?: string): Promise<void> {
+    try {
+      await DatabaseService.query(
+        'SELECT recalculate_daily_counts($1)',
+        [serviceDate || null]
+      );
+    } catch (error) {
+      console.error('Error recalculating booking counts:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Ensure daily limit records exist for a date range
+   * Creates records with default settings if they don't exist
+   */
+  private static async ensureLimitsExist(startDate: string, endDate: string): Promise<void> {
+    try {
+      await DatabaseService.query(
+        `DO $$
+         DECLARE
+           current_date DATE := $1::DATE;
+           end_date DATE := $2::DATE;
+         BEGIN
+           WHILE current_date <= end_date LOOP
+             PERFORM get_or_create_daily_limit(current_date);
+             current_date := current_date + INTERVAL '1 day';
+           END LOOP;
+         END $$;`,
+        [startDate, endDate]
+      );
+    } catch (error) {
+      console.error('Error ensuring limits exist:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get booking summary for admin dashboard
+   * Shows overview of limits and current bookings
+   */
+  static async getBookingSummary(days: number = 7): Promise<{
+    totalAvailableSpots: number;
+    totalBookedSpots: number;
+    upcomingDates: DailyLimit[];
+    settings: Record<string, any>;
+  }> {
+    try {
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + days - 1);
+      
+      const startDate = new Date().toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      const limits = await this.getDailyLimits(startDate, endDateStr);
+      const settings = await this.getAllSystemSettings();
+      
+      const totalAvailableSpots = limits.reduce((sum, limit) => {
+        if (limit.availability_status === 'available') {
+          return sum + limit.spots_remaining;
+        }
+        return sum;
+      }, 0);
+      
+      const totalBookedSpots = limits.reduce((sum, limit) => {
+        return sum + (limit.limit_type === 'customers' 
+          ? limit.current_customers 
+          : limit.current_items);
+      }, 0);
+      
+      return {
+        totalAvailableSpots,
+        totalBookedSpots,
+        upcomingDates: limits,
+        settings
+      };
+    } catch (error) {
+      console.error('Error getting booking summary:', error);
+      return {
+        totalAvailableSpots: 0,
+        totalBookedSpots: 0,
+        upcomingDates: [],
+        settings: {}
+      };
+    }
+  }
+}

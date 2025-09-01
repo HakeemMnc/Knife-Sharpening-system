@@ -4,13 +4,17 @@
  */
 
 import { getRouteByPostcode, RouteArea } from '@/config/mobileRoutes';
+import { BookingLimitsService, DailyLimit, AvailabilityStatus } from '@/lib/booking-limits';
 
 /**
  * Get the next available service slots for a given postcode
- * Returns the next 3 available service dates
+ * Returns up to maxSlots available service dates (default 3)
  * Implements 5pm cutoff rule: after 5pm, tomorrow's service is not available
  */
-export function getNextAvailableSlots(postcode: string): Date[] {
+export async function getNextAvailableSlots(
+  postcode: string, 
+  maxSlots: number = 3
+): Promise<Date[]> {
   const route = getRouteByPostcode(postcode);
   if (!route) {
     throw new Error(`Postcode ${postcode} is not supported by mobile service`);
@@ -30,19 +34,26 @@ export function getNextAvailableSlots(postcode: string): Date[] {
     startDate.setDate(now.getDate() + 1);
   }
   
-  // Look ahead up to 4 weeks to find 3 available slots
+  // Look ahead up to 4 weeks to find available slots
   const maxDaysToCheck = 28;
   let daysChecked = 0;
   
-  while (slots.length < 3 && daysChecked < maxDaysToCheck) {
+  while (slots.length < maxSlots && daysChecked < maxDaysToCheck) {
     const checkDate = new Date(startDate);
     checkDate.setDate(startDate.getDate() + daysChecked);
     
     if (isServiceDay(postcode, checkDate)) {
-      // Check if there are spots remaining (mock data for now)
-      const spotsRemaining = getSpotsRemaining(checkDate);
-      if (spotsRemaining > 0) {
-        slots.push(new Date(checkDate));
+      const dateString = checkDate.toISOString().split('T')[0];
+      
+      try {
+        // Check if bookings are available for this date
+        const canBook = await BookingLimitsService.canBookForDate(dateString, 1, 1);
+        if (canBook) {
+          slots.push(new Date(checkDate));
+        }
+      } catch (error) {
+        console.error('Error checking booking availability for', dateString, error);
+        // On error, skip this date for safety
       }
     }
     
@@ -65,18 +76,18 @@ export function isServiceDay(postcode: string, date: Date): boolean {
 
 /**
  * Get the number of spots remaining for a specific date
- * Mock implementation - returns random number between 1-4
- * In production, this would query the database for actual bookings
+ * Returns actual spots remaining from booking limits
  */
-export function getSpotsRemaining(date: Date): number {
-  // Mock implementation - simulate varying availability
+export async function getSpotsRemaining(date: Date): Promise<number> {
   const dateString = date.toISOString().split('T')[0];
   
-  // Use date as seed for consistent "random" results
-  const seed = dateString.split('-').reduce((acc, val) => acc + parseInt(val), 0);
-  const mockSpots = (seed % 4) + 1; // Returns 1-4
-  
-  return mockSpots;
+  try {
+    const dailyLimit = await BookingLimitsService.getDailyLimit(dateString);
+    return dailyLimit?.spots_remaining || 0;
+  } catch (error) {
+    console.error('Error getting spots remaining for', dateString, error);
+    return 0; // Fail safe - show no spots available
+  }
 }
 
 /**
@@ -111,12 +122,23 @@ export function getNextServiceDay(postcode: string, targetDay: string): Date | n
 /**
  * Check if booking is possible for a specific date and postcode
  */
-export function canBookForDate(postcode: string, date: Date): boolean {
+export async function canBookForDate(
+  postcode: string, 
+  date: Date, 
+  customerCount: number = 1,
+  itemCount: number = 1
+): Promise<boolean> {
   if (!isServiceDay(postcode, date)) return false;
   if (date <= new Date()) return false; // Can't book for past dates
   
-  const spotsRemaining = getSpotsRemaining(date);
-  return spotsRemaining > 0;
+  const dateString = date.toISOString().split('T')[0];
+  
+  try {
+    return await BookingLimitsService.canBookForDate(dateString, customerCount, itemCount);
+  } catch (error) {
+    console.error('Error checking booking availability for', dateString, error);
+    return false; // Fail safe - deny booking
+  }
 }
 
 /**
@@ -134,14 +156,94 @@ export function formatServiceDate(date: Date): string {
 }
 
 /**
+ * Get service dates with availability status for carousel display
+ * Returns both available and full dates to show demand
+ */
+export async function getServiceDatesForCarousel(
+  postcode: string,
+  maxDates: number = 5
+): Promise<Array<{
+  date: Date;
+  dateString: string;
+  isAvailable: boolean;
+  spotsRemaining: number;
+  availabilityStatus: AvailabilityStatus;
+}>> {
+  const route = getRouteByPostcode(postcode);
+  if (!route) {
+    throw new Error(`Postcode ${postcode} is not supported by mobile service`);
+  }
+
+  const dates: Array<{
+    date: Date;
+    dateString: string;
+    isAvailable: boolean;
+    spotsRemaining: number;
+    availabilityStatus: AvailabilityStatus;
+  }> = [];
+  
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Determine starting point based on 5pm cutoff rule
+  let startDate = new Date(now);
+  if (currentHour >= 17) { // After 5pm
+    startDate.setDate(now.getDate() + 2);
+  } else {
+    startDate.setDate(now.getDate() + 1);
+  }
+  
+  // Look ahead up to 6 weeks to find enough dates for carousel
+  const maxDaysToCheck = 42;
+  let daysChecked = 0;
+  
+  while (dates.length < maxDates && daysChecked < maxDaysToCheck) {
+    const checkDate = new Date(startDate);
+    checkDate.setDate(startDate.getDate() + daysChecked);
+    
+    if (isServiceDay(postcode, checkDate)) {
+      const dateString = checkDate.toISOString().split('T')[0];
+      
+      try {
+        const dailyLimit = await BookingLimitsService.getDailyLimit(dateString);
+        
+        if (dailyLimit) {
+          dates.push({
+            date: new Date(checkDate),
+            dateString,
+            isAvailable: dailyLimit.availability_status === 'available',
+            spotsRemaining: dailyLimit.spots_remaining,
+            availabilityStatus: dailyLimit.availability_status
+          });
+        }
+      } catch (error) {
+        console.error('Error getting carousel date info for', dateString, error);
+        // On error, show date as unavailable
+        dates.push({
+          date: new Date(checkDate),
+          dateString,
+          isAvailable: false,
+          spotsRemaining: 0,
+          availabilityStatus: 'closed'
+        });
+      }
+    }
+    
+    daysChecked++;
+  }
+  
+  return dates;
+}
+
+/**
  * Get service summary for a postcode
  */
-export function getServiceSummary(postcode: string): {
+export async function getServiceSummary(postcode: string): Promise<{
   supported: boolean;
   serviceDays: string[];
   areaName?: string;
   nextAvailable: Date[];
-} {
+}> {
   const route = getRouteByPostcode(postcode);
   
   if (!route) {
@@ -152,10 +254,22 @@ export function getServiceSummary(postcode: string): {
     };
   }
   
-  return {
-    supported: true,
-    serviceDays: route.serviceDays,
-    areaName: route.areaName,
-    nextAvailable: getNextAvailableSlots(postcode)
-  };
+  try {
+    const nextAvailable = await getNextAvailableSlots(postcode);
+    
+    return {
+      supported: true,
+      serviceDays: route.serviceDays,
+      areaName: route.areaName,
+      nextAvailable
+    };
+  } catch (error) {
+    console.error('Error getting service summary for postcode', postcode, error);
+    return {
+      supported: true,
+      serviceDays: route.serviceDays,
+      areaName: route.areaName,
+      nextAvailable: []
+    };
+  }
 }

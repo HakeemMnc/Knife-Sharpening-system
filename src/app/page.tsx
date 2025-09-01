@@ -5,7 +5,6 @@ import Card from '@/components/ui/Card'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PaymentForm } from '@/components/PaymentForm'
 import ServiceScheduler from '@/components/ServiceScheduler'
-import { getSpotsRemaining } from '@/utils/scheduling'
 
 export default function Home() {
   // Form state management
@@ -2716,9 +2715,6 @@ export default function Home() {
                             month: 'long', 
                             day: 'numeric' 
                           })}
-                          <span className="ml-2 text-red-600 font-medium">
-                            ({getSpotsRemaining(selectedServiceDate)} spots left)
-                          </span>
                         </div>
                       )}
                       <div className="text-lg font-semibold" style={{color: '#1B1B1B'}}>
