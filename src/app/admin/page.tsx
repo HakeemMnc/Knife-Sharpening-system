@@ -34,10 +34,11 @@ export default function AdminDashboard() {
   const [bulkSMSAction, setBulkSMSAction] = useState<string>('');
   const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
   const [modalInstructions, setModalInstructions] = useState<{orderId: number, instructions: string, customerName: string} | null>(null);
-  const [activeTab, setActiveTab] = useState<'orders' | 'messages' | 'templates'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'messages' | 'templates' | 'sms-logs'>('orders');
   const [templates, setTemplates] = useState<any[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [templateContent, setTemplateContent] = useState('');
+  const [smsLogs, setSmsLogs] = useState<any[]>([]);
 
   useEffect(() => {
     fetchOrders();
@@ -51,6 +52,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeTab === 'templates') {
       fetchTemplates();
+    } else if (activeTab === 'sms-logs') {
+      fetchSmsLogs();
     }
   }, [activeTab]);
 
@@ -81,7 +84,12 @@ export default function AdminDashboard() {
       // Clear previous errors when retrying
       if (error) setError('');
       
-      const response = await fetch('/api/orders');
+      const response = await fetch('/api/orders', {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -102,6 +110,11 @@ export default function AdminDashboard() {
         
         setOrders(validatedOrders);
         console.log(`Fetched ${validatedOrders.length} valid orders (${skippedCount} skipped)`);
+        console.log('First order SMS fields:', {
+          confirmation_sms_status: validatedOrders[0]?.confirmation_sms_status,
+          reminder_24h_status: validatedOrders[0]?.reminder_24h_status,
+          morning_reminder_status: validatedOrders[0]?.morning_reminder_status
+        });
         
         // Clear any previous errors on successful fetch
         if (error) setError('');
@@ -153,6 +166,19 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error updating template:', error);
       alert('Failed to update template');
+    }
+  };
+
+  const fetchSmsLogs = async () => {
+    try {
+      const response = await fetch('/api/sms/logs');
+      if (!response.ok) throw new Error('Failed to fetch SMS logs');
+      const result = await response.json();
+      if (result.success) {
+        setSmsLogs(result.logs);
+      }
+    } catch (error) {
+      console.error('Error fetching SMS logs:', error);
     }
   };
 
@@ -300,6 +326,23 @@ export default function AdminDashboard() {
         pickup_date: sanitizeString(order.pickup_date, new Date().toISOString().split('T')[0]),
         status: sanitizeString(order.status, 'pending'),
         payment_status: sanitizeString(order.payment_status, 'unpaid'),
+        
+        // SMS Status fields
+        confirmation_sms_status: sanitizeString(order.confirmation_sms_status, 'pending'),
+        reminder_24h_status: sanitizeString(order.reminder_24h_status, 'pending'),
+        morning_reminder_status: sanitizeString(order.morning_reminder_status, 'pending'),
+        pickup_sms_status: sanitizeString(order.pickup_sms_status, 'pending'),
+        delivery_sms_status: sanitizeString(order.delivery_sms_status, 'pending'),
+        followup_sms_status: sanitizeString(order.followup_sms_status, 'pending'),
+        
+        // SMS Timestamps
+        confirmation_sms_sent_at: sanitizeOptionalString(order.confirmation_sms_sent_at),
+        reminder_24h_sent_at: sanitizeOptionalString(order.reminder_24h_sent_at),
+        morning_reminder_sent_at: sanitizeOptionalString(order.morning_reminder_sent_at),
+        pickup_sms_sent_at: sanitizeOptionalString(order.pickup_sms_sent_at),
+        delivery_sms_sent_at: sanitizeOptionalString(order.delivery_sms_sent_at),
+        followup_sms_sent_at: sanitizeOptionalString(order.followup_sms_sent_at),
+        
         created_at: sanitizeString(order.created_at, new Date().toISOString())
       };
     } catch (error) {
@@ -1377,6 +1420,16 @@ export default function AdminDashboard() {
                 >
                   SMS Templates
                 </button>
+                <button
+                  onClick={() => setActiveTab('sms-logs')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'sms-logs'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  SMS Logs
+                </button>
               </nav>
             </div>
           </div>
@@ -1785,7 +1838,12 @@ export default function AdminDashboard() {
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SMS Status</th>
+                                  <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conf</th>
+                                  <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">D-1</th>
+                                  <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Morn</th>
+                                  <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick</th>
+                                  <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Del</th>
+                                  <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                               </thead>
@@ -1971,8 +2029,71 @@ export default function AdminDashboard() {
                                         {order.payment_status}
                                       </span>
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
-                                      <SMSStatusIndicator order={order} />
+                                    <td className="px-1 py-4 whitespace-nowrap text-xs">
+                                      <span className={`px-1 py-1 rounded text-xs ${
+                                        order.confirmation_sms_status === 'sent' || order.confirmation_sms_status === 'delivered' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : order.confirmation_sms_status === 'failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+{order.confirmation_sms_status || 'pending'}
+                                      </span>
+                                    </td>
+                                    <td className="px-1 py-4 whitespace-nowrap text-xs">
+                                      <span className={`px-1 py-1 rounded text-xs ${
+                                        order.reminder_24h_status === 'sent' || order.reminder_24h_status === 'delivered' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : order.reminder_24h_status === 'failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                        {order.reminder_24h_status || 'pending'}
+                                      </span>
+                                    </td>
+                                    <td className="px-1 py-4 whitespace-nowrap text-xs">
+                                      <span className={`px-1 py-1 rounded text-xs ${
+                                        order.morning_reminder_status === 'sent' || order.morning_reminder_status === 'delivered' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : order.morning_reminder_status === 'failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                        {order.morning_reminder_status || 'pending'}
+                                      </span>
+                                    </td>
+                                    <td className="px-1 py-4 whitespace-nowrap text-xs">
+                                      <span className={`px-1 py-1 rounded text-xs ${
+                                        order.pickup_sms_status === 'sent' || order.pickup_sms_status === 'delivered' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : order.pickup_sms_status === 'failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                        {order.pickup_sms_status || 'pending'}
+                                      </span>
+                                    </td>
+                                    <td className="px-1 py-4 whitespace-nowrap text-xs">
+                                      <span className={`px-1 py-1 rounded text-xs ${
+                                        order.delivery_sms_status === 'sent' || order.delivery_sms_status === 'delivered' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : order.delivery_sms_status === 'failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                        {order.delivery_sms_status || 'pending'}
+                                      </span>
+                                    </td>
+                                    <td className="px-1 py-4 whitespace-nowrap text-xs">
+                                      <span className={`px-1 py-1 rounded text-xs ${
+                                        order.followup_sms_status === 'sent' || order.followup_sms_status === 'delivered' 
+                                          ? 'bg-green-100 text-green-800' 
+                                          : order.followup_sms_status === 'failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                        {order.followup_sms_status || 'pending'}
+                                      </span>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                       <select
@@ -2113,6 +2234,78 @@ export default function AdminDashboard() {
                 <div className="text-gray-600">No SMS templates found</div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* SMS Logs Tab */}
+        {activeTab === 'sms-logs' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg md:text-xl font-semibold">SMS Sending History</h2>
+              <button 
+                onClick={fetchSmsLogs}
+                className="bg-blue-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-blue-700 text-sm md:text-base"
+              >
+                Refresh
+              </button>
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SMS Type</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {smsLogs.map((log) => (
+                      <tr key={log.id}>
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {new Date(log.sent_at).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {log.orders ? `${log.orders.first_name} ${log.orders.last_name}` : 'Unknown'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {log.phone_number}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {log.sms_type.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            log.status === 'sent' || log.status === 'delivered' 
+                              ? 'bg-green-100 text-green-800' 
+                              : log.status === 'failed' 
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {log.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
+                          {log.message_content}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {smsLogs.length === 0 && (
+                <div className="p-6 text-center">
+                  <div className="text-gray-600">No SMS logs found</div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
