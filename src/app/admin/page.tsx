@@ -45,6 +45,8 @@ export default function AdminDashboard() {
   const [customEndDate, setCustomEndDate] = useState('');
   const [notesModal, setNotesModal] = useState<{orderId: number, notes: string, customerName: string} | null>(null);
   const [updatingNotes, setUpdatingNotes] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = current+next week, -1 = previous 2 weeks, +1 = next 2 weeks after next
+  const [navigatingWeeks, setNavigatingWeeks] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -64,6 +66,13 @@ export default function AdminDashboard() {
       fetchAnalytics();
     }
   }, [activeTab]);
+
+  // Refresh orders when week offset changes
+  useEffect(() => {
+    if (weekOffset !== 0) {
+      fetchOrders();
+    }
+  }, [weekOffset]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -266,7 +275,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const getWeekDays = (): DayGroup[] => {
+  const getWeekDays = (offset: number = 0): DayGroup[] => {
     // Use local timezone consistently for business operations
     const today = new Date();
     const currentWeekStart = new Date(today);
@@ -279,12 +288,16 @@ export default function AdminDashboard() {
     const daysToGoBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     currentWeekStart.setDate(today.getDate() - daysToGoBack);
     
+    // Apply the offset (each offset represents 2 weeks = 14 days)
+    currentWeekStart.setDate(currentWeekStart.getDate() + (offset * 14));
+    
     // Log for debugging week boundary calculations
     if (process.env.NODE_ENV === 'development') {
       console.log('Week calculation:', {
         today: today.toDateString(),
         dayOfWeek,
         daysToGoBack,
+        offset,
         currentWeekStart: currentWeekStart.toDateString()
       });
     }
@@ -419,7 +432,7 @@ export default function AdminDashboard() {
   };
 
   const groupOrdersByDay = (): DayGroup[] => {
-    const weekDays = getWeekDays();
+    const weekDays = getWeekDays(weekOffset);
     const filteredOrders = filterOrders(orders);
     
     // Group filtered orders by their service date
@@ -441,6 +454,28 @@ export default function AdminDashboard() {
     });
     
     return weekDays;
+  };
+
+  const getDateRangeDisplay = (): string => {
+    const weekDays = getWeekDays(weekOffset);
+    if (weekDays.length === 0) return '';
+    
+    const startDate = new Date(weekDays[0].date + 'T00:00:00');
+    const endDate = new Date(weekDays[weekDays.length - 1].date + 'T00:00:00');
+    
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString('en-AU', { 
+        day: 'numeric', 
+        month: 'short',
+        year: startDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined 
+      });
+    };
+    
+    if (weekOffset === 0) {
+      return 'Current + Next Week';
+    }
+    
+    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
   };
 
   const getRouteInfo = (order: Order): string => {
@@ -972,92 +1007,115 @@ export default function AdminDashboard() {
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
         </div>
       )}
+      
+      {/* Header: Name, Order#, Price */}
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start space-x-3 flex-1">
           <input
             type="checkbox"
             checked={selectedOrders.has(order.id)}
             onChange={() => toggleOrderSelection(order.id)}
             className="mt-1 rounded border-gray-300 touch-manipulation"
           />
-          <div>
-            <h3 className="font-medium text-gray-900">
+          <div className="flex-1">
+            <h3 className="font-medium text-gray-900 text-base">
               {order.first_name} {order.last_name}
             </h3>
             <p className="text-sm text-gray-500">#{order.id}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="font-medium text-gray-900">${order.total_amount.toFixed(2)}</p>
-          <p className="text-xs text-gray-500">{order.total_items} items</p>
+        <div className="text-right ml-3">
+          <p className="font-semibold text-gray-900 text-base">${order.total_amount.toFixed(2)}</p>
+          <div className="flex items-center justify-end space-x-1">
+            <p className="text-xs text-gray-500">{order.total_items} items</p>
+            <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${
+              order.service_level === 'premium' 
+                ? 'bg-purple-100 text-purple-700' 
+                : 'bg-blue-100 text-blue-700'
+            }`}>
+              {order.service_level === 'premium' ? '⭐' : '📋'}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            order.status === 'paid' ? 'bg-green-100 text-green-800' :
-            order.status === 'reminder_24h' ? 'bg-yellow-100 text-yellow-800' :
-            order.status === 'morning_reminder' ? 'bg-orange-100 text-orange-800' :
-            order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
-            order.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
-            order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {order.status.replace('_', ' ')}
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-3"></div>
+
+      {/* Status Row: Order Status + Payment Status */}
+      <div className="flex items-center justify-between mb-3">
+        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${
+          order.status === 'paid' ? 'bg-green-100 text-green-800' :
+          order.status === 'reminder_24h' ? 'bg-yellow-100 text-yellow-800' :
+          order.status === 'morning_reminder' ? 'bg-orange-100 text-orange-800' :
+          order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
+          order.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
+          order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {order.status.replace('_', ' ')}
+        </span>
+        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${
+          order.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+          order.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {order.payment_status}
+        </span>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-3"></div>
+
+      {/* SMS Status Section */}
+      <div className="mb-3">
+        <div className="text-xs text-gray-500 mb-2 font-medium">SMS Status</div>
+        <SMSStatusIndicator order={order} compact={true} />
+      </div>
+
+      {/* Address Section */}
+      <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded-lg">
+        <div className="flex items-center space-x-2 flex-1">
+          <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="text-sm text-gray-700 truncate flex-1">
+            {order.street_address || order.pickup_address}
           </span>
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            order.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-            order.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {order.payment_status}
-          </span>
+          {/* Show route order number if optimized */}
+          {(() => {
+            const orderNum = getOptimizedOrderNumber(groupOrdersByDay().find(dg => 
+              dg.orders.some(o => o.id === order.id)
+            )!, order);
+            return orderNum ? (
+              <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
+                #{orderNum}
+              </span>
+            ) : null;
+          })()}
         </div>
+        <button
+          onClick={() => openGoogleMaps(getFullAddress(order))}
+          className="ml-2 p-1.5 text-blue-500 hover:text-blue-700 bg-blue-50 rounded-lg touch-manipulation flex-shrink-0"
+          title="Navigate"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </button>
+      </div>
 
-        {/* SMS Status Row */}
-        <div className="mt-2">
-          <div className="text-xs text-gray-500 mb-1">SMS Status:</div>
-          <SMSStatusIndicator order={order} compact={true} />
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-2 flex-1">
-            <span className="text-gray-600 truncate">
-              {order.street_address || order.pickup_address}
-            </span>
-            {/* Show route order number if optimized */}
-            {(() => {
-              const orderNum = getOptimizedOrderNumber(groupOrdersByDay().find(dg => 
-                dg.orders.some(o => o.id === order.id)
-              )!, order);
-              return orderNum ? (
-                <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
-                  #{orderNum}
-                </span>
-              ) : null;
-            })()}
-          </div>
-          <button
-            onClick={() => openGoogleMaps(getFullAddress(order))}
-            className="ml-2 p-1 text-blue-500 hover:text-blue-700 touch-manipulation"
-            title="Navigate"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-        </div>
-
-        {order.special_instructions && order.special_instructions.trim() !== '' && (
-          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+      {/* Special Instructions */}
+      {order.special_instructions && order.special_instructions.trim() !== '' && (
+        <>
+          <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
             <div className="flex items-start space-x-2">
               <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="flex-1">
-                <p className="text-xs font-medium text-yellow-800">Special Instructions:</p>
+                <p className="text-xs font-medium text-yellow-800">Special Instructions</p>
                 <p className="text-xs text-yellow-700 mt-1">
                   {expandedInstructions.has(order.id) 
                     ? order.special_instructions
@@ -1075,45 +1133,77 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-        )}
+        </>
+      )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => handleCallCustomer(order.phone, `${order.first_name} ${order.last_name}`)}
-              className="p-2 text-green-500 hover:text-green-700 bg-green-50 rounded-lg touch-manipulation"
-              title="Call"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => handleSMSCustomer(order.phone, `${order.first_name} ${order.last_name}`, order.id)}
-              className="p-2 text-blue-500 hover:text-blue-700 bg-blue-50 rounded-lg touch-manipulation"
-              title="SMS"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </button>
+      {/* Internal Notes */}
+      <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg mb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-2 flex-1">
+            <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-blue-800">Internal Notes</p>
+              <p className="text-xs text-blue-700 mt-1">
+                {order.internal_notes && order.internal_notes.trim() !== '' 
+                  ? order.internal_notes 
+                  : 'No internal notes'}
+              </p>
+            </div>
           </div>
-          <select
-            value={order.status}
-            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-            disabled={updatingOrderStatus[order.id]}
-            className={`text-xs border border-gray-300 rounded-lg px-2 py-1 touch-manipulation ${
-              updatingOrderStatus[order.id] ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+          <button
+            onClick={() => setNotesModal({
+              orderId: order.id,
+              notes: order.internal_notes || '',
+              customerName: `${order.first_name} ${order.last_name}`
+            })}
+            className="text-blue-600 hover:text-blue-800 text-xs font-medium bg-white px-2 py-1 rounded border border-blue-200 touch-manipulation flex-shrink-0"
           >
-            <option value="paid">💳 Paid</option>
-            <option value="reminder_24h">📅 24H Reminder</option>
-            <option value="morning_reminder">🌅 Morning</option>
-            <option value="picked_up">📦 Picked Up</option>
-            <option value="delivered">🚚 Delivered</option>
-            <option value="completed">✨ Completed</option>
-          </select>
+            Edit
+          </button>
         </div>
+      </div>
+
+      {/* Action Buttons Section */}
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => handleCallCustomer(order.phone, `${order.first_name} ${order.last_name}`)}
+            className="flex items-center px-3 py-2 text-sm text-green-700 bg-green-50 rounded-lg hover:bg-green-100 touch-manipulation"
+            title="Call Customer"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            Call
+          </button>
+          <button
+            onClick={() => handleSMSCustomer(order.phone, `${order.first_name} ${order.last_name}`, order.id)}
+            className="flex items-center px-3 py-2 text-sm text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 touch-manipulation"
+            title="Send SMS"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            SMS
+          </button>
+        </div>
+        <select
+          value={order.status}
+          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+          disabled={updatingOrderStatus[order.id]}
+          className={`text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white touch-manipulation min-w-[100px] ${
+            updatingOrderStatus[order.id] ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <option value="paid">💳 Paid</option>
+          <option value="reminder_24h">📅 24H Reminder</option>
+          <option value="morning_reminder">🌅 Morning</option>
+          <option value="picked_up">📦 Picked Up</option>
+          <option value="delivered">🚚 Delivered</option>
+          <option value="completed">✨ Completed</option>
+        </select>
       </div>
     </div>
   );
@@ -1815,6 +1905,133 @@ export default function AdminDashboard() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Week Navigation Controls */}
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-white border border-gray-200 rounded-lg">
+            {/* Mobile Layout */}
+            <div className="block md:hidden space-y-3">
+              {/* Date Range Display */}
+              <div className="text-center">
+                <div className="text-sm font-medium text-gray-700 mb-2">
+                  {navigatingWeeks ? 'Loading...' : getDateRangeDisplay()}
+                </div>
+                {weekOffset !== 0 && (
+                  <button
+                    onClick={() => {
+                      setNavigatingWeeks(true);
+                      setWeekOffset(0);
+                      setTimeout(() => setNavigatingWeeks(false), 500);
+                    }}
+                    disabled={navigatingWeeks}
+                    className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
+                  >
+                    Back to Current Week
+                  </button>
+                )}
+              </div>
+              
+              {/* Navigation Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => {
+                    setNavigatingWeeks(true);
+                    setWeekOffset(weekOffset - 1);
+                    setTimeout(() => setNavigatingWeeks(false), 500);
+                  }}
+                  disabled={navigatingWeeks}
+                  className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                    navigatingWeeks
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="text-xs">Previous</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setNavigatingWeeks(true);
+                    setWeekOffset(weekOffset + 1);
+                    setTimeout(() => setNavigatingWeeks(false), 500);
+                  }}
+                  disabled={navigatingWeeks}
+                  className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                    navigatingWeeks
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  <span className="text-xs">Next</span>
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden md:flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setNavigatingWeeks(true);
+                  setWeekOffset(weekOffset - 1);
+                  setTimeout(() => setNavigatingWeeks(false), 500);
+                }}
+                disabled={navigatingWeeks}
+                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  navigatingWeeks
+                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous 2 Weeks
+              </button>
+
+              <div className="flex items-center space-x-2">
+                <div className="text-sm text-gray-600">
+                  {navigatingWeeks ? 'Loading...' : getDateRangeDisplay()}
+                </div>
+                {weekOffset !== 0 && (
+                  <button
+                    onClick={() => {
+                      setNavigatingWeeks(true);
+                      setWeekOffset(0);
+                      setTimeout(() => setNavigatingWeeks(false), 500);
+                    }}
+                    disabled={navigatingWeeks}
+                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
+                  >
+                    Today
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  setNavigatingWeeks(true);
+                  setWeekOffset(weekOffset + 1);
+                  setTimeout(() => setNavigatingWeeks(false), 500);
+                }}
+                disabled={navigatingWeeks}
+                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  navigatingWeeks
+                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                }`}
+              >
+                Next 2 Weeks
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {selectedOrders.size > 0 && (
