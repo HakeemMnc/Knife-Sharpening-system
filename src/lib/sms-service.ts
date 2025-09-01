@@ -341,6 +341,23 @@ export class SMSService {
     }
   }
 
+  // Send notification SMS to admin (used by webhook)
+  static async sendAdminNotification(message: string): Promise<boolean> {
+    const adminPhone = process.env.ADMIN_PHONE_NUMBER;
+    if (!adminPhone) {
+      console.warn('Admin phone number not configured for notifications');
+      return false;
+    }
+
+    try {
+      const result = await this.sendSMS(adminPhone, message);
+      return result.success;
+    } catch (error) {
+      console.error('Error sending admin notification:', error);
+      return false;
+    }
+  }
+
   // Update SMS delivery status (webhook handler)
   static async updateDeliveryStatus(twilioSid: string, status: 'delivered' | 'undelivered'): Promise<void> {
     try {

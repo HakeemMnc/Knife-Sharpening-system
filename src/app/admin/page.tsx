@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const [bulkSMSAction, setBulkSMSAction] = useState<string>('');
   const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
   const [modalInstructions, setModalInstructions] = useState<{orderId: number, instructions: string, customerName: string} | null>(null);
+  const [activeTab, setActiveTab] = useState<'orders' | 'messages'>('orders');
 
   useEffect(() => {
     fetchOrders();
@@ -131,6 +132,9 @@ export default function AdminDashboard() {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP ${response.status}: Failed to update order`);
       }
+
+      // Auto-trigger SMS based on status change
+      await handleAutoSMS(orderId, newStatus);
 
       // Refresh orders on success
       fetchOrders();
@@ -550,6 +554,99 @@ export default function AdminDashboard() {
     return labels[smsType] || smsType;
   };
 
+  // Auto-trigger SMS based on order status changes
+  const handleAutoSMS = async (orderId: number, newStatus: string) => {
+    const statusSMSMapping: { [key: string]: string } = {
+      'reminder_24h': 'reminder_24h',
+      'morning_reminder': 'morning_reminder', 
+      'picked_up': 'pickup',
+      'delivered': 'delivery'
+    };
+
+    const smsType = statusSMSMapping[newStatus];
+    if (!smsType) return; // No SMS needed for this status
+
+    try {
+      console.log(`Auto-triggering ${smsType} SMS for order ${orderId} (status: ${newStatus})`);
+      
+      const response = await fetch(`/api/sms/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          smsType,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log(`✅ Auto-SMS sent successfully: ${smsType} for order ${orderId}`);
+      } else {
+        console.error(`❌ Auto-SMS failed: ${result.message}`);
+        // Don't show alert for auto-SMS failures to avoid interrupting the user
+      }
+
+      // Special case: Schedule follow-up SMS 24 hours after delivery
+      if (newStatus === 'delivered') {
+        console.log(`📅 Delivery status detected - scheduling follow-up SMS for 24 hours from now`);
+        
+        // Schedule follow-up SMS for 24 hours later
+        // Note: In production, use a proper job queue. This is a demo implementation.
+        setTimeout(async () => {
+          try {
+            console.log(`⏰ 24 hours elapsed - sending follow-up SMS for order ${orderId}`);
+            
+            const followUpResponse = await fetch(`/api/sms/follow-up`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ orderId }),
+            });
+
+            const followUpResult = await followUpResponse.json();
+            
+            if (followUpResult.success) {
+              console.log(`✅ Follow-up SMS sent successfully for order ${orderId} - Order marked as completed`);
+            } else {
+              console.error(`❌ Follow-up SMS failed for order ${orderId}:`, followUpResult.message);
+            }
+          } catch (error) {
+            console.error(`Error sending scheduled follow-up SMS for order ${orderId}:`, error);
+          }
+        }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+        
+        // For testing purposes, also schedule a shorter demo version (5 minutes)
+        console.log(`🧪 DEMO: Also scheduling a test follow-up in 5 minutes for testing`);
+        setTimeout(async () => {
+          console.log(`🧪 DEMO: 5 minutes elapsed - this would be the 24h follow-up for order ${orderId}`);
+          // Uncomment below to test the follow-up immediately
+          // You can manually trigger this by uncommenting these lines
+          /*
+          try {
+            const followUpResponse = await fetch(`/api/sms/follow-up`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId }),
+            });
+            const followUpResult = await followUpResponse.json();
+            console.log('Demo follow-up result:', followUpResult);
+          } catch (error) {
+            console.error('Demo follow-up error:', error);
+          }
+          */
+        }, 5 * 60 * 1000); // 5 minutes for demo
+      }
+
+    } catch (error) {
+      console.error(`Error sending auto-SMS for order ${orderId}:`, error);
+      // Silent failure for auto-SMS to not interrupt user workflow
+    }
+  };
+
   const canProgressStatus = (fromStatus: string, toStatus: string): boolean => {
     const validTransitions: { [key: string]: string[] } = {
       'pending': ['paid'],
@@ -767,12 +864,12 @@ export default function AdminDashboard() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
             order.status === 'paid' ? 'bg-green-100 text-green-800' :
+            order.status === 'reminder_24h' ? 'bg-yellow-100 text-yellow-800' :
+            order.status === 'morning_reminder' ? 'bg-orange-100 text-orange-800' :
             order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
-            order.status === 'sharpening' ? 'bg-purple-100 text-purple-800' :
-            order.status === 'ready' ? 'bg-indigo-100 text-indigo-800' :
-            order.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+            order.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
+            order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
             'bg-gray-100 text-gray-800'
           }`}>
             {order.status.replace('_', ' ')}
@@ -784,6 +881,12 @@ export default function AdminDashboard() {
           }`}>
             {order.payment_status}
           </span>
+        </div>
+
+        {/* SMS Status Row */}
+        <div className="mt-2">
+          <div className="text-xs text-gray-500 mb-1">SMS Status:</div>
+          <SMSStatusIndicator order={order} compact={true} />
         </div>
 
         <div className="flex items-center justify-between text-sm">
@@ -871,13 +974,12 @@ export default function AdminDashboard() {
               updatingOrderStatus[order.id] ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="picked_up">Picked Up</option>
-            <option value="sharpening">Sharpening</option>
-            <option value="ready">Ready</option>
-            <option value="delivered">Delivered</option>
-            <option value="completed">Completed</option>
+            <option value="paid">💳 Paid</option>
+            <option value="reminder_24h">📅 24H Reminder</option>
+            <option value="morning_reminder">🌅 Morning</option>
+            <option value="picked_up">📦 Picked Up</option>
+            <option value="delivered">🚚 Delivered</option>
+            <option value="completed">✨ Completed</option>
           </select>
         </div>
       </div>
@@ -1200,6 +1302,36 @@ export default function AdminDashboard() {
             </div>
           )}
           
+          {/* Tab Navigation */}
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'orders'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Orders
+                </button>
+                <button
+                  onClick={() => setActiveTab('messages')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'messages'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  SMS Conversations
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {activeTab === 'orders' && (
+          <>
           <div className="mb-4 md:mb-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg md:text-xl font-semibold">
@@ -1260,13 +1392,12 @@ export default function AdminDashboard() {
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="all">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
-                  <option value="picked_up">Picked Up</option>
-                  <option value="sharpening">Sharpening</option>
-                  <option value="ready">Ready</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="completed">Completed</option>
+                  <option value="paid">💳 Paid</option>
+                  <option value="reminder_24h">📅 24H Reminder</option>
+                  <option value="morning_reminder">🌅 Morning Reminder</option>
+                  <option value="picked_up">📦 Picked Up</option>
+                  <option value="delivered">🚚 Delivered</option>
+                  <option value="completed">✨ Completed</option>
                 </select>
               </div>
 
@@ -1380,88 +1511,35 @@ export default function AdminDashboard() {
                     Clear
                   </button>
                 </div>
-                <div className="space-y-3 md:space-y-0">
-                  {/* Status Update Actions */}
-                  <div>
-                    <h4 className="text-xs font-medium text-blue-800 mb-2 md:hidden">Status Updates</h4>
-                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-                      <button
-                        onClick={() => bulkUpdateOrderStatus('picked_up')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Picked Up' : 'Mark as Picked Up'}
-                      </button>
-                      <button
-                        onClick={() => bulkUpdateOrderStatus('sharpening')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Sharpening' : 'Mark as Sharpening'}
-                      </button>
-                      <button
-                        onClick={() => bulkUpdateOrderStatus('ready')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Ready' : 'Mark as Ready'}
-                      </button>
-                      <button
-                        onClick={() => bulkUpdateOrderStatus('delivered')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-gray-600 text-white text-xs rounded-lg hover:bg-gray-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Delivered' : 'Mark as Delivered'}
-                      </button>
-                      <button
-                        onClick={() => bulkUpdateOrderStatus('completed')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-900 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Updating...' : isMobileView ? 'Completed' : 'Mark as Completed'}
-                      </button>
-                    </div>
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  {/* Bulk SMS Actions - Most Used */}
+                  <button
+                    onClick={() => handleBulkSMS('reminder_24h')}
+                    disabled={bulkUpdating}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 touch-manipulation flex items-center gap-2"
+                  >
+                    <span>📅</span>
+                    {bulkUpdating ? 'Sending...' : 'Send D-1 Reminder'}
+                  </button>
+                  
+                  <button
+                    onClick={() => handleBulkSMS('morning_reminder')}
+                    disabled={bulkUpdating}
+                    className="px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 disabled:opacity-50 touch-manipulation flex items-center gap-2"
+                  >
+                    <span>🌅</span>
+                    {bulkUpdating ? 'Sending...' : 'Send Morning Reminder'}
+                  </button>
 
-                  {/* SMS Actions */}
-                  <div>
-                    <h4 className="text-xs font-medium text-blue-800 mb-2 md:hidden">SMS Actions</h4>
-                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-                      <button
-                        onClick={() => handleBulkSMS('reminder_24h')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Sending...' : isMobileView ? 'D-1 SMS' : 'Send D-1 Reminder'}
-                      </button>
-                      <button
-                        onClick={() => handleBulkSMS('morning_reminder')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-yellow-600 text-white text-xs rounded-lg hover:bg-yellow-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Sending...' : isMobileView ? 'Morning SMS' : 'Send Morning Reminder'}
-                      </button>
-                      <button
-                        onClick={() => handleBulkSMS('followup')}
-                        disabled={bulkUpdating}
-                        className="px-3 py-2 bg-teal-600 text-white text-xs rounded-lg hover:bg-teal-700 disabled:opacity-50 touch-manipulation"
-                      >
-                        {bulkUpdating ? 'Sending...' : isMobileView ? 'Follow-up SMS' : 'Send Follow-up'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Danger Actions */}
-                  <div>
-                    <h4 className="text-xs font-medium text-red-800 mb-2 md:hidden">Danger Zone</h4>
-                    <button
-                      onClick={bulkDeleteOrders}
-                      disabled={bulkUpdating}
-                      className="px-3 py-2 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 touch-manipulation"
-                    >
-                      {bulkUpdating ? 'Deleting...' : isMobileView ? '🗑️ Delete' : '🗑️ Permanent Delete'}
-                    </button>
-                  </div>
+                  {/* Delete Action */}
+                  <button
+                    onClick={bulkDeleteOrders}
+                    disabled={bulkUpdating}
+                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 touch-manipulation flex items-center gap-2 ml-4"
+                  >
+                    <span>🗑️</span>
+                    {bulkUpdating ? 'Deleting...' : 'Delete Selected'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -1656,6 +1734,7 @@ export default function AdminDashboard() {
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SMS Status</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                               </thead>
@@ -1821,12 +1900,12 @@ export default function AdminDashboard() {
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                         order.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                        order.status === 'reminder_24h' ? 'bg-yellow-100 text-yellow-800' :
+                                        order.status === 'morning_reminder' ? 'bg-orange-100 text-orange-800' :
                                         order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
-                                        order.status === 'sharpening' ? 'bg-purple-100 text-purple-800' :
-                                        order.status === 'ready' ? 'bg-indigo-100 text-indigo-800' :
-                                        order.status === 'delivered' ? 'bg-gray-100 text-gray-800' :
+                                        order.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
+                                        order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
                                         'bg-gray-100 text-gray-800'
                                       }`}>
                                         {order.status.replace('_', ' ')}
@@ -1841,6 +1920,9 @@ export default function AdminDashboard() {
                                         {order.payment_status}
                                       </span>
                                     </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                      <SMSStatusIndicator order={order} />
+                                    </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                       <select
                                         value={order.status}
@@ -1850,13 +1932,12 @@ export default function AdminDashboard() {
                                           updatingOrderStatus[order.id] ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
                                       >
-                                        <option value="pending">Pending</option>
-                                        <option value="paid">Paid</option>
-                                        <option value="picked_up">Picked Up</option>
-                                        <option value="sharpening">Sharpening</option>
-                                        <option value="ready">Ready</option>
-                                        <option value="delivered">Delivered</option>
-                                        <option value="completed">Completed</option>
+                                        <option value="paid">💳 Paid (Confirmation sent)</option>
+                                        <option value="reminder_24h">📅 24H Reminder (→ SMS)</option>
+                                        <option value="morning_reminder">🌅 Morning Reminder (→ SMS)</option>
+                                        <option value="picked_up">📦 Picked Up (→ SMS)</option>
+                                        <option value="delivered">🚚 Delivered (→ SMS + Follow-up)</option>
+                                        <option value="completed">✨ Completed</option>
                                       </select>
                                     </td>
                                   </tr>
@@ -1873,7 +1954,34 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
-        </div>
+        </>
+        )}
+
+        {/* SMS Conversations Tab */}
+        {activeTab === 'messages' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg md:text-xl font-semibold">SMS Conversations</h2>
+              <button 
+                onClick={() => {/* TODO: Implement refresh conversations */}}
+                className="bg-blue-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-blue-700 text-sm md:text-base"
+              >
+                Refresh
+              </button>
+            </div>
+            
+            {/* Coming soon placeholder */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <div className="text-yellow-600 text-lg font-medium mb-2">SMS Conversations</div>
+              <div className="text-yellow-700 text-sm mb-4">
+                This feature will show all SMS conversations with customers and allow you to reply directly.
+              </div>
+              <div className="text-yellow-600 text-xs">
+                📋 Next: Set up Twilio webhook to receive customer replies
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Special Instructions Modal */}
         {modalInstructions && (
@@ -1924,5 +2032,6 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+  </div>
   );
 }

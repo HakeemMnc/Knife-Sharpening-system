@@ -58,7 +58,7 @@ export async function PATCH(
     const { status, payment_status, ...otherUpdates } = body;
 
     // Validate status if provided
-    if (status && !['pending', 'paid', 'picked_up', 'sharpening', 'ready', 'delivered', 'completed'].includes(status)) {
+    if (status && !['pending', 'paid', 'reminder_24h', 'morning_reminder', 'picked_up', 'delivered', 'completed'].includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status' },
         { status: 400 }

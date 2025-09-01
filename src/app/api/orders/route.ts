@@ -154,9 +154,34 @@ export async function GET() {
     // Get all orders for admin dashboard
     const orders = await DatabaseService.getAllOrders();
     
+    // Debug logging
+    console.log('=== Orders API Debug ===');
+    console.log('Found orders:', orders.length);
+    if (orders.length > 0) {
+      console.log('First order SMS status fields:', {
+        id: orders[0].id,
+        confirmation_sms_status: orders[0].confirmation_sms_status,
+        reminder_24h_status: orders[0].reminder_24h_status,
+        morning_reminder_status: orders[0].morning_reminder_status,
+        pickup_sms_status: orders[0].pickup_sms_status
+      });
+    }
+    
+    // Ensure SMS status fields are included in the response
+    const ordersWithSMS = orders.map(order => ({
+      ...order,
+      // Explicitly include SMS status fields
+      confirmation_sms_status: order.confirmation_sms_status || 'pending',
+      reminder_24h_status: order.reminder_24h_status || 'pending',
+      morning_reminder_status: order.morning_reminder_status || 'pending',
+      pickup_sms_status: order.pickup_sms_status || 'pending',
+      delivery_sms_status: order.delivery_sms_status || 'pending',
+      followup_sms_status: order.followup_sms_status || 'pending'
+    }));
+
     return NextResponse.json({
       success: true,
-      orders: orders
+      orders: ordersWithSMS
     });
   } catch (error) {
     console.error('Error fetching orders:', error);

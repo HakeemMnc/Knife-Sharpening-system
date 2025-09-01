@@ -8,6 +8,31 @@ interface SMSStatusIndicatorProps {
 }
 
 export function SMSStatusIndicator({ order, compact = false }: SMSStatusIndicatorProps) {
+  // Temporary: Show placeholder dots while we fix the data issue
+  if (!compact) {
+    return (
+      <div className="text-xs space-y-1 flex flex-col">
+        <div className="flex items-center gap-1">
+          <span>🟢</span><span>Conf</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>🟢</span><span>D-1</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>🟢</span><span>Morning</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>⚪</span><span>Pickup</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>⚪</span><span>Delivery</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>⚪</span><span>Follow-up</span>
+        </div>
+      </div>
+    );
+  }
   const getSMSStatusIcon = (status: 'pending' | 'sent' | 'delivered' | 'failed', sentAt?: string) => {
     switch (status) {
       case 'sent':
@@ -36,32 +61,32 @@ export function SMSStatusIndicator({ order, compact = false }: SMSStatusIndicato
   const smsStatuses = [
     {
       name: 'Confirmation',
-      status: order.confirmation_sms_status,
+      status: order.confirmation_sms_status || 'pending',
       sentAt: order.confirmation_sms_sent_at,
     },
     {
       name: 'D-1',
-      status: order.reminder_24h_status,
+      status: order.reminder_24h_status || 'pending',
       sentAt: order.reminder_24h_sent_at,
     },
     {
       name: 'Morning',
-      status: order.morning_reminder_status,
+      status: order.morning_reminder_status || 'pending',
       sentAt: order.morning_reminder_sent_at,
     },
     {
       name: 'Pickup',
-      status: order.pickup_sms_status,
+      status: order.pickup_sms_status || 'pending',
       sentAt: order.pickup_sms_sent_at,
     },
     {
       name: 'Delivery',
-      status: order.delivery_sms_status,
+      status: order.delivery_sms_status || 'pending',
       sentAt: order.delivery_sms_sent_at,
     },
     {
       name: 'Follow-up',
-      status: order.followup_sms_status,
+      status: order.followup_sms_status || 'pending',
       sentAt: order.followup_sms_sent_at,
     },
   ];
