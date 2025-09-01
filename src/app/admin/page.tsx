@@ -43,6 +43,8 @@ export default function AdminDashboard() {
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [notesModal, setNotesModal] = useState<{orderId: number, notes: string, customerName: string} | null>(null);
+  const [updatingNotes, setUpdatingNotes] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -203,6 +205,27 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+    }
+  };
+
+  const updateOrderNotes = async (orderId: number, notes: string) => {
+    setUpdatingNotes(true);
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ internal_notes: notes })
+      });
+
+      if (!response.ok) throw new Error('Failed to update notes');
+
+      fetchOrders(); // Refresh to show updated notes
+      setNotesModal(null);
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      alert('Failed to update notes');
+    } finally {
+      setUpdatingNotes(false);
     }
   };
 
@@ -367,6 +390,7 @@ export default function AdminDashboard() {
         delivery_sms_sent_at: sanitizeOptionalString(order.delivery_sms_sent_at),
         followup_sms_sent_at: sanitizeOptionalString(order.followup_sms_sent_at),
         
+        internal_notes: sanitizeOptionalString(order.internal_notes),
         created_at: sanitizeString(order.created_at, new Date().toISOString())
       };
     } catch (error) {
@@ -2036,6 +2060,7 @@ export default function AdminDashboard() {
                                   <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pick</th>
                                   <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Del</th>
                                   <th className="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                               </thead>
@@ -2286,6 +2311,23 @@ export default function AdminDashboard() {
                                       }`}>
                                         {order.followup_sms_status || 'pending'}
                                       </span>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <div className="max-w-xs truncate text-gray-600 text-xs">
+                                          {order.internal_notes || 'No notes'}
+                                        </div>
+                                        <button
+                                          onClick={() => setNotesModal({
+                                            orderId: order.id,
+                                            notes: order.internal_notes || '',
+                                            customerName: `${order.first_name} ${order.last_name}`
+                                          })}
+                                          className="text-blue-600 hover:text-blue-800 text-xs underline"
+                                        >
+                                          Edit
+                                        </button>
+                                      </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                       <select
@@ -2543,6 +2585,57 @@ export default function AdminDashboard() {
                   className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Internal Notes Modal */}
+        {notesModal && (
+          <div 
+            className="fixed inset-0 backdrop-blur-sm bg-white/20 flex items-center justify-center z-50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setNotesModal(null);
+              }
+            }}
+          >
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  Internal Notes - {notesModal.customerName}
+                </h3>
+                <button
+                  onClick={() => setNotesModal(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <textarea
+                value={notesModal.notes}
+                onChange={(e) => setNotesModal({...notesModal, notes: e.target.value})}
+                placeholder="Add internal notes here... (e.g., gate code, item conditions, customer preferences, delivery instructions)"
+                className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => setNotesModal(null)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => updateOrderNotes(notesModal.orderId, notesModal.notes)}
+                  disabled={updatingNotes}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {updatingNotes ? 'Saving...' : 'Save Notes'}
                 </button>
               </div>
             </div>
