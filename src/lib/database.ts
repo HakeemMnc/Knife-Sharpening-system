@@ -246,6 +246,96 @@ export class DatabaseService {
     return data || [];
   }
 
+  // SMS Conversation operations
+  static async saveConversationMessage(conversationData: {
+    order_id?: number;
+    phone_number: string;
+    message_content: string;
+    direction: 'inbound' | 'outbound';
+    twilio_sid?: string;
+    admin_user?: string;
+  }): Promise<SMSConversation> {
+    const { data, error } = await supabaseAdmin
+      .from('sms_conversations')
+      .insert(conversationData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getConversationsByOrder(orderId: number): Promise<SMSConversation[]> {
+    const { data, error } = await supabase
+      .from('sms_conversations')
+      .select('*')
+      .eq('order_id', orderId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getAllConversations(): Promise<SMSConversation[]> {
+    const { data, error } = await supabase
+      .from('sms_conversations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  // SMS Template operations
+  static async getSMSTemplates(): Promise<SMSTemplate[]> {
+    const { data, error } = await supabase
+      .from('sms_templates')
+      .select('*')
+      .eq('is_active', true);
+
+    if (error) throw error;
+    
+    // Custom order for templates
+    const templateOrder = ['confirmation', 'reminder_24h', 'morning_reminder', 'pickup', 'delivery', 'followup'];
+    const templates = data || [];
+    
+    return templates.sort((a, b) => {
+      const aIndex = templateOrder.indexOf(a.template_name);
+      const bIndex = templateOrder.indexOf(b.template_name);
+      return aIndex - bIndex;
+    });
+  }
+
+  static async updateSMSTemplate(id: number, template_content: string): Promise<SMSTemplate> {
+    const { data, error } = await supabaseAdmin
+      .from('sms_templates')
+      .update({ 
+        template_content,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updateSMSTemplateFields(id: number, updates: any): Promise<SMSTemplate> {
+    const { data, error } = await supabaseAdmin
+      .from('sms_templates')
+      .update({ 
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   // Customer operations
   static async findOrCreateCustomer(customerData: {
     email: string;

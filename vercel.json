@@ -20,6 +20,18 @@
     },
     "src/app/api/payments/webhook-test/route.ts": {
       "maxDuration": 10
+    },
+    "src/app/api/sms/webhook/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/sms/send/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/sms/bulk-send/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/sms/follow-up/route.ts": {
+      "maxDuration": 10
     }
   }
 }

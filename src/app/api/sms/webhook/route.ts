@@ -44,18 +44,23 @@ export async function POST(request: NextRequest) {
     const conversationData = {
       phone_number: from,
       message_content: body,
-      message_sid: messageSid,
       direction: 'inbound' as const,
-      order_id: matchingOrder?.id || null,
-      customer_name: matchingOrder ? `${matchingOrder.first_name} ${matchingOrder.last_name}` : 'Unknown Customer'
+      order_id: matchingOrder?.id || undefined,
+      twilio_sid: messageSid
     };
 
-    // TODO: Implement DatabaseService.saveConversationMessage()
-    console.log('💾 Would save conversation:', conversationData);
+    try {
+      const savedConversation = await DatabaseService.saveConversationMessage(conversationData);
+      console.log('💾 Conversation saved:', savedConversation.id);
+    } catch (error) {
+      console.error('❌ Failed to save conversation:', error);
+      // Continue processing even if save fails
+    }
 
     // Forward SMS to admin's personal phone
     try {
-      const adminMessage = `🔔 Customer Reply:\nFrom: ${conversationData.customer_name} (${from})\nOrder: ${matchingOrder ? `#${matchingOrder.id}` : 'No order found'}\nMessage: "${body}"`;
+      const customerName = matchingOrder ? `${matchingOrder.first_name} ${matchingOrder.last_name}` : 'Unknown Customer';
+      const adminMessage = `🔔 Customer Reply:\nFrom: ${customerName} (${from})\nOrder: ${matchingOrder ? `#${matchingOrder.id}` : 'No order found'}\nMessage: "${body}"`;
       
       const forwardResult = await SMSService.sendAdminNotification(adminMessage);
       console.log('📲 Admin notification result:', forwardResult);
