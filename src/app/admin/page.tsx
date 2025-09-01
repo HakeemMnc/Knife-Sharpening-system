@@ -34,11 +34,15 @@ export default function AdminDashboard() {
   const [bulkSMSAction, setBulkSMSAction] = useState<string>('');
   const [expandedInstructions, setExpandedInstructions] = useState<Set<number>>(new Set());
   const [modalInstructions, setModalInstructions] = useState<{orderId: number, instructions: string, customerName: string} | null>(null);
-  const [activeTab, setActiveTab] = useState<'orders' | 'messages' | 'templates' | 'sms-logs'>('orders');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'messages' | 'templates' | 'sms-logs'>('analytics');
   const [templates, setTemplates] = useState<any[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [templateContent, setTemplateContent] = useState('');
   const [smsLogs, setSmsLogs] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsDateRange, setAnalyticsDateRange] = useState<'week' | 'month' | 'custom'>('week');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -54,6 +58,8 @@ export default function AdminDashboard() {
       fetchTemplates();
     } else if (activeTab === 'sms-logs') {
       fetchSmsLogs();
+    } else if (activeTab === 'analytics') {
+      fetchAnalytics();
     }
   }, [activeTab]);
 
@@ -179,6 +185,24 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching SMS logs:', error);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      let url = '/api/analytics';
+      if (analyticsDateRange === 'custom' && customStartDate && customEndDate) {
+        url += `?startDate=${customStartDate}&endDate=${customEndDate}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      const result = await response.json();
+      if (result.success) {
+        setAnalytics(result.analytics);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
     }
   };
 
@@ -1391,6 +1415,16 @@ export default function AdminDashboard() {
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
                 <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'analytics'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Analytics
+                </button>
+                <button
                   onClick={() => setActiveTab('orders')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === 'orders'
@@ -1433,6 +1467,164 @@ export default function AdminDashboard() {
               </nav>
             </div>
           </div>
+
+          {/* Analytics Tab */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg md:text-xl font-semibold">Business Analytics</h2>
+                <button 
+                  onClick={fetchAnalytics}
+                  className="bg-blue-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-blue-700 text-sm md:text-base"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {analytics ? (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="text-sm text-gray-600">This Week</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        ${analytics.revenue.currentWeek.toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="text-sm text-gray-600">This Month</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        ${analytics.revenue.currentMonth.toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="text-sm text-gray-600">Total Orders</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {analytics.orders.totalOrders}
+                      </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="text-sm text-gray-600">Items Sharpened</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {analytics.orders.totalItemsSharpened}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time Period Selector */}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="text-sm font-medium text-gray-700">View Period:</span>
+                      <button
+                        onClick={() => setAnalyticsDateRange('week')}
+                        className={`px-3 py-1 rounded text-sm ${
+                          analyticsDateRange === 'week' 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Week
+                      </button>
+                      <button
+                        onClick={() => setAnalyticsDateRange('month')}
+                        className={`px-3 py-1 rounded text-sm ${
+                          analyticsDateRange === 'month' 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Month
+                      </button>
+                      <button
+                        onClick={() => setAnalyticsDateRange('custom')}
+                        className={`px-3 py-1 rounded text-sm ${
+                          analyticsDateRange === 'custom' 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Custom Range
+                      </button>
+                      
+                      {analyticsDateRange === 'custom' && (
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="date"
+                            value={customStartDate}
+                            onChange={(e) => setCustomStartDate(e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                          />
+                          <span className="text-gray-500">to</span>
+                          <input
+                            type="date"
+                            value={customEndDate}
+                            onChange={(e) => setCustomEndDate(e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                          />
+                          <button
+                            onClick={fetchAnalytics}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Revenue and Service Breakdown */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-lg font-medium mb-3">Service Breakdown</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Standard ({analytics.serviceBreakdown.standard.count} orders)</span>
+                          <span className="font-medium">${analytics.serviceBreakdown.standard.revenue.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Premium ({analytics.serviceBreakdown.premium.count} orders)</span>
+                          <span className="font-medium">${analytics.serviceBreakdown.premium.revenue.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-lg font-medium mb-3">Top Areas (by orders)</h3>
+                      <div className="space-y-2">
+                        {analytics.geoInsights.slice(0, 5).map((area: any) => (
+                          <div key={area.postcode} className="flex justify-between text-sm">
+                            <span>{area.postcode}</span>
+                            <span className="font-medium">{area.count} orders</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Simple Trends */}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <h3 className="text-lg font-medium mb-3">Daily Trends</h3>
+                    <div className="text-sm text-gray-600 mb-2">Revenue and order count by day</div>
+                    <div className="space-y-1 max-h-64 overflow-y-auto">
+                      {analytics.dailyTrends.map((day: any) => (
+                        <div key={day.date} className="flex justify-between items-center py-1 border-b border-gray-100">
+                          <span className="text-sm">{new Date(day.date).toLocaleDateString()}</span>
+                          <div className="flex gap-4 text-sm">
+                            <span>${day.revenue.toFixed(2)}</span>
+                            <span className="text-gray-500">{day.orders} orders</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                  <div className="text-gray-600">Loading analytics...</div>
+                </div>
+              )}
+            </div>
+          )}
 
           {activeTab === 'orders' && (
           <>
