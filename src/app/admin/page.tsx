@@ -5,6 +5,7 @@ import { getRouteByPostcode } from '@/config/mobileRoutes';
 import { Order } from '@/lib/database';
 import { SMSStatusIndicator } from '@/components/SMSStatusIndicator';
 import { SMSActionDropdown } from '@/components/SMSActionDropdown';
+import BookingLimitsWidget from '@/components/BookingLimitsWidget';
 
 interface DayGroup {
   dayName: string;
@@ -44,6 +45,7 @@ export default function AdminDashboard() {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [notesModal, setNotesModal] = useState<{orderId: number, notes: string, customerName: string} | null>(null);
+  const [bookingLimitsWidgetOpen, setBookingLimitsWidgetOpen] = useState(false);
   const [updatingNotes, setUpdatingNotes] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current+next week, -1 = previous 2 weeks, +1 = next 2 weeks after next
   const [navigatingWeeks, setNavigatingWeeks] = useState(false);
@@ -1587,12 +1589,20 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg md:text-xl font-semibold">Business Analytics</h2>
-                <button 
-                  onClick={fetchAnalytics}
-                  className="bg-blue-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-blue-700 text-sm md:text-base"
-                >
-                  Refresh
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setBookingLimitsWidgetOpen(true)}
+                    className="bg-purple-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-purple-700 text-sm md:text-base"
+                  >
+                    Booking Limits
+                  </button>
+                  <button 
+                    onClick={fetchAnalytics}
+                    className="bg-blue-600 text-white px-3 py-2 md:px-4 rounded-lg hover:bg-blue-700 text-sm md:text-base"
+                  >
+                    Refresh
+                  </button>
+                </div>
               </div>
 
               {analytics ? (
@@ -2860,6 +2870,12 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+    
+    {/* Booking Limits Widget */}
+    <BookingLimitsWidget
+      isOpen={bookingLimitsWidgetOpen}
+      onClose={() => setBookingLimitsWidgetOpen(false)}
+    />
   </div>
   );
 }

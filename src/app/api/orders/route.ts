@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService, dbHelpers } from '@/lib/database';
-// import { BookingLimitsService } from '@/lib/booking-limits'; // Temporarily disabled
+import { BookingLimitsService } from '@/lib/booking-limits';
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,8 +65,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Re-enable booking limits check once we fix the server-side API call issue
-    console.log('🔍 Skipping booking availability check for now:', serviceDate);
+    // Check booking availability
+    console.log('🔍 Checking booking availability for:', serviceDate);
+    const canBook = await BookingLimitsService.canBookForDate(serviceDate, 1, totalItems);
+    if (!canBook) {
+      console.log('❌ Booking not available for date:', serviceDate);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'The selected date is no longer available. Please choose another date.',
+          details: 'Daily booking limit has been reached or date is unavailable'
+        },
+        { status: 400 }
+      );
+    }
+    console.log('✅ Booking availability confirmed for:', serviceDate);
 
     // Calculate order totals or use provided amount
     let finalTotals;
@@ -128,8 +141,15 @@ export async function POST(request: NextRequest) {
     const order = await DatabaseService.createOrder(orderData);
     console.log('✅ Order created successfully:', order.id);
 
-    // TODO: Re-enable booking count increment once we fix the server-side API call issue
-    console.log('🔍 Skipping booking count increment for now:', serviceDate);
+    // Increment booking count
+    console.log('🔍 Incrementing booking count for:', serviceDate);
+    try {
+      await BookingLimitsService.incrementBookingCount(serviceDate, 1, totalItems);
+      console.log('✅ Booking count incremented successfully');
+    } catch (error) {
+      console.error('⚠️ Error incrementing booking count:', error);
+      // Don't fail the order creation for this
+    }
 
     // Return success response
     return NextResponse.json({

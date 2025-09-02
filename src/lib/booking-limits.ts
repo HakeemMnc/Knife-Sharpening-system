@@ -391,6 +391,31 @@ export class BookingLimitsService {
   }
 
   /**
+   * Get system settings for the API
+   */
+  static async getSystemSettings(): Promise<{
+    defaultDailyCustomerLimit: number;
+    defaultDailyItemLimit: number;
+    enableBookingLimits: boolean;
+  }> {
+    try {
+      const allSettings = await this.getAllSystemSettings();
+      return {
+        defaultDailyCustomerLimit: allSettings.default_daily_customer_limit || 7,
+        defaultDailyItemLimit: allSettings.default_daily_item_limit || 100,
+        enableBookingLimits: allSettings.enable_booking_limits !== false
+      };
+    } catch (error) {
+      console.error('Error getting system settings:', error);
+      return {
+        defaultDailyCustomerLimit: 7,
+        defaultDailyItemLimit: 100,
+        enableBookingLimits: true
+      };
+    }
+  }
+
+  /**
    * Get all system settings as a key-value object
    */
   static async getAllSystemSettings(): Promise<Record<string, any>> {
@@ -559,6 +584,199 @@ export class BookingLimitsService {
         upcomingDates: [],
         settings: {}
       };
+    }
+  }
+
+  /**
+   * Update a system setting using Supabase
+   */
+  static async updateSystemSetting(key: string, value: string): Promise<void> {
+    try {
+      const { error } = await supabaseAdmin
+        .from('system_settings')
+        .upsert({
+          setting_key: key,
+          setting_value: value,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_key'
+        });
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating system setting:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update future daily limits that haven't been customized
+   */
+  static async updateFutureDailyLimits(newLimit: number): Promise<{ updatedCount: number }> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Update all future limits to the new default
+      const { data, error } = await supabaseAdmin
+        .from('daily_limits')
+        .update({ 
+          max_customers: newLimit,
+          updated_at: new Date().toISOString()
+        })
+        .gte('limit_date', today)
+        .select('id');
+        
+      if (error) throw error;
+      
+      return { updatedCount: data?.length || 0 };
+    } catch (error) {
+      console.error('Error updating future daily limits:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set vacation dates (make them unavailable)
+   */
+  static async setVacationDates(startDate: string, endDate: string): Promise<{ affectedDates: number }> {
+    try {
+      // First ensure all dates in the range have limit records
+      await this.ensureLimitsExist(startDate, endDate);
+      
+      // Update all dates in range to be inactive (vacation/closure)
+      const { data, error } = await supabaseAdmin
+        .from('daily_limits')
+        .update({ 
+          is_active: false,
+          notes: 'Vacation/Closure period',
+          updated_at: new Date().toISOString()
+        })
+        .gte('limit_date', startDate)
+        .lte('limit_date', endDate)
+        .select('limit_date');
+        
+      if (error) throw error;
+      
+      return { affectedDates: data?.length || 0 };
+    } catch (error) {
+      console.error('Error setting vacation dates:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current vacation periods
+   */
+  static async getVacationDates(): Promise<Array<{ startDate: string; endDate: string; notes?: string }>> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get all inactive dates (vacation periods)
+      const { data: inactiveDates, error } = await supabaseAdmin
+        .from('daily_limits')
+        .select('limit_date, notes')
+        .eq('is_active', false)
+        .gte('limit_date', today)
+        .order('limit_date');
+        
+      if (error) throw error;
+      
+      if (!inactiveDates || inactiveDates.length === 0) {
+        return [];
+      }
+      
+      // Group consecutive dates into periods
+      const periods: Array<{ startDate: string; endDate: string; notes?: string }> = [];
+      let currentPeriod: { startDate: string; endDate: string; notes?: string } | null = null;
+      
+      for (const dateRecord of inactiveDates) {
+        const date = dateRecord.limit_date;
+        
+        if (!currentPeriod) {
+          currentPeriod = { 
+            startDate: date, 
+            endDate: date, 
+            notes: dateRecord.notes 
+          };
+        } else {
+          // Check if this date is consecutive to the current period
+          const lastDate = new Date(currentPeriod.endDate);
+          lastDate.setDate(lastDate.getDate() + 1);
+          const expectedNextDate = lastDate.toISOString().split('T')[0];
+          
+          if (date === expectedNextDate) {
+            // Extend current period
+            currentPeriod.endDate = date;
+          } else {
+            // Start new period
+            periods.push(currentPeriod);
+            currentPeriod = { 
+              startDate: date, 
+              endDate: date, 
+              notes: dateRecord.notes 
+            };
+          }
+        }
+      }
+      
+      if (currentPeriod) {
+        periods.push(currentPeriod);
+      }
+      
+      return periods;
+    } catch (error) {
+      console.error('Error getting vacation dates:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Ensure limit records exist for a date range
+   */
+  private static async ensureLimitsExist(startDate: string, endDate: string): Promise<void> {
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const dates: string[] = [];
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().split('T')[0]);
+      }
+      
+      // Get system settings for defaults
+      const settings = await this.getAllSystemSettings();
+      const defaultLimit = settings.defaultDailyCustomerLimit || 7;
+      
+      // Check which dates already have limits
+      const { data: existingLimits } = await supabaseAdmin
+        .from('daily_limits')
+        .select('limit_date')
+        .in('limit_date', dates);
+        
+      const existingDates = new Set(existingLimits?.map(l => l.limit_date) || []);
+      const missingDates = dates.filter(date => !existingDates.has(date));
+      
+      // Create missing limit records
+      if (missingDates.length > 0) {
+        const newLimits = missingDates.map(date => ({
+          limit_date: date,
+          limit_type: 'customers' as LimitType,
+          max_customers: defaultLimit,
+          max_items: 100,
+          current_customers: 0,
+          current_items: 0,
+          is_active: true
+        }));
+        
+        const { error } = await supabaseAdmin
+          .from('daily_limits')
+          .insert(newLimits);
+          
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('Error ensuring limits exist:', error);
+      throw error;
     }
   }
 }
