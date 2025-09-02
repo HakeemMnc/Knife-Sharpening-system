@@ -366,6 +366,18 @@ export class DatabaseService {
     return data;
   }
 
+  // Raw SQL query method for complex operations
+  // For now, we'll implement the booking limits using Supabase ORM methods
+  // This is a placeholder that maintains API compatibility
+  static async query(sql: string, params: any[] = []): Promise<{ rows: any[] }> {
+    console.warn('Raw SQL query not yet implemented in Supabase setup:', sql);
+    
+    // For booking limits system, we'll need to implement these specific queries
+    // using Supabase's built-in methods rather than raw SQL
+    
+    return { rows: [] };
+  }
+
   // Analytics and reporting
   static async getOrderStats(): Promise<{
     total_orders: number;
