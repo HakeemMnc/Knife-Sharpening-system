@@ -4,7 +4,8 @@
  */
 
 import { getRouteByPostcode, RouteArea } from '@/config/mobileRoutes';
-import { BookingLimitsService, DailyLimit, AvailabilityStatus } from '@/lib/booking-limits';
+
+export type AvailabilityStatus = 'available' | 'full' | 'closed';
 
 /**
  * Get the next available service slots for a given postcode
@@ -46,10 +47,15 @@ export async function getNextAvailableSlots(
       const dateString = checkDate.toISOString().split('T')[0];
       
       try {
-        // Check if bookings are available for this date
-        const canBook = await BookingLimitsService.canBookForDate(dateString, 1, 1);
-        if (canBook) {
-          slots.push(new Date(checkDate));
+        // Check if bookings are available for this date via API
+        const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+          const dayLimit = result.data[0];
+          if (dayLimit.availability_status === 'available' && dayLimit.spots_remaining > 0) {
+            slots.push(new Date(checkDate));
+          }
         }
       } catch (error) {
         console.error('Error checking booking availability for', dateString, error);
@@ -82,8 +88,13 @@ export async function getSpotsRemaining(date: Date): Promise<number> {
   const dateString = date.toISOString().split('T')[0];
   
   try {
-    const dailyLimit = await BookingLimitsService.getDailyLimit(dateString);
-    return dailyLimit?.spots_remaining || 0;
+    const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+    const result = await response.json();
+    
+    if (result.success && result.data.length > 0) {
+      return result.data[0].spots_remaining || 0;
+    }
+    return 0;
   } catch (error) {
     console.error('Error getting spots remaining for', dateString, error);
     return 0; // Fail safe - show no spots available
@@ -134,7 +145,18 @@ export async function canBookForDate(
   const dateString = date.toISOString().split('T')[0];
   
   try {
-    return await BookingLimitsService.canBookForDate(dateString, customerCount, itemCount);
+    const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+    const result = await response.json();
+    
+    if (result.success && result.data.length > 0) {
+      const dayLimit = result.data[0];
+      if (dayLimit.limit_type === 'customers') {
+        return (dayLimit.current_customers + customerCount) <= dayLimit.max_customers;
+      } else if (dayLimit.limit_type === 'items') {
+        return (dayLimit.current_items + itemCount) <= dayLimit.max_items;
+      }
+    }
+    return false;
   } catch (error) {
     console.error('Error checking booking availability for', dateString, error);
     return false; // Fail safe - deny booking
@@ -205,15 +227,26 @@ export async function getServiceDatesForCarousel(
       const dateString = checkDate.toISOString().split('T')[0];
       
       try {
-        const dailyLimit = await BookingLimitsService.getDailyLimit(dateString);
+        const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+        const result = await response.json();
         
-        if (dailyLimit) {
+        if (result.success && result.data.length > 0) {
+          const dailyLimit = result.data[0];
           dates.push({
             date: new Date(checkDate),
             dateString,
             isAvailable: dailyLimit.availability_status === 'available',
             spotsRemaining: dailyLimit.spots_remaining,
             availabilityStatus: dailyLimit.availability_status
+          });
+        } else {
+          // Default to available if no limit exists yet
+          dates.push({
+            date: new Date(checkDate),
+            dateString,
+            isAvailable: true,
+            spotsRemaining: 7,
+            availabilityStatus: 'available'
           });
         }
       } catch (error) {

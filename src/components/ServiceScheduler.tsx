@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Card from '@/components/ui/Card';
-import { getServiceDatesForCarousel, formatServiceDate } from '@/utils/scheduling';
-import { AvailabilityStatus } from '@/lib/booking-limits';
+import { getServiceDatesForCarousel, formatServiceDate, AvailabilityStatus } from '@/utils/scheduling';
 
 interface ServiceDate {
   date: Date;

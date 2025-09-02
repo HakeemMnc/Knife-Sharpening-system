@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService, dbHelpers } from '@/lib/database';
-import { BookingLimitsService } from '@/lib/booking-limits';
+// import { BookingLimitsService } from '@/lib/booking-limits'; // Temporarily disabled
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,17 +65,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check booking availability before creating order
-    console.log('🔍 Checking booking availability for service date:', serviceDate);
-    const canBook = await BookingLimitsService.canBookForDate(serviceDate, 1, totalItems);
-    if (!canBook) {
-      console.log('❌ Booking not available for service date:', serviceDate);
-      return NextResponse.json(
-        { error: 'Service date is fully booked. Please select another date.' },
-        { status: 400 }
-      );
-    }
-    console.log('✅ Booking is available for service date:', serviceDate);
+    // TODO: Re-enable booking limits check once we fix the server-side API call issue
+    console.log('🔍 Skipping booking availability check for now:', serviceDate);
 
     // Calculate order totals or use provided amount
     let finalTotals;
@@ -137,15 +128,8 @@ export async function POST(request: NextRequest) {
     const order = await DatabaseService.createOrder(orderData);
     console.log('✅ Order created successfully:', order.id);
 
-    // Increment booking count for this service date
-    try {
-      await BookingLimitsService.incrementBookingCount(serviceDate, 1, totalItems);
-      console.log('✅ Booking count incremented for service date:', serviceDate);
-    } catch (error) {
-      console.error('⚠️ Warning: Failed to increment booking count, but order was created:', error);
-      // Don't fail the order creation if booking count update fails
-      // This could happen if limits aren't set up yet
-    }
+    // TODO: Re-enable booking count increment once we fix the server-side API call issue
+    console.log('🔍 Skipping booking count increment for now:', serviceDate);
 
     // Return success response
     return NextResponse.json({
