@@ -165,6 +165,18 @@ export class DatabaseService {
     return data || [];
   }
 
+  static async getOrdersByIds(ids: number[]): Promise<Order[]> {
+    if (ids.length === 0) return [];
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .in('id', ids);
+
+    if (error) throw error;
+    return data || [];
+  }
+
   static async getOrdersByStatus(status: Order['status']): Promise<Order[]> {
     const { data, error } = await supabase
       .from('orders')

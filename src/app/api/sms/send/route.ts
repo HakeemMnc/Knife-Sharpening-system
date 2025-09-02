@@ -5,6 +5,11 @@ import { DatabaseService } from '@/lib/database';
 export async function POST(request: NextRequest) {
   try {
     console.log('=== SMS API Debug ===');
+    console.log('Environment Check:');
+    console.log('TWILIO_PHONE_NUMBER:', process.env.TWILIO_PHONE_NUMBER);
+    console.log('ADMIN_PHONE_NUMBER:', process.env.ADMIN_PHONE_NUMBER);
+    console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID?.substring(0, 10) + '...');
+    
     const { orderId, smsType } = await request.json();
     console.log('Request data:', { orderId, smsType });
 

@@ -129,9 +129,9 @@ export async function POST(request: NextRequest) {
       stripe_payment_id: stripePaymentId || undefined,
       confirmation_sms_sent: false,
       reminder_24h_sent: false,
-      reminder_1h_sent: false,
-      pickup_confirmation_sent: false,
-      delivery_confirmation_sent: false,
+      morning_reminder_sent: false,
+      pickup_sms_sent: false,
+      delivery_sms_sent: false,
       followup_sms_sent: false,
       internal_notes: undefined,
     };

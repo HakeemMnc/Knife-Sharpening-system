@@ -274,6 +274,23 @@ export class SMSService {
     return result.success;
   }
 
+  // Send admin reply (wrapper for sendCustomSMS)
+  static async sendAdminReply(phone: string, message: string, orderId?: number): Promise<{success: boolean, messageSid?: string, error?: string}> {
+    try {
+      const result = await this.sendSMS(phone, message, orderId);
+      return {
+        success: result.success,
+        messageSid: result.sid,
+        error: result.success ? undefined : 'SMS sending failed'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   // Handle incoming SMS (webhook)
   static async handleIncomingSMS(
     from: string, 
