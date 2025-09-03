@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService, dbHelpers } from '@/lib/database';
 import { BookingLimitsService } from '@/lib/booking-limits';
+import { SMSService } from '@/lib/sms-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -148,6 +149,32 @@ export async function POST(request: NextRequest) {
       console.log('✅ Booking count incremented successfully');
     } catch (error) {
       console.error('⚠️ Error incrementing booking count:', error);
+      // Don't fail the order creation for this
+    }
+
+    // Send admin notification SMS for new booking
+    console.log('🔍 Sending admin notification for new booking');
+    try {
+      const serviceFormatted = new Date(serviceDate).toLocaleDateString('en-AU', { 
+        weekday: 'long',
+        day: '2-digit', 
+        month: '2-digit',
+        year: 'numeric'
+      });
+      
+      const notificationMessage = `🔪 NEW BOOKING ALERT\n\n` +
+        `Customer: ${firstName} ${lastName}\n` +
+        `Phone: ${phone}\n` +
+        `Service: ${serviceFormatted}\n` +
+        `Items: ${totalItems}\n` +
+        `Amount: $${finalTotals.total_amount.toFixed(2)}\n` +
+        `Status: ${isPaymentCompleted ? 'PAID' : 'PENDING PAYMENT'}\n` +
+        `Order ID: #${order.id}`;
+      
+      await SMSService.sendAdminNotification(notificationMessage);
+      console.log('✅ Admin notification sent successfully');
+    } catch (error) {
+      console.error('⚠️ Error sending admin notification:', error);
       // Don't fail the order creation for this
     }
 
