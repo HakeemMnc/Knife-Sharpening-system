@@ -103,6 +103,20 @@ export interface Customer {
   updated_at: string;
 }
 
+export interface ContactMessage {
+  id: number;
+  name: string;
+  phone: string;
+  message_content: string;
+  ip_address?: string;
+  user_agent?: string;
+  is_existing_customer: boolean;
+  admin_responded: boolean;
+  admin_notes?: string;
+  created_at: string;
+  responded_at?: string;
+}
+
 // Database client initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -424,6 +438,62 @@ export class DatabaseService {
       pending_orders: pendingOrders?.length || 0,
       today_pickups: todayPickups?.length || 0,
     };
+  }
+
+  // Contact Messages Management
+  static async createContactMessage(contactData: {
+    name: string;
+    phone: string;
+    message_content: string;
+    ip_address?: string;
+    user_agent?: string;
+    is_existing_customer: boolean;
+  }): Promise<ContactMessage> {
+    const { data, error } = await supabase
+      .from('contact_messages')
+      .insert(contactData)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to create contact message: ${error.message}`);
+    return data;
+  }
+
+  static async isExistingCustomer(phone: string): Promise<boolean> {
+    // Check if this phone number exists in the orders table
+    const formattedPhone = phone.replace(/\s/g, ''); // Remove spaces
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('phone', formattedPhone)
+      .limit(1);
+
+    if (error) {
+      console.error('Error checking existing customer:', error);
+      return false;
+    }
+
+    return (data?.length || 0) > 0;
+  }
+
+  static async getAllContactMessages(): Promise<ContactMessage[]> {
+    const { data, error } = await supabase
+      .from('contact_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`Failed to fetch contact messages: ${error.message}`);
+    return data || [];
+  }
+
+  static async updateContactMessage(id: number, updates: Partial<ContactMessage>): Promise<void> {
+    const { error } = await supabase
+      .from('contact_messages')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw new Error(`Failed to update contact message: ${error.message}`);
   }
 }
 

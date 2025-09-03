@@ -11,7 +11,6 @@ export default function Footer() {
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [formState, setFormState] = useState({
     name: '',
-    email: '',
     phone: '',
     message: ''
   })
@@ -29,8 +28,8 @@ export default function Footer() {
     const errors: Record<string, string> = {}
     
     if (!formState.name.trim()) errors.name = 'Name is required'
-    if (!formState.email.trim()) errors.email = 'Email is required'
-    else if (!/\S+@\S+\.\S+/.test(formState.email)) errors.email = 'Please enter a valid email'
+    if (!formState.phone.trim()) errors.phone = 'Phone number is required'
+    else if (!/^[\d\s\-\+\(\)]+$/.test(formState.phone.trim())) errors.phone = 'Please enter a valid phone number'
     if (!formState.message.trim()) errors.message = 'Message is required'
     
     return errors
@@ -48,12 +47,23 @@ export default function Footer() {
     setFormStatus('loading')
     setFormErrors({})
     
-    // Simulate form submission
+    // Submit contact form
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setFormStatus('success')
-      setFormState({ name: '', email: '', phone: '', message: '' })
-      setTimeout(() => setFormStatus('idle'), 3000)
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formState)
+      })
+      
+      if (response.ok) {
+        setFormStatus('success')
+        setFormState({ name: '', phone: '', message: '' })
+        setTimeout(() => setFormStatus('idle'), 3000)
+      } else {
+        throw new Error('Failed to send message')
+      }
     } catch {
       setFormStatus('error')
       setTimeout(() => setFormStatus('idle'), 3000)
@@ -125,13 +135,13 @@ export default function Footer() {
                   {formStatus === 'success' && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-green-700 font-semibold">✓ Message sent successfully!</p>
-                      <p className="text-green-600 text-sm">We'll get back to you within 24 hours.</p>
+                      <p className="text-green-600 text-sm">I'll get back to you soon.</p>
                     </div>
                   )}
                   {formStatus === 'error' && (
                     <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                       <p className="text-red-700 font-semibold">✗ Something went wrong</p>
-                      <p className="text-red-600 text-sm">Please try again or call us directly.</p>
+                      <p className="text-red-600 text-sm">Please try again or call me directly on 0451 494 922.</p>
                     </div>
                   )}
                   <div>
@@ -152,28 +162,19 @@ export default function Footer() {
                   </div>
                   <div>
                     <input
-                      type="email"
-                      placeholder="Email Address"
-                      value={formState.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      type="tel"
+                      placeholder="Phone Number"
+                      value={formState.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
-                        formErrors.email 
+                        formErrors.phone 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300 focus:ring-blue-600'
                       } focus:outline-none focus:ring-2 focus:border-transparent`}
                     />
-                    {formErrors.email && (
-                      <p className="text-red-600 text-sm mt-1">{formErrors.email}</p>
+                    {formErrors.phone && (
+                      <p className="text-red-600 text-sm mt-1">{formErrors.phone}</p>
                     )}
-                  </div>
-                  <div>
-                    <input
-                      type="tel"
-                      placeholder="Phone Number (Optional)"
-                      value={formState.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200"
-                    />
                   </div>
                   <div>
                     <textarea
@@ -350,32 +351,52 @@ export default function Footer() {
                     <input
                       type="text"
                       placeholder="Your Name"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200"
+                      value={formState.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
+                        formErrors.name 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-600'
+                      } focus:outline-none focus:ring-2 focus:border-transparent`}
                       required
                     />
-                  </div>
-                  <div>
-                    <input
-                      type="email"
-                      placeholder="Email Address"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200"
-                      required
-                    />
+                    {formErrors.name && (
+                      <p className="text-red-600 text-sm mt-1">{formErrors.name}</p>
+                    )}
                   </div>
                   <div>
                     <input
                       type="tel"
                       placeholder="Phone Number"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200"
+                      value={formState.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
+                        formErrors.phone 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-600'
+                      } focus:outline-none focus:ring-2 focus:border-transparent`}
+                      required
                     />
+                    {formErrors.phone && (
+                      <p className="text-red-600 text-sm mt-1">{formErrors.phone}</p>
+                    )}
                   </div>
                   <div>
                     <textarea
                       placeholder="Your Message"
                       rows={4}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none transition-all duration-200"
+                      value={formState.message}
+                      onChange={(e) => handleInputChange('message', e.target.value)}
+                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 resize-none ${
+                        formErrors.message 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-600'
+                      } focus:outline-none focus:ring-2 focus:border-transparent`}
                       required
                     ></textarea>
+                    {formErrors.message && (
+                      <p className="text-red-600 text-sm mt-1">{formErrors.message}</p>
+                    )}
                   </div>
                   <Button 
                     variant="primary" 
