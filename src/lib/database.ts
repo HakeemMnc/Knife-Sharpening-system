@@ -14,7 +14,7 @@ export interface Order {
   postal_code?: string;
   special_instructions?: string;
   total_items: number;
-  service_level: 'standard' | 'premium';
+  service_level: 'standard' | 'premium' | 'traditional_japanese';
   base_amount: number;
   upgrade_amount: number;
   delivery_fee: number;
@@ -510,14 +510,21 @@ export const dbHelpers = {
   },
 
   // Calculate order totals (mobile service - no delivery fees)
-  calculateOrderTotals: (totalItems: number, serviceLevel: 'standard' | 'premium'): {
+  calculateOrderTotals: (totalItems: number, serviceLevel: 'standard' | 'premium' | 'traditional_japanese'): {
     base_amount: number;
     upgrade_amount: number;
     delivery_fee: number;
     total_amount: number;
   } => {
     const baseAmount = totalItems * 17;
-    const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0;
+    let upgradeAmount = 0;
+    
+    if (serviceLevel === 'premium') {
+      upgradeAmount = totalItems * 5;
+    } else if (serviceLevel === 'traditional_japanese') {
+      upgradeAmount = totalItems * 10;
+    }
+    
     const totalAmount = baseAmount + upgradeAmount;
 
     return {

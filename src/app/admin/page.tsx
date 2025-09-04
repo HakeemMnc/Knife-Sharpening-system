@@ -545,7 +545,7 @@ export default function AdminDashboard() {
         postal_code: sanitizeOptionalString(order.postal_code),
         special_instructions: sanitizeOptionalString(order.special_instructions),
         total_items: sanitizeNumber(order.total_items, 1),
-        service_level: sanitizeString(order.service_level, 'standard') as 'standard' | 'premium',
+        service_level: sanitizeString(order.service_level, 'standard') as 'standard' | 'premium' | 'traditional_japanese',
         total_amount: sanitizeNumber(order.total_amount, 0),
         service_date: sanitizeString(order.service_date, new Date().toISOString().split('T')[0]),
         pickup_date: sanitizeString(order.pickup_date, new Date().toISOString().split('T')[0]),
@@ -1196,9 +1196,11 @@ export default function AdminDashboard() {
             <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${
               order.service_level === 'premium' 
                 ? 'bg-purple-100 text-purple-700' 
+                : order.service_level === 'traditional_japanese'
+                ? 'bg-yellow-100 text-yellow-700'
                 : 'bg-blue-100 text-blue-700'
             }`}>
-              {order.service_level === 'premium' ? '⭐' : '📋'}
+              {order.service_level === 'premium' ? '⭐' : order.service_level === 'traditional_japanese' ? '💎' : '📋'}
             </span>
           </div>
         </div>
@@ -1872,6 +1874,12 @@ export default function AdminDashboard() {
                           <span>Premium ({analytics.serviceBreakdown.premium.count} orders)</span>
                           <span className="font-medium">${analytics.serviceBreakdown.premium.revenue.toFixed(2)}</span>
                         </div>
+                        {analytics.serviceBreakdown.traditional_japanese && (
+                          <div className="flex justify-between">
+                            <span>Traditional Japanese ({analytics.serviceBreakdown.traditional_japanese.count} orders)</span>
+                            <span className="font-medium">${analytics.serviceBreakdown.traditional_japanese.revenue.toFixed(2)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

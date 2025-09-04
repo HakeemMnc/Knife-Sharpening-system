@@ -452,12 +452,12 @@ export default function Home() {
     const items = [];
     if (quantities.items > 0) items.push(`Items: ${quantities.items}`);
     if (quantities.scissors > 0) items.push(`Scissors: ${quantities.scissors}`);
-    if (quantities.garden > 0) items.push(`Garden Tools: ${quantities.garden}`);
+    if (quantities.garden > 0) items.push(`Garden & Outdoor: ${quantities.garden}`);
     if (quantities.other > 0) items.push(`Other: ${quantities.other}`);
     return items.join(', ');
   };
 
-  // STEP 1: Simplified Two-Card Bundle Layout
+  // STEP 1: Three-Tier Bundle Layout
   const serviceBundles = {
     standard: {
       name: 'Standard Care',
@@ -488,7 +488,22 @@ export default function Home() {
       ],
       icon: '✨',
       color: 'blue',
-      badge: 'Popular'
+      badge: 'Most Popular'
+    },
+    traditional_japanese: {
+      name: 'Traditional Japanese',
+      title: 'Traditional Japanese',
+      price: 10,
+      priceText: '+$10 per item',
+      description: 'Superior edge quality through traditional stone methods',
+      benefits: [
+        '4-stone progression and leather strop finishing',
+        'Hand-forged perfection',
+        'Traditional Japanese craftsmanship',
+        'Ultimate edge quality'
+      ],
+      icon: '💎',
+      color: 'gold'
     }
   };
 
@@ -2727,29 +2742,31 @@ export default function Home() {
                 <div className="border-b pb-6" style={{marginBottom: '32px'}}>
                   <h3 className="text-xl font-semibold mb-6" style={{color: '#1B1B1B'}}>UPGRADE</h3>
                   
-                  {/* STEP 1: Simplified Two-Card Layout */}
+                  {/* STEP 1: Three-Tier Service Layout */}
                   <div className="mb-8">
                     
                     {/* Bundle Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {Object.entries(serviceBundles).map(([bundleKey, bundle]) => {
                         const isSelected = applyToAll === bundleKey;
                         const isPremium = bundleKey === 'premium';
+                        const isTraditionalJapanese = bundleKey === 'traditional_japanese';
                         
                         return (
                           <div
                             key={bundleKey}
-                            className={`relative border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                            className={`relative border-2 rounded-lg cursor-pointer transition-all duration-200 h-full flex flex-col ${
                               isSelected 
                                 ? 'border-blue-500 bg-blue-50 shadow-lg' 
                                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                            } ${isPremium ? 'ring-2 ring-blue-200' : ''}`}
+                            } ${isPremium ? 'ring-2 ring-blue-200' : ''} ${isTraditionalJapanese ? 'ring-2 ring-yellow-300' : ''}`}
                             style={{
-                              padding: '24px',
+                              padding: '20px',
                               borderWidth: isSelected ? '3px' : '2px',
                               backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.05)' : undefined,
                               borderRadius: '8px',
-                              boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.06)' : undefined
+                              boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.06)' : undefined,
+                              minHeight: '440px'
                             }}
                             onClick={() => handleApplyToAll(bundleKey)}
                           >
@@ -2762,9 +2779,9 @@ export default function Home() {
                               </div>
                             )}
                             
-                            {/* Card Header */}
-                            <div className="text-center mb-4">
-                              <div className="text-4xl mb-3">{bundle.icon}</div>
+                            {/* Card Header - Fixed Height */}
+                            <div className="text-center mb-4" style={{ height: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                              <div className="text-4xl mb-2">{bundle.icon}</div>
                               <h5 className="text-xl font-bold mb-2" style={{color: '#1B1B1B'}}>
                                 {bundle.title}
                               </h5>
@@ -2784,24 +2801,28 @@ export default function Home() {
                               </div>
                             </div>
                             
-                            {/* Description */}
-                            <p className="text-sm text-center mb-4" style={{color: '#4a5568', lineHeight: '1.5'}}>
-                              {bundle.description}
-                            </p>
+                            {/* Description - Fixed Height */}
+                            <div className="text-center mb-4" style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <p className="text-sm" style={{color: '#4a5568', lineHeight: '1.4'}}>
+                                {bundle.description}
+                              </p>
+                            </div>
                             
-                            {/* Benefits List */}
-                            <ul className="space-y-2" style={{marginTop: '16px'}}>
-                              {bundle.benefits.map((benefit, index) => (
-                                <li key={index} className="flex items-center text-sm" style={{
-                                  color: '#4a5568',
-                                  marginBottom: '8px',
-                                  lineHeight: '1.5'
-                                }}>
-                                  <span className="text-green-500 mr-2">✓</span>
-                                  {benefit}
-                                </li>
-                              ))}
-                            </ul>
+                            {/* Benefits List - Flex Grow */}
+                            <div className="flex-grow">
+                              <ul className="space-y-2">
+                                {bundle.benefits.map((benefit, index) => (
+                                  <li key={index} className="flex items-start text-sm" style={{
+                                    color: '#4a5568',
+                                    marginBottom: '8px',
+                                    lineHeight: '1.4'
+                                  }}>
+                                    <span className="text-green-500 mr-2 mt-0.5">✓</span>
+                                    <span>{benefit}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                             
                             {/* Selection Indicator */}
                             {isSelected && (
@@ -2820,7 +2841,10 @@ export default function Home() {
                     <div className="text-center">
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <div className="text-lg font-bold" style={{color: '#1B1B1B'}}>
-                          {applyToAll === 'premium' ? `Total upgrade: +$${(serviceBundles[applyToAll as keyof typeof serviceBundles].price * getItemCount()).toFixed(2)}` : 'No additional cost'}
+                          {applyToAll !== 'standard' ? 
+                            `Total upgrade: +$${(serviceBundles[applyToAll as keyof typeof serviceBundles].price * getItemCount()).toFixed(2)}` 
+                            : 'No additional cost'
+                          }
                         </div>
                       </div>
                     </div>
@@ -3090,14 +3114,12 @@ export default function Home() {
                   lineHeight: '1.4'
                 }}>
                   <span className="mr-2" style={{fontSize: '1.2rem'}}>🌿</span>
-                  Garden Tools
+                  Garden & Outdoor Tools
                 </h3>
                 <ul className="space-y-2" style={{color: '#4a5568'}}>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hedge trimmers and pruning shears</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Garden scissors and secateurs</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Lawn mower blades</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Axes and hatchets</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Machetes and bush knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Pruning shears (hand-held only)</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Bush knives and clearing blades</li>
                 </ul>
               </div>
 
@@ -3138,7 +3160,10 @@ export default function Home() {
                 <ul className="space-y-2" style={{color: '#4a5568'}}>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Chainsaws</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hair or fur clipper blades</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Salon scissors</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Salon or hairdresser scissors</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hedge trimmers</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Lawn mower blades</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Power tool blades</li>
                 </ul>
               </div>
 
