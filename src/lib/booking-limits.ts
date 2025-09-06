@@ -665,6 +665,33 @@ export class BookingLimitsService {
   }
 
   /**
+   * Remove vacation dates (make them available again)
+   */
+  static async removeVacationDates(startDate: string, endDate: string): Promise<{ affectedDates: number }> {
+    try {
+      // Update all dates in range to be active again
+      const { data, error } = await supabaseAdmin
+        .from('daily_limits')
+        .update({ 
+          is_active: true,
+          notes: null,
+          updated_at: new Date().toISOString()
+        })
+        .gte('limit_date', startDate)
+        .lte('limit_date', endDate)
+        .eq('is_active', false)
+        .select('limit_date');
+        
+      if (error) throw error;
+      
+      return { affectedDates: data?.length || 0 };
+    } catch (error) {
+      console.error('Error removing vacation dates:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get current vacation periods
    */
   static async getVacationDates(): Promise<Array<{ startDate: string; endDate: string; notes?: string }>> {

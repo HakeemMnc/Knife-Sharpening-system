@@ -67,3 +67,35 @@ export async function GET() {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { startDate, endDate } = body;
+
+    if (!startDate || !endDate) {
+      return NextResponse.json(
+        { success: false, error: 'Both start and end dates are required' },
+        { status: 400 }
+      );
+    }
+
+    // Remove vacation dates (make them active again)
+    const result = await BookingLimitsService.removeVacationDates(startDate, endDate);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        startDate,
+        endDate,
+        affectedDates: result.affectedDates
+      }
+    });
+  } catch (error) {
+    console.error('Error removing vacation dates:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to remove vacation dates' },
+      { status: 500 }
+    );
+  }
+}

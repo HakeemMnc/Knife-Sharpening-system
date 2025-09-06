@@ -44,6 +44,8 @@ export default function AdminDashboard() {
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [vacationDates, setVacationDates] = useState<Array<{ startDate: string; endDate: string; notes?: string }>>([]);
+  const [loadingVacations, setLoadingVacations] = useState(false);
   const [notesModal, setNotesModal] = useState<{orderId: number, notes: string, customerName: string} | null>(null);
   const [bookingLimitsWidgetOpen, setBookingLimitsWidgetOpen] = useState(false);
   const [updatingNotes, setUpdatingNotes] = useState(false);
@@ -111,6 +113,7 @@ export default function AdminDashboard() {
       fetchSmsLogs();
     } else if (activeTab === 'analytics') {
       fetchAnalytics();
+      fetchVacationDates();
     } else if (activeTab === 'messages') {
       fetchConversations();
       
@@ -283,6 +286,49 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+    }
+  };
+
+  const fetchVacationDates = async () => {
+    setLoadingVacations(true);
+    try {
+      const response = await fetch('/api/admin/booking-limits/vacation');
+      if (!response.ok) throw new Error('Failed to fetch vacation dates');
+      const result = await response.json();
+      if (result.success) {
+        setVacationDates(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching vacation dates:', error);
+    } finally {
+      setLoadingVacations(false);
+    }
+  };
+
+  const deleteVacationPeriod = async (startDate: string, endDate: string) => {
+    if (!confirm(`Are you sure you want to delete the vacation period from ${startDate} to ${endDate}?`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/booking-limits/vacation', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ startDate, endDate }),
+      });
+
+      if (!response.ok) throw new Error('Failed to delete vacation period');
+      
+      const result = await response.json();
+      if (result.success) {
+        fetchVacationDates();
+        alert(`Successfully deleted vacation period (${result.data.affectedDates} dates restored)`);
+      }
+    } catch (error) {
+      console.error('Error deleting vacation period:', error);
+      alert('Failed to delete vacation period');
     }
   };
 
@@ -1911,6 +1957,53 @@ export default function AdminDashboard() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                  {/* Vacation Dates Management */}
+                  <div className="bg-white p-4 rounded-lg border border-orange-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-medium text-orange-800">Vacation Periods</h3>
+                      <button 
+                        onClick={fetchVacationDates}
+                        disabled={loadingVacations}
+                        className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 disabled:opacity-50"
+                      >
+                        {loadingVacations ? 'Loading...' : 'Refresh'}
+                      </button>
+                    </div>
+                    {vacationDates.length > 0 ? (
+                      <div className="space-y-3">
+                        {vacationDates.map((period, index) => {
+                          const startDate = new Date(period.startDate);
+                          const endDate = new Date(period.endDate);
+                          const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                          
+                          return (
+                            <div key={index} className="flex items-center justify-between bg-orange-50 p-3 rounded-lg border border-orange-100">
+                              <div>
+                                <div className="font-medium text-orange-800">
+                                  {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+                                </div>
+                                <div className="text-sm text-orange-600">
+                                  {diffDays} day{diffDays !== 1 ? 's' : ''}
+                                  {period.notes && ` • ${period.notes}`}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => deleteVacationPeriod(period.startDate, period.endDate)}
+                                className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-gray-500">
+                        {loadingVacations ? 'Loading vacation periods...' : 'No vacation periods scheduled'}
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
