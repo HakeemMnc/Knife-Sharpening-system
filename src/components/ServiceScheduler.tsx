@@ -107,7 +107,6 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
     // Only register horizontal swipes (ignore vertical scrolling)
     if (Math.abs(deltaX) > 50 && deltaY < 100) {
       // Show all dates, not just available ones
-      const allDates = serviceDates;
       
       if (deltaX > 0 && mobileCurrentIndex < allDates.length - 1) {
         // Swipe left - next date
@@ -131,7 +130,6 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
 
   const handleMobileNext = () => {
     // Show all dates, not just available ones
-    const allDates = serviceDates;
     if (mobileCurrentIndex < allDates.length - 1) {
       setMobileCurrentIndex(prev => prev + 1);
     }
@@ -201,6 +199,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
 
   const visibleDates = getVisibleDates();
   const availableCount = serviceDates.filter(d => d.isAvailable).length;
+  const allDates = serviceDates; // All dates including closed ones
 
   return (
     <div className="mb-8">
@@ -246,7 +245,6 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
       <div className="md:hidden">
         {(() => {
           // Show all dates (available and unavailable) to display complete service schedule
-          const allDates = serviceDates;
           if (allDates.length === 0) return null;
           
           const currentMobileDate = allDates[mobileCurrentIndex];
@@ -387,9 +385,9 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
               </div>
               
               {/* Dots Indicator */}
-              {availableDates.length > 1 && (
+              {allDates.length > 1 && (
                 <div className="flex justify-center mt-4 space-x-2">
-                  {availableDates.map((_, index) => (
+                  {allDates.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setMobileCurrentIndex(index)}
