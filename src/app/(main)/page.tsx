@@ -46,6 +46,11 @@ export default function Home() {
   // Service scheduling state
   const [selectedServiceDate, setSelectedServiceDate] = useState<Date | null>(null);
   
+  // Clear selected service date when postcode changes
+  useEffect(() => {
+    setSelectedServiceDate(null);
+  }, [address.postalCode]);
+  
   // Memoized date selection handler to prevent infinite re-renders
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedServiceDate(date);
@@ -2768,7 +2773,7 @@ export default function Home() {
                         return (
                           <div
                             key={bundleKey}
-                            className={`relative border-2 rounded-lg cursor-pointer transition-all duration-200 h-full flex flex-col ${
+                            className={`relative border-2 rounded-lg cursor-pointer transition-all duration-200 h-full flex flex-col min-h-[280px] md:min-h-[440px] ${
                               isSelected 
                                 ? 'border-blue-500 bg-blue-50 shadow-lg' 
                                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
@@ -2779,7 +2784,6 @@ export default function Home() {
                               backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.05)' : undefined,
                               borderRadius: '8px',
                               boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.06)' : undefined,
-                              minHeight: '440px'
                             }}
                             onClick={() => handleApplyToAll(bundleKey)}
                           >
@@ -2960,25 +2964,25 @@ export default function Home() {
                   </button>
                   <button
                     onClick={handleCompleteBooking}
-                    disabled={isSubmittingBooking}
+                    disabled={isSubmittingBooking || !selectedServiceDate}
                     className={`text-white rounded-lg transition-all duration-200 shadow-lg ${
-                      isSubmittingBooking 
+                      (isSubmittingBooking || !selectedServiceDate)
                         ? 'opacity-50 cursor-not-allowed' 
                         : 'hover:shadow-xl transform hover:scale-105'
                     }`}
                     style={{
-                      backgroundColor: isSubmittingBooking ? '#9ca3af' : '#d64f24',
+                      backgroundColor: (isSubmittingBooking || !selectedServiceDate) ? '#9ca3af' : '#d64f24',
                       padding: '16px 40px',
                       fontSize: '1.1rem',
                       fontWeight: 'bold'
                     }}
                     onMouseEnter={(e) => {
-                      if (!isSubmittingBooking) {
+                      if (!isSubmittingBooking && selectedServiceDate) {
                         e.currentTarget.style.backgroundColor = '#b8431f';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isSubmittingBooking) {
+                      if (!isSubmittingBooking && selectedServiceDate) {
                         e.currentTarget.style.backgroundColor = '#d64f24';
                       }
                     }}

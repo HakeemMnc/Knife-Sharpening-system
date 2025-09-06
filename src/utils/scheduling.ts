@@ -216,14 +216,8 @@ export async function getServiceDatesForCarousel(
     throw new Error(`Postcode ${postcode} is not supported by mobile service`);
   }
 
-  const dates: Array<{
-    date: Date;
-    dateString: string;
-    isAvailable: boolean;
-    spotsRemaining: number;
-    availabilityStatus: AvailabilityStatus;
-  }> = [];
-  
+  // Phase 1: Generate all service dates first (without API calls)
+  const serviceDates: Date[] = [];
   const now = new Date();
   
   // Simple rule: No same-day booking, start from tomorrow
@@ -250,9 +244,9 @@ export async function getServiceDatesForCarousel(
   // Generate dates by alternating between the two service days
   let currentDate = new Date(searchStartDate);
   
-  // Look up to 10 weeks in the future
-  for (let week = 0; week < 10 && dates.length < maxDates; week++) {
-    for (let dayInWeek = 0; dayInWeek < 2 && dates.length < maxDates; dayInWeek++) {
+  // Look up to 10 weeks in the future to ensure we get maxDates
+  for (let week = 0; week < 10 && serviceDates.length < maxDates; week++) {
+    for (let dayInWeek = 0; dayInWeek < 2 && serviceDates.length < maxDates; dayInWeek++) {
       const targetDayIndex = serviceDayIndices[alternatingIndex];
       
       // Find the next occurrence of this service day
@@ -264,47 +258,11 @@ export async function getServiceDatesForCarousel(
         testDate.setDate(searchDate.getDate() + daysToAdd);
         
         if (testDate.getDay() === targetDayIndex && testDate >= searchStartDate) {
-          const serviceDate = new Date(testDate);
-          const dateString = serviceDate.toISOString().split('T')[0];
-          
-          try {
-            const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
-            const result = await response.json();
-            
-            if (result.success && result.data.length > 0) {
-              const dailyLimit = result.data[0];
-              dates.push({
-                date: new Date(serviceDate),
-                dateString,
-                isAvailable: dailyLimit.availability_status === 'available',
-                spotsRemaining: dailyLimit.spots_remaining,
-                availabilityStatus: dailyLimit.availability_status
-              });
-            } else {
-              // Default to available if no limit exists yet
-              dates.push({
-                date: new Date(serviceDate),
-                dateString,
-                isAvailable: true,
-                spotsRemaining: 7,
-                availabilityStatus: 'available'
-              });
-            }
-          } catch (error) {
-            console.error('Error getting carousel date info for', dateString, error);
-            // On error, show date as unavailable
-            dates.push({
-              date: new Date(serviceDate),
-              dateString,
-              isAvailable: false,
-              spotsRemaining: 0,
-              availabilityStatus: 'closed'
-            });
-          }
+          serviceDates.push(new Date(testDate));
           
           // Move currentDate to the day after this service date for next search
-          currentDate = new Date(serviceDate);
-          currentDate.setDate(serviceDate.getDate() + 1);
+          currentDate = new Date(testDate);
+          currentDate.setDate(testDate.getDate() + 1);
           break;
         }
         daysToAdd++;
@@ -313,6 +271,48 @@ export async function getServiceDatesForCarousel(
       // Alternate between the two service days
       alternatingIndex = (alternatingIndex + 1) % 2;
     }
+  }
+  
+  // Phase 2: Convert to full date objects with availability info
+  const dates: Array<{
+    date: Date;
+    dateString: string;
+    isAvailable: boolean;
+    spotsRemaining: number;
+    availabilityStatus: AvailabilityStatus;
+  }> = [];
+  
+  for (const serviceDate of serviceDates) {
+    const dateString = serviceDate.toISOString().split('T')[0];
+    
+    // Default to available - only change if we successfully get limit data
+    let dateInfo = {
+      date: new Date(serviceDate),
+      dateString,
+      isAvailable: true,
+      spotsRemaining: 7,
+      availabilityStatus: 'available' as AvailabilityStatus
+    };
+    
+    try {
+      // Only try API call in browser context
+      if (typeof window !== 'undefined') {
+        const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+          const dailyLimit = result.data[0];
+          dateInfo.isAvailable = dailyLimit.availability_status === 'available';
+          dateInfo.spotsRemaining = dailyLimit.spots_remaining;
+          dateInfo.availabilityStatus = dailyLimit.availability_status;
+        }
+      }
+    } catch (error) {
+      // Silently fail - keep default available status
+      console.log('Booking limits check failed for', dateString, '- using default available status');
+    }
+    
+    dates.push(dateInfo);
   }
   
   return dates;

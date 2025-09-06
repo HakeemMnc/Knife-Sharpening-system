@@ -85,6 +85,17 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
     }
   }, [isVisible, selectedDate, serviceDates, onDateSelect]);
 
+  // Additional effect to ensure auto-selection happens when dates finish loading
+  useEffect(() => {
+    if (serviceDates.length > 0 && !selectedDate && !hasAutoSelected.current && isVisible) {
+      const firstAvailable = serviceDates.find(d => d.isAvailable);
+      if (firstAvailable) {
+        hasAutoSelected.current = true;
+        onDateSelect(firstAvailable.date);
+      }
+    }
+  }, [serviceDates]);
+
   // Swipe gesture handlers for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartRef.current = {
@@ -250,7 +261,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
           const currentMobileDate = allDates[mobileCurrentIndex];
           if (!currentMobileDate) return null;
           
-          const isSelected = selectedDate && currentMobileDate.date.getTime() === selectedDate.getTime();
+          const isSelected = selectedDate && currentMobileDate.date.toDateString() === selectedDate.toDateString();
           const isFullyBooked = currentMobileDate.availabilityStatus === 'full';
           const isClosed = currentMobileDate.availabilityStatus === 'closed';
           
@@ -294,7 +305,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
               
               {/* Mobile Single Card with Swipe */}
               <div 
-                className="relative overflow-hidden px-2"
+                className="relative px-3 py-3"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
@@ -408,7 +419,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
       {/* Desktop Layout - 3 Column Grid (Unchanged) */}
       <div className="hidden md:grid grid-cols-3 gap-4">
         {visibleDates.map((serviceDate, index) => {
-          const isSelected = selectedDate && serviceDate.date.getTime() === selectedDate.getTime();
+          const isSelected = selectedDate && serviceDate.date.toDateString() === selectedDate.toDateString();
           const isFullyBooked = serviceDate.availabilityStatus === 'full';
           const isClosed = serviceDate.availabilityStatus === 'closed';
           
