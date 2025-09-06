@@ -305,48 +305,126 @@ export class StripeService {
 
   // Handle successful payment
   private static async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promise<void> {
-    console.log('Processing payment success for payment intent:', paymentIntent.id);
-    console.log('Payment intent metadata:', paymentIntent.metadata);
+    console.log('🎉 WEBHOOK: Processing payment success for payment intent:', paymentIntent.id);
+    console.log('🔍 WEBHOOK: Payment intent metadata:', paymentIntent.metadata);
     
     const orderId = paymentIntent.metadata.orderId ? parseInt(paymentIntent.metadata.orderId) : null;
     
-    if (!orderId) {
-      console.error('No order ID found in payment intent metadata');
-      return;
-    }
+    if (orderId) {
+      // Case 1: Order already exists, just update it to paid
+      console.log('Updating existing order:', orderId, 'to paid status');
+      
+      try {
+        // Update order status to paid
+        const updatedOrder = await DatabaseService.updateOrder(orderId, {
+          payment_status: 'paid',
+          status: 'paid',
+          stripe_payment_id: paymentIntent.id,
+          updated_at: new Date().toISOString(),
+        });
 
-    console.log('Updating order:', orderId, 'to paid status');
-    
-    try {
-      // Update order status to paid
-      const updatedOrder = await DatabaseService.updateOrder(orderId, {
-        payment_status: 'paid',
-        status: 'paid',
-        stripe_payment_id: paymentIntent.id,
-        updated_at: new Date().toISOString(),
-      });
+        console.log('Order updated successfully:', updatedOrder);
 
-      console.log('Order updated successfully:', updatedOrder);
-
-      // Get the order to send confirmation SMS
-      const order = await DatabaseService.getOrder(orderId);
-      if (order) {
-        console.log('Sending SMS confirmation for order:', orderId);
+        // Get the order to send confirmation SMS
+        const order = await DatabaseService.getOrder(orderId);
+        if (order) {
+          console.log('Sending SMS confirmation for order:', orderId);
+          try {
+            // Import SMS service dynamically to avoid circular dependencies
+            const { SMSService } = await import('./sms-service');
+            await SMSService.sendOrderConfirmation(order);
+            console.log('SMS confirmation sent successfully');
+          } catch (smsError) {
+            console.error('Failed to send SMS confirmation:', smsError);
+            // Don't throw error - SMS failure shouldn't fail the webhook
+          }
+        } else {
+          console.error('Order not found after update:', orderId);
+        }
+      } catch (error) {
+        console.error('Failed to update order status:', error);
+        throw error;
+      }
+    } else if (paymentIntent.metadata.orderDataJSON) {
+      // Case 2: No order exists yet, create it from the stored order data
+      console.log('No orderId found, but orderDataJSON exists. Creating order from webhook.');
+      
+      try {
+        const orderData = JSON.parse(paymentIntent.metadata.orderDataJSON);
+        console.log('Parsed order data:', orderData);
+        
+        // Import dbHelpers to calculate totals properly
+        const { dbHelpers } = await import('./database');
+        
+        // Calculate proper totals based on items and service level
+        const finalTotals = dbHelpers.calculateOrderTotals(orderData.totalItems, orderData.serviceLevel);
+        
+        // Create the order with paid status - matching the structure from orders API
+        const newOrder = {
+          first_name: orderData.firstName,
+          last_name: orderData.lastName,
+          email: orderData.email.toLowerCase(),
+          phone: orderData.phone.replace(/\s/g, ''), // Remove spaces
+          pickup_address: orderData.address,
+          street_address: orderData.streetAddress || null,
+          suburb: orderData.suburb || null,
+          state: orderData.state ? orderData.state.substring(0, 10) : null, // Truncate to 10 chars
+          postal_code: orderData.postalCode || null,
+          special_instructions: orderData.specialInstructions || null,
+          total_items: orderData.totalItems,
+          service_level: orderData.serviceLevel,
+          base_amount: finalTotals.base_amount,
+          upgrade_amount: finalTotals.upgrade_amount,
+          delivery_fee: finalTotals.delivery_fee,
+          total_amount: finalTotals.total_amount,
+          service_date: orderData.serviceDate,
+          pickup_date: dbHelpers.getNextMonday(), // Legacy compatibility
+          status: 'paid' as const,
+          payment_status: 'paid' as const,
+          stripe_payment_id: paymentIntent.id,
+          stripe_customer_id: paymentIntent.customer as string || undefined,
+          confirmation_sms_sent: false,
+          reminder_24h_sent: false,
+          morning_reminder_sent: false,
+          pickup_sms_sent: false,
+          delivery_sms_sent: false,
+          followup_sms_sent: false,
+          confirmation_sms_status: 'pending' as const,
+          reminder_24h_status: 'pending' as const,
+          morning_reminder_status: 'pending' as const,
+          pickup_sms_status: 'pending' as const,
+          delivery_sms_status: 'pending' as const,
+          followup_sms_status: 'pending' as const,
+          confirmation_sms_sent_at: undefined,
+          reminder_24h_sent_at: undefined,
+          morning_reminder_sent_at: undefined,
+          pickup_sms_sent_at: undefined,
+          delivery_sms_sent_at: undefined,
+          followup_sms_sent_at: undefined,
+          internal_notes: undefined,
+        };
+        
+        console.log('Creating new order from webhook:', newOrder);
+        const createdOrder = await DatabaseService.createOrder(newOrder);
+        console.log('Order created successfully from webhook:', createdOrder);
+        
+        // Send SMS confirmation
         try {
-          // Import SMS service dynamically to avoid circular dependencies
           const { SMSService } = await import('./sms-service');
-          await SMSService.sendOrderConfirmation(order);
+          await SMSService.sendOrderConfirmation(createdOrder);
           console.log('SMS confirmation sent successfully');
         } catch (smsError) {
           console.error('Failed to send SMS confirmation:', smsError);
           // Don't throw error - SMS failure shouldn't fail the webhook
         }
-      } else {
-        console.error('Order not found after update:', orderId);
+        
+      } catch (error) {
+        console.error('Failed to create order from webhook:', error);
+        throw error;
       }
-    } catch (error) {
-      console.error('Failed to update order status:', error);
-      throw error;
+    } else {
+      console.error('No order ID or order data found in payment intent metadata');
+      return;
     }
   }
 

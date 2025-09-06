@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       pickup_address: address,
       street_address: streetAddress || null,
       suburb: suburb || null,
-      state: state || null,
+      state: state ? state.substring(0, 10) : null, // Truncate to 10 chars
       postal_code: postalCode || null,
       special_instructions: specialInstructions || null,
       total_items: totalItems,
@@ -124,7 +124,6 @@ export async function POST(request: NextRequest) {
       total_amount: finalTotals.total_amount,
       service_date: serviceDate,
       pickup_date: dbHelpers.getNextMonday(), // Legacy compatibility
-      pickup_time_slot: 'morning' as const,
       status: isPaymentCompleted ? 'paid' as const : 'pending' as const,
       payment_status: isPaymentCompleted ? 'paid' as const : 'unpaid' as const,
       stripe_payment_id: stripePaymentId || undefined,
@@ -134,6 +133,18 @@ export async function POST(request: NextRequest) {
       pickup_sms_sent: false,
       delivery_sms_sent: false,
       followup_sms_sent: false,
+      confirmation_sms_status: 'pending' as const,
+      reminder_24h_status: 'pending' as const,
+      morning_reminder_status: 'pending' as const,
+      pickup_sms_status: 'pending' as const,
+      delivery_sms_status: 'pending' as const,
+      followup_sms_status: 'pending' as const,
+      confirmation_sms_sent_at: undefined,
+      reminder_24h_sent_at: undefined,
+      morning_reminder_sent_at: undefined,
+      pickup_sms_sent_at: undefined,
+      delivery_sms_sent_at: undefined,
+      followup_sms_sent_at: undefined,
       internal_notes: undefined,
     };
 
@@ -203,40 +214,64 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Get all orders for admin dashboard
-    const orders = await DatabaseService.getAllOrders();
+    // Check for stripePaymentId query parameter
+    const { searchParams } = new URL(request.url);
+    const stripePaymentId = searchParams.get('stripePaymentId');
     
-    // Debug logging
-    console.log('=== Orders API Debug ===');
-    console.log('Found orders:', orders.length);
-    if (orders.length > 0) {
-      console.log('First order SMS status fields:', {
-        id: orders[0].id,
-        confirmation_sms_status: orders[0].confirmation_sms_status,
-        reminder_24h_status: orders[0].reminder_24h_status,
-        morning_reminder_status: orders[0].morning_reminder_status,
-        pickup_sms_status: orders[0].pickup_sms_status
+    if (stripePaymentId) {
+      // Query for a specific order by stripe payment ID
+      console.log('🔍 Querying order by Stripe Payment ID:', stripePaymentId);
+      const order = await DatabaseService.getOrderByStripePaymentId(stripePaymentId);
+      
+      if (order) {
+        console.log('✅ Found order:', order.id);
+        return NextResponse.json({
+          success: true,
+          order: order
+        });
+      } else {
+        console.log('❌ No order found with Stripe Payment ID:', stripePaymentId);
+        return NextResponse.json({
+          success: false,
+          order: null
+        });
+      }
+    } else {
+      // Get all orders for admin dashboard
+      const orders = await DatabaseService.getAllOrders();
+      
+      // Debug logging
+      console.log('=== Orders API Debug ===');
+      console.log('Found orders:', orders.length);
+      if (orders.length > 0) {
+        console.log('First order SMS status fields:', {
+          id: orders[0].id,
+          confirmation_sms_status: orders[0].confirmation_sms_status,
+          reminder_24h_status: orders[0].reminder_24h_status,
+          morning_reminder_status: orders[0].morning_reminder_status,
+          pickup_sms_status: orders[0].pickup_sms_status
+        });
+      }
+      
+      // Ensure SMS status fields are included in the response
+      const ordersWithSMS = orders.map(order => ({
+        ...order,
+        // Explicitly include SMS status fields
+        confirmation_sms_status: order.confirmation_sms_status || 'pending',
+        reminder_24h_status: order.reminder_24h_status || 'pending',
+        morning_reminder_status: order.morning_reminder_status || 'pending',
+        pickup_sms_status: order.pickup_sms_status || 'pending',
+        delivery_sms_status: order.delivery_sms_status || 'pending',
+        followup_sms_status: order.followup_sms_status || 'pending'
+      }));
+
+      return NextResponse.json({
+        success: true,
+        orders: ordersWithSMS
       });
     }
-    
-    // Ensure SMS status fields are included in the response
-    const ordersWithSMS = orders.map(order => ({
-      ...order,
-      // Explicitly include SMS status fields
-      confirmation_sms_status: order.confirmation_sms_status || 'pending',
-      reminder_24h_status: order.reminder_24h_status || 'pending',
-      morning_reminder_status: order.morning_reminder_status || 'pending',
-      pickup_sms_status: order.pickup_sms_status || 'pending',
-      delivery_sms_status: order.delivery_sms_status || 'pending',
-      followup_sms_status: order.followup_sms_status || 'pending'
-    }));
-
-    return NextResponse.json({
-      success: true,
-      orders: ordersWithSMS
-    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json(

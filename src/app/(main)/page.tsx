@@ -312,9 +312,9 @@ export default function Home() {
     }
   };
 
-  // Handle payment success - NOW create the order!
+  // Handle payment success - Check if webhook already created order, otherwise create it
   const handlePaymentSuccess = async (paymentIntentId: string) => {
-    console.log('🎉 Payment successful! Now creating the order...');
+    console.log('🎉 Payment successful! Checking if order exists or needs to be created...');
     setPaymentStatus('success');
     
     if (!orderData) {
@@ -324,34 +324,47 @@ export default function Home() {
     }
 
     try {
-      // NOW create the order with paid status
-      const orderToCreate = {
-        ...orderData,
-        stripePaymentId: paymentIntentId, // Link to Stripe payment
-      };
-
-      console.log('💾 Creating paid order with data:', orderToCreate);
-
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderToCreate),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        console.log('✅ Order created successfully after payment:', result.order.id);
-        alert(`Payment successful! Order #${result.order.id}\n\nService Date: ${result.order.serviceDate}\nTotal: $${result.order.total.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
+      // First, wait a moment for webhook to potentially process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check if webhook already created an order with this payment intent ID
+      const checkResponse = await fetch(`/api/orders?stripePaymentId=${paymentIntentId}`);
+      const checkResult = await checkResponse.json();
+      
+      if (checkResult.success && checkResult.order) {
+        // Webhook already created the order
+        console.log('✅ Order already exists from webhook:', checkResult.order.id);
+        alert(`Payment successful! Order #${checkResult.order.id}\n\nService Date: ${checkResult.order.pickup_date}\nTotal: $${checkResult.order.total_amount.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
       } else {
-        console.error('Failed to create order after payment:', result.error);
-        alert('Payment successful but failed to create order. Please contact support.');
+        // Webhook didn't create order yet, create it now
+        console.log('💾 Creating order from frontend (webhook didn\'t create it yet)...');
+        
+        const orderToCreate = {
+          ...orderData,
+          stripePaymentId: paymentIntentId, // Link to Stripe payment
+        };
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderToCreate),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log('✅ Order created successfully from frontend:', result.order.id);
+          alert(`Payment successful! Order #${result.order.id}\n\nService Date: ${result.order.serviceDate}\nTotal: $${result.order.total.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
+        } else {
+          console.error('Failed to create order from frontend:', result.error);
+          alert('Payment successful but failed to create order. Please contact support.');
+        }
       }
     } catch (error) {
-      console.error('Error creating order after payment:', error);
-      alert('Payment successful but failed to create order. Please contact support.');
+      console.error('Error handling payment success:', error);
+      alert('Payment successful! Your order may have been processed. Please contact support if you don\'t receive a confirmation SMS shortly.');
     }
     
     // Reset form and payment state
@@ -384,7 +397,7 @@ export default function Home() {
   // Handle payment cancellation
   const handlePaymentCancel = () => {
     setShowPayment(false);
-    setCurrentOrder(null);
+    setOrderData(null);
     setPaymentStatus('idle');
   };
 

@@ -21,7 +21,6 @@ export interface Order {
   total_amount: number;
   service_date: string;
   pickup_date: string; // Legacy compatibility
-  pickup_time_slot: 'morning' | 'afternoon' | 'evening';
   status: 'pending' | 'paid' | 'picked_up' | 'sharpening' | 'ready' | 'delivered' | 'completed';
   payment_status: 'unpaid' | 'paid' | 'refunded' | 'failed';
   stripe_payment_id?: string;
@@ -154,6 +153,21 @@ export class DatabaseService {
       .single();
 
     if (error) throw error;
+    return data;
+  }
+
+  static async getOrderByStripePaymentId(stripePaymentId: string): Promise<Order | null> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('stripe_payment_id', stripePaymentId)
+      .single();
+
+    if (error) {
+      // If no rows found, return null instead of throwing
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
     return data;
   }
 

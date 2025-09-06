@@ -23,47 +23,66 @@ export async function getNextAvailableSlots(
 
   const slots: Date[] = [];
   const now = new Date();
-  const currentHour = now.getHours();
   
-  // Determine starting point based on 5pm cutoff rule
+  // Simple rule: No same-day booking, start from tomorrow
   let startDate = new Date(now);
-  if (currentHour >= 17) { // After 5pm
-    // Start checking from day after tomorrow
-    startDate.setDate(now.getDate() + 2);
+  startDate.setDate(now.getDate() + 1); // Always start from tomorrow
+  
+  // Use same alternating logic as carousel for consistency
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const serviceDayIndices = route.serviceDays.map(day => dayNames.indexOf(day));
+  
+  // Check if tomorrow is a service day - if so, start with it
+  const tomorrowDayIndex = startDate.getDay();
+  let alternatingIndex = 0;
+  
+  if (serviceDayIndices.includes(tomorrowDayIndex)) {
+    alternatingIndex = serviceDayIndices.indexOf(tomorrowDayIndex);
   } else {
-    // Before 5pm, start checking from tomorrow  
-    startDate.setDate(now.getDate() + 1);
+    alternatingIndex = 0;
   }
   
-  // Look ahead up to 4 weeks to find available slots
-  const maxDaysToCheck = 28;
-  let daysChecked = 0;
+  let currentDate = new Date(startDate);
   
-  while (slots.length < maxSlots && daysChecked < maxDaysToCheck) {
-    const checkDate = new Date(startDate);
-    checkDate.setDate(startDate.getDate() + daysChecked);
-    
-    if (isServiceDay(postcode, checkDate)) {
-      const dateString = checkDate.toISOString().split('T')[0];
+  // Look up to 6 weeks in the future
+  for (let week = 0; week < 6 && slots.length < maxSlots; week++) {
+    for (let dayInWeek = 0; dayInWeek < 2 && slots.length < maxSlots; dayInWeek++) {
+      const targetDayIndex = serviceDayIndices[alternatingIndex];
       
-      try {
-        // Check if bookings are available for this date via API
-        const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
-        const result = await response.json();
+      // Find the next occurrence of this service day
+      let searchDate = new Date(currentDate);
+      let daysToAdd = 0;
+      
+      while (daysToAdd < 14) {
+        const testDate = new Date(searchDate);
+        testDate.setDate(searchDate.getDate() + daysToAdd);
         
-        if (result.success && result.data.length > 0) {
-          const dayLimit = result.data[0];
-          if (dayLimit.availability_status === 'available' && dayLimit.spots_remaining > 0) {
-            slots.push(new Date(checkDate));
+        if (testDate.getDay() === targetDayIndex && testDate >= startDate) {
+          const dateString = testDate.toISOString().split('T')[0];
+          
+          try {
+            const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+            const result = await response.json();
+            
+            if (result.success && result.data.length > 0) {
+              const dayLimit = result.data[0];
+              if (dayLimit.availability_status === 'available' && dayLimit.spots_remaining > 0) {
+                slots.push(new Date(testDate));
+              }
+            }
+          } catch (error) {
+            console.error('Error checking booking availability for', dateString, error);
           }
+          
+          currentDate = new Date(testDate);
+          currentDate.setDate(testDate.getDate() + 1);
+          break;
         }
-      } catch (error) {
-        console.error('Error checking booking availability for', dateString, error);
-        // On error, skip this date for safety
+        daysToAdd++;
       }
+      
+      alternatingIndex = (alternatingIndex + 1) % 2;
     }
-    
-    daysChecked++;
   }
   
   return slots;
@@ -180,10 +199,11 @@ export function formatServiceDate(date: Date): string {
 /**
  * Get service dates with availability status for carousel display
  * Returns both available and full dates to show demand
+ * Ensures proper alternation between the two service days
  */
 export async function getServiceDatesForCarousel(
   postcode: string,
-  maxDates: number = 5
+  maxDates: number = 6
 ): Promise<Array<{
   date: Date;
   dateString: string;
@@ -205,64 +225,94 @@ export async function getServiceDatesForCarousel(
   }> = [];
   
   const now = new Date();
-  const currentHour = now.getHours();
   
-  // Determine starting point based on 5pm cutoff rule
-  let startDate = new Date(now);
-  if (currentHour >= 17) { // After 5pm
-    startDate.setDate(now.getDate() + 2);
+  // Simple rule: No same-day booking, start from tomorrow
+  let searchStartDate = new Date(now);
+  searchStartDate.setDate(now.getDate() + 1); // Always start from tomorrow
+  
+  // Generate service dates with proper alternation
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const serviceDayIndices = route.serviceDays.map(day => dayNames.indexOf(day));
+  
+  // Check if tomorrow is a service day - if so, start with it
+  const tomorrowDayIndex = searchStartDate.getDay();
+  let alternatingIndex = 0;
+  
+  // Determine which service day to start with
+  if (serviceDayIndices.includes(tomorrowDayIndex)) {
+    // Tomorrow is a service day! Find which one it is
+    alternatingIndex = serviceDayIndices.indexOf(tomorrowDayIndex);
   } else {
-    startDate.setDate(now.getDate() + 1);
+    // Tomorrow is not a service day, start with first service day
+    alternatingIndex = 0;
   }
   
-  // Look ahead up to 6 weeks to find enough dates for carousel
-  const maxDaysToCheck = 42;
-  let daysChecked = 0;
+  // Generate dates by alternating between the two service days
+  let currentDate = new Date(searchStartDate);
   
-  while (dates.length < maxDates && daysChecked < maxDaysToCheck) {
-    const checkDate = new Date(startDate);
-    checkDate.setDate(startDate.getDate() + daysChecked);
-    
-    if (isServiceDay(postcode, checkDate)) {
-      const dateString = checkDate.toISOString().split('T')[0];
+  // Look up to 10 weeks in the future
+  for (let week = 0; week < 10 && dates.length < maxDates; week++) {
+    for (let dayInWeek = 0; dayInWeek < 2 && dates.length < maxDates; dayInWeek++) {
+      const targetDayIndex = serviceDayIndices[alternatingIndex];
       
-      try {
-        const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
-        const result = await response.json();
+      // Find the next occurrence of this service day
+      let searchDate = new Date(currentDate);
+      let daysToAdd = 0;
+      
+      while (daysToAdd < 14) { // Max 2 weeks to find the day
+        const testDate = new Date(searchDate);
+        testDate.setDate(searchDate.getDate() + daysToAdd);
         
-        if (result.success && result.data.length > 0) {
-          const dailyLimit = result.data[0];
-          dates.push({
-            date: new Date(checkDate),
-            dateString,
-            isAvailable: dailyLimit.availability_status === 'available',
-            spotsRemaining: dailyLimit.spots_remaining,
-            availabilityStatus: dailyLimit.availability_status
-          });
-        } else {
-          // Default to available if no limit exists yet
-          dates.push({
-            date: new Date(checkDate),
-            dateString,
-            isAvailable: true,
-            spotsRemaining: 7,
-            availabilityStatus: 'available'
-          });
+        if (testDate.getDay() === targetDayIndex && testDate >= searchStartDate) {
+          const serviceDate = new Date(testDate);
+          const dateString = serviceDate.toISOString().split('T')[0];
+          
+          try {
+            const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
+            const result = await response.json();
+            
+            if (result.success && result.data.length > 0) {
+              const dailyLimit = result.data[0];
+              dates.push({
+                date: new Date(serviceDate),
+                dateString,
+                isAvailable: dailyLimit.availability_status === 'available',
+                spotsRemaining: dailyLimit.spots_remaining,
+                availabilityStatus: dailyLimit.availability_status
+              });
+            } else {
+              // Default to available if no limit exists yet
+              dates.push({
+                date: new Date(serviceDate),
+                dateString,
+                isAvailable: true,
+                spotsRemaining: 7,
+                availabilityStatus: 'available'
+              });
+            }
+          } catch (error) {
+            console.error('Error getting carousel date info for', dateString, error);
+            // On error, show date as unavailable
+            dates.push({
+              date: new Date(serviceDate),
+              dateString,
+              isAvailable: false,
+              spotsRemaining: 0,
+              availabilityStatus: 'closed'
+            });
+          }
+          
+          // Move currentDate to the day after this service date for next search
+          currentDate = new Date(serviceDate);
+          currentDate.setDate(serviceDate.getDate() + 1);
+          break;
         }
-      } catch (error) {
-        console.error('Error getting carousel date info for', dateString, error);
-        // On error, show date as unavailable
-        dates.push({
-          date: new Date(checkDate),
-          dateString,
-          isAvailable: false,
-          spotsRemaining: 0,
-          availabilityStatus: 'closed'
-        });
+        daysToAdd++;
       }
+      
+      // Alternate between the two service days
+      alternatingIndex = (alternatingIndex + 1) % 2;
     }
-    
-    daysChecked++;
   }
   
   return dates;

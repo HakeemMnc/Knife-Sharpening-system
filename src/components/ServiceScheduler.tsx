@@ -45,7 +45,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
         setError(null);
         
         // Get service dates for carousel (both available and full)
-        const dates = await getServiceDatesForCarousel(postcode, 7); // Get up to 7 dates for carousel
+        const dates = await getServiceDatesForCarousel(postcode, 6); // Get exactly 6 dates for carousel
         setServiceDates(dates);
         
         // Auto-select first available date if none is currently selected
@@ -106,9 +106,10 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
 
     // Only register horizontal swipes (ignore vertical scrolling)
     if (Math.abs(deltaX) > 50 && deltaY < 100) {
-      const availableDates = serviceDates.filter(d => d.isAvailable);
+      // Show all dates, not just available ones
+      const allDates = serviceDates;
       
-      if (deltaX > 0 && mobileCurrentIndex < availableDates.length - 1) {
+      if (deltaX > 0 && mobileCurrentIndex < allDates.length - 1) {
         // Swipe left - next date
         setMobileCurrentIndex(prev => prev + 1);
       } else if (deltaX < 0 && mobileCurrentIndex > 0) {
@@ -129,8 +130,9 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
   };
 
   const handleMobileNext = () => {
-    const availableDates = serviceDates.filter(d => d.isAvailable);
-    if (mobileCurrentIndex < availableDates.length - 1) {
+    // Show all dates, not just available ones
+    const allDates = serviceDates;
+    if (mobileCurrentIndex < allDates.length - 1) {
       setMobileCurrentIndex(prev => prev + 1);
     }
   };
@@ -193,15 +195,8 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
   // Helper function to get visible dates for carousel
   const getVisibleDates = () => {
     const visibleCount = 3; // Show 3 dates at a time
-    const availableDates = serviceDates.filter(d => d.isAvailable);
-    
-    // If we have enough available dates, show those
-    if (availableDates.length >= visibleCount) {
-      return availableDates.slice(currentIndex, currentIndex + visibleCount);
-    } else {
-      // Mix available and unavailable to show demand
-      return serviceDates.slice(currentIndex, currentIndex + visibleCount);
-    }
+    // Show all dates (available and unavailable) to display complete service schedule
+    return serviceDates.slice(currentIndex, currentIndex + visibleCount);
   };
 
   const visibleDates = getVisibleDates();
@@ -250,10 +245,11 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
       {/* Mobile Layout - Single Card Carousel */}
       <div className="md:hidden">
         {(() => {
-          const availableDates = serviceDates.filter(d => d.isAvailable);
-          if (availableDates.length === 0) return null;
+          // Show all dates (available and unavailable) to display complete service schedule
+          const allDates = serviceDates;
+          if (allDates.length === 0) return null;
           
-          const currentMobileDate = availableDates[mobileCurrentIndex];
+          const currentMobileDate = allDates[mobileCurrentIndex];
           if (!currentMobileDate) return null;
           
           const isSelected = selectedDate && currentMobileDate.date.getTime() === selectedDate.getTime();
@@ -281,15 +277,15 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
                 </button>
                 
                 <div className="text-sm text-gray-600">
-                  {availableDates.length === 1 
+                  {allDates.length === 1 
                     ? '1 date available'
-                    : `${availableDates.length} dates available`
+                    : `${allDates.length} dates available`
                   }
                 </div>
                 
                 <button
                   onClick={handleMobileNext}
-                  disabled={mobileCurrentIndex >= availableDates.length - 1}
+                  disabled={mobileCurrentIndex >= allDates.length - 1}
                   className="p-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

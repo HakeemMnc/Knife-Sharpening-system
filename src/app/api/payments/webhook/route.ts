@@ -3,7 +3,7 @@ import { StripeService } from '@/lib/stripe-service';
 import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
-  console.log('Webhook received');
+  console.log('🎯 WEBHOOK: Webhook received at', new Date().toISOString());
   
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
