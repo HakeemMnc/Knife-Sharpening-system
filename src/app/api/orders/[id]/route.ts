@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService, Order } from '@/lib/database';
+import { SMSService } from '@/lib/sms-service';
 
 export async function GET(
   request: NextRequest,
@@ -57,6 +58,15 @@ export async function PATCH(
     const body = await request.json();
     const { status, payment_status, ...otherUpdates } = body;
 
+    // Get current order to check previous status
+    const currentOrder = await DatabaseService.getOrder(orderId);
+    if (!currentOrder) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
     // Validate status if provided
     if (status && !['pending', 'paid', 'reminder_24h', 'morning_reminder', 'picked_up', 'delivered', 'completed'].includes(status)) {
       return NextResponse.json(
@@ -73,12 +83,29 @@ export async function PATCH(
       );
     }
 
-                    const updates: Partial<Order> = {};
+    const updates: Partial<Order> = {};
     if (status) updates.status = status;
     if (payment_status) updates.payment_status = payment_status;
     Object.assign(updates, otherUpdates);
 
     const updatedOrder = await DatabaseService.updateOrder(orderId, updates);
+
+    // If status changed to 'completed' and follow-up SMS hasn't been sent yet, send it
+    if (status === 'completed' && currentOrder.status !== 'completed' && !currentOrder.followup_sms_sent) {
+      try {
+        console.log(`📤 Sending follow-up SMS for order ${orderId} (status changed to completed)`);
+        const followupResult = await SMSService.sendFollowUpSMS(updatedOrder);
+        
+        if (followupResult) {
+          console.log(`✅ Follow-up SMS sent successfully for order ${orderId}`);
+        } else {
+          console.warn(`⚠️ Follow-up SMS failed for order ${orderId}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error sending follow-up SMS for order ${orderId}:`, error);
+        // Don't fail the status update if SMS fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
