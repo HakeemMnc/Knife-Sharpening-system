@@ -338,6 +338,33 @@ export class StripeService {
             console.error('Failed to send SMS confirmation:', smsError);
             // Don't throw error - SMS failure shouldn't fail the webhook
           }
+
+          // Send admin notification SMS for paid order
+          console.log('🔍 Sending admin notification for payment received');
+          try {
+            const { SMSService } = await import('./sms-service');
+            const serviceFormatted = new Date(order.service_date).toLocaleDateString('en-AU', { 
+              weekday: 'long',
+              day: '2-digit', 
+              month: '2-digit',
+              year: 'numeric'
+            });
+            
+            const notificationMessage = `🔪 PAYMENT RECEIVED\n\n` +
+              `Customer: ${order.first_name} ${order.last_name}\n` +
+              `Phone: ${order.phone}\n` +
+              `Service: ${serviceFormatted}\n` +
+              `Items: ${order.total_items}\n` +
+              `Amount: $${order.total_amount.toFixed(2)}\n` +
+              `Status: PAID\n` +
+              `Order ID: #${order.id}`;
+            
+            await SMSService.sendAdminNotification(notificationMessage);
+            console.log('✅ Admin notification sent successfully for payment');
+          } catch (error) {
+            console.error('⚠️ Error sending admin notification for payment:', error);
+            // Don't fail the webhook for this
+          }
         } else {
           console.error('Order not found after update:', orderId);
         }
@@ -416,6 +443,33 @@ export class StripeService {
         } catch (smsError) {
           console.error('Failed to send SMS confirmation:', smsError);
           // Don't throw error - SMS failure shouldn't fail the webhook
+        }
+
+        // Send admin notification SMS for new booking
+        console.log('🔍 Sending admin notification for new booking from webhook');
+        try {
+          const { SMSService } = await import('./sms-service');
+          const serviceFormatted = new Date(createdOrder.service_date).toLocaleDateString('en-AU', { 
+            weekday: 'long',
+            day: '2-digit', 
+            month: '2-digit',
+            year: 'numeric'
+          });
+          
+          const notificationMessage = `🔪 NEW BOOKING ALERT\n\n` +
+            `Customer: ${createdOrder.first_name} ${createdOrder.last_name}\n` +
+            `Phone: ${createdOrder.phone}\n` +
+            `Service: ${serviceFormatted}\n` +
+            `Items: ${createdOrder.total_items}\n` +
+            `Amount: $${createdOrder.total_amount.toFixed(2)}\n` +
+            `Status: PAID\n` +
+            `Order ID: #${createdOrder.id}`;
+          
+          await SMSService.sendAdminNotification(notificationMessage);
+          console.log('✅ Admin notification sent successfully from webhook');
+        } catch (error) {
+          console.error('⚠️ Error sending admin notification from webhook:', error);
+          // Don't fail the webhook for this
         }
         
       } catch (error) {
