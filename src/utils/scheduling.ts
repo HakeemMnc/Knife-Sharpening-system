@@ -24,25 +24,32 @@ export async function getNextAvailableSlots(
   const slots: Date[] = [];
   const now = new Date();
   
-  // Simple rule: No same-day booking, start from tomorrow
-  let startDate = new Date(now);
-  startDate.setDate(now.getDate() + 1); // Always start from tomorrow
-  
-  // Use same alternating logic as carousel for consistency
+  // Find the very next service day from today
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const serviceDayIndices = route.serviceDays.map(day => dayNames.indexOf(day));
   
-  // Check if tomorrow is a service day - if so, start with it
-  const tomorrowDayIndex = startDate.getDay();
+  // Find the next service day from today
+  let nextServiceDay: Date | null = null;
   let alternatingIndex = 0;
   
-  if (serviceDayIndices.includes(tomorrowDayIndex)) {
-    alternatingIndex = serviceDayIndices.indexOf(tomorrowDayIndex);
-  } else {
-    alternatingIndex = 0;
+  // Check each day starting from tomorrow
+  for (let daysAhead = 1; daysAhead <= 7; daysAhead++) {
+    const checkDate = new Date(now);
+    checkDate.setDate(now.getDate() + daysAhead);
+    const checkDayIndex = checkDate.getDay();
+    
+    if (serviceDayIndices.includes(checkDayIndex)) {
+      nextServiceDay = checkDate;
+      alternatingIndex = serviceDayIndices.indexOf(checkDayIndex);
+      break;
+    }
   }
   
-  let currentDate = new Date(startDate);
+  if (!nextServiceDay) {
+    throw new Error('Could not find next service day');
+  }
+  
+  let currentDate = new Date(nextServiceDay);
   
   // Look up to 6 weeks in the future
   for (let week = 0; week < 6 && slots.length < maxSlots; week++) {
@@ -57,7 +64,7 @@ export async function getNextAvailableSlots(
         const testDate = new Date(searchDate);
         testDate.setDate(searchDate.getDate() + daysToAdd);
         
-        if (testDate.getDay() === targetDayIndex && testDate >= startDate) {
+        if (testDate.getDay() === targetDayIndex && testDate >= currentDate) {
           const dateString = testDate.toISOString().split('T')[0];
           
           try {
@@ -220,33 +227,44 @@ export async function getServiceDatesForCarousel(
   const serviceDates: Date[] = [];
   const now = new Date();
   
-  // Simple rule: No same-day booking, start from tomorrow
-  let searchStartDate = new Date(now);
-  searchStartDate.setDate(now.getDate() + 1); // Always start from tomorrow
-  
-  // Generate service dates with proper alternation
+  // Find the very next service day from today
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const serviceDayIndices = route.serviceDays.map(day => dayNames.indexOf(day));
+  const todayIndex = now.getDay();
   
-  // Check if tomorrow is a service day - if so, start with it
-  const tomorrowDayIndex = searchStartDate.getDay();
+  // Find the next service day from today
+  let nextServiceDay: Date | null = null;
   let alternatingIndex = 0;
   
-  // Determine which service day to start with
-  if (serviceDayIndices.includes(tomorrowDayIndex)) {
-    // Tomorrow is a service day! Find which one it is
-    alternatingIndex = serviceDayIndices.indexOf(tomorrowDayIndex);
-  } else {
-    // Tomorrow is not a service day, start with first service day
-    alternatingIndex = 0;
+  // Check each day starting from tomorrow
+  for (let daysAhead = 1; daysAhead <= 7; daysAhead++) {
+    const checkDate = new Date(now);
+    checkDate.setDate(now.getDate() + daysAhead);
+    const checkDayIndex = checkDate.getDay();
+    
+    if (serviceDayIndices.includes(checkDayIndex)) {
+      nextServiceDay = checkDate;
+      alternatingIndex = serviceDayIndices.indexOf(checkDayIndex);
+      break;
+    }
   }
   
-  // Generate dates by alternating between the two service days
-  let currentDate = new Date(searchStartDate);
+  if (!nextServiceDay) {
+    throw new Error('Could not find next service day');
+  }
+  
+  // Start with the first service date we found
+  serviceDates.push(new Date(nextServiceDay));
+  
+  // Generate remaining dates by alternating between the two service days
+  let currentDate = new Date(nextServiceDay);
+  currentDate.setDate(nextServiceDay.getDate() + 1); // Start searching from day after first service date
   
   // Look up to 10 weeks in the future to ensure we get maxDates
   for (let week = 0; week < 10 && serviceDates.length < maxDates; week++) {
     for (let dayInWeek = 0; dayInWeek < 2 && serviceDates.length < maxDates; dayInWeek++) {
+      // Alternate to the next service day
+      alternatingIndex = (alternatingIndex + 1) % 2;
       const targetDayIndex = serviceDayIndices[alternatingIndex];
       
       // Find the next occurrence of this service day
@@ -257,7 +275,7 @@ export async function getServiceDatesForCarousel(
         const testDate = new Date(searchDate);
         testDate.setDate(searchDate.getDate() + daysToAdd);
         
-        if (testDate.getDay() === targetDayIndex && testDate >= searchStartDate) {
+        if (testDate.getDay() === targetDayIndex && testDate >= currentDate) {
           serviceDates.push(new Date(testDate));
           
           // Move currentDate to the day after this service date for next search
@@ -267,9 +285,6 @@ export async function getServiceDatesForCarousel(
         }
         daysToAdd++;
       }
-      
-      // Alternate between the two service days
-      alternatingIndex = (alternatingIndex + 1) % 2;
     }
   }
   

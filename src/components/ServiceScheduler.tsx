@@ -19,6 +19,28 @@ interface ServiceSchedulerProps {
   isVisible?: boolean;
 }
 
+// Helper function for new threshold-based availability display
+function getAvailabilityDisplay(spotsRemaining: number, isClosed: boolean, isFullyBooked: boolean) {
+  if (isClosed) {
+    return { message: "Not available", className: "text-gray-500" };
+  }
+  
+  if (isFullyBooked || spotsRemaining === 0) {
+    return { message: "Fully booked", className: "text-gray-500" };
+  }
+  
+  // New threshold logic: only show message when 3 or fewer spots
+  if (spotsRemaining <= 3) {
+    return { 
+      message: `${spotsRemaining} spot${spotsRemaining === 1 ? '' : 's'} left`, 
+      className: "text-red-500 font-medium" 
+    };
+  }
+  
+  // 4+ spots: show nothing
+  return { message: "", className: "" };
+}
+
 export default function ServiceScheduler({ postcode, selectedDate, onDateSelect, isVisible = true }: ServiceSchedulerProps) {
   const [serviceDates, setServiceDates] = useState<ServiceDate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -378,17 +400,16 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
                       
                       {/* Availability status */}
                       <div className="text-sm">
-                        {isClosed ? (
-                          <span className="text-gray-500">Not available</span>
-                        ) : isFullyBooked ? (
-                          <span className="text-red-500 font-medium">Fully booked</span>
-                        ) : currentMobileDate.spotsRemaining === 1 ? (
-                          <span className="text-orange-600 font-medium">1 spot left</span>
-                        ) : (
-                          <span className="text-green-600">
-                            {currentMobileDate.spotsRemaining} spots left
-                          </span>
-                        )}
+                        {(() => {
+                          const display = getAvailabilityDisplay(
+                            currentMobileDate.spotsRemaining,
+                            isClosed,
+                            isFullyBooked
+                          );
+                          return display.message ? (
+                            <span className={display.className}>{display.message}</span>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   </Card>
@@ -491,17 +512,16 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
                 
                 {/* Availability status */}
                 <div className="text-sm">
-                  {isClosed ? (
-                    <span className="text-gray-500">Not available</span>
-                  ) : isFullyBooked ? (
-                    <span className="text-red-500 font-medium">Fully booked</span>
-                  ) : serviceDate.spotsRemaining === 1 ? (
-                    <span className="text-orange-600 font-medium">1 spot left</span>
-                  ) : (
-                    <span className="text-green-600">
-                      {serviceDate.spotsRemaining} spots left
-                    </span>
-                  )}
+                  {(() => {
+                    const display = getAvailabilityDisplay(
+                      serviceDate.spotsRemaining,
+                      isClosed,
+                      isFullyBooked
+                    );
+                    return display.message ? (
+                      <span className={display.className}>{display.message}</span>
+                    ) : null;
+                  })()}
                 </div>
               </div>
             </Card>
