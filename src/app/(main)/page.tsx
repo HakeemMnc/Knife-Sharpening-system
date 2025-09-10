@@ -1390,7 +1390,7 @@ export default function Home() {
                   letterSpacing: '0.005em', 
                   lineHeight: '1.6'
                 }}>
-                  I work my magic in mobile workshop
+                  I work my magic in my mobile workshop
                 </p>
               </div>
 
@@ -1478,7 +1478,7 @@ export default function Home() {
                     letterSpacing: '0.005em', 
                     lineHeight: '1.6'
                   }}>
-                    Fill out our simple form with your details and knife count
+                    Fill out our simple form with your details and item count
                   </p>
                 </div>
               </div>
@@ -1619,7 +1619,7 @@ export default function Home() {
                     letterSpacing: '0.005em', 
                     lineHeight: '1.6'
                   }}>
-                    Enjoy razor-sharp knives delivered back in 48 hours
+                    Enjoy razor-sharp knives delivered back in less than 1 hour
                   </p>
                 </div>
               </div>
@@ -2370,10 +2370,22 @@ export default function Home() {
                       style={{color: '#d64f24'}}
                       onClick={(e) => {
                         e.preventDefault();
-                        document.getElementById('contact')?.scrollIntoView({ 
-                          behavior: 'smooth',
-                          block: 'start'
-                        });
+                        const contactElement = document.getElementById('contact');
+                        if (contactElement) {
+                          // Enhanced mobile scrolling with additional offset for mobile headers
+                          contactElement.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                          });
+                          
+                          // Fallback for mobile devices that might not support smooth scrolling
+                          setTimeout(() => {
+                            window.scrollTo({
+                              top: contactElement.offsetTop - 20, // 20px offset from top
+                              behavior: 'smooth'
+                            });
+                          }, 100);
+                        }
                       }}
                     >
                       Contact us
