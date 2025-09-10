@@ -116,7 +116,7 @@ export default function Footer() {
         </div>
       </section>
 
-      <footer style={{ backgroundColor: '#013350' }} className="py-12 px-4 sm:px-6 lg:px-8">
+      <footer id="contact" style={{ backgroundColor: '#013350' }} className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Footer Container */}
           <div className="shadow-lg rounded-3xl p-8 lg:p-12" style={{ backgroundColor: '#f4f2ec' }}>
@@ -124,7 +124,7 @@ export default function Footer() {
             <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 lg:gap-12">
               
               {/* Column 1: Contact Form */}
-              <div id="contact" className="space-y-6">
+              <div className="space-y-6">
                 <h3 className="text-2xl font-bold" style={{ 
                   fontFamily: 'Comic Relief, sans-serif', 
                   color: '#013350' 

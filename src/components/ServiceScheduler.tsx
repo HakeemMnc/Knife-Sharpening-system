@@ -460,11 +460,11 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
                 }
               }}
               hover={serviceDate.isAvailable}
-              className={`relative transition-all duration-200 ${
+              className={`relative transition-all duration-200 shadow-md ${
                 isSelected 
-                  ? 'ring-2 ring-blue-500 shadow-lg' 
+                  ? 'ring-2 ring-blue-500 shadow-xl' 
                   : serviceDate.isAvailable
-                    ? 'hover:ring-1 hover:ring-gray-300 cursor-pointer'
+                    ? 'hover:ring-1 hover:ring-gray-300 hover:shadow-lg cursor-pointer'
                     : 'opacity-75 cursor-not-allowed'
               }`}
             >

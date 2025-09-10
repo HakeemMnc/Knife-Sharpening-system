@@ -2372,19 +2372,28 @@ export default function Home() {
                         e.preventDefault();
                         const contactElement = document.getElementById('contact');
                         if (contactElement) {
-                          // Enhanced mobile scrolling with additional offset for mobile headers
-                          contactElement.scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'start'
+                          // Mobile-optimized scrolling
+                          const isMobile = window.innerWidth < 768;
+                          const offset = isMobile ? 10 : 20; // Less offset on mobile
+                          
+                          // Use consistent scrollTo approach for better mobile support
+                          const elementTop = contactElement.offsetTop;
+                          const finalPosition = Math.max(0, elementTop - offset);
+                          
+                          window.scrollTo({
+                            top: finalPosition,
+                            behavior: 'smooth'
                           });
                           
-                          // Fallback for mobile devices that might not support smooth scrolling
-                          setTimeout(() => {
-                            window.scrollTo({
-                              top: contactElement.offsetTop - 20, // 20px offset from top
-                              behavior: 'smooth'
-                            });
-                          }, 100);
+                          // Additional fallback for iOS devices
+                          if (isMobile && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                            setTimeout(() => {
+                              window.scrollTo({
+                                top: finalPosition,
+                                behavior: 'smooth'
+                              });
+                            }, 150);
+                          }
                         }
                       }}
                     >
