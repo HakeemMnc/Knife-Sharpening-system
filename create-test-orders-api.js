@@ -297,7 +297,7 @@ const testOrders = {
 
 // Calculate pricing based on your business model
 function calculateFinalTotal(totalItems, serviceLevel) {
-  const baseAmount = totalItems * 17; // $17 per item
+  const baseAmount = totalItems * 20; // $20 per item
   const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0; // $5 upgrade per item
   return baseAmount + upgradeAmount; // No delivery fee for mobile service
 }

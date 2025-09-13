@@ -51,7 +51,7 @@ async function testBookingFlow() {
   console.log('\n3. Testing price calculation...');
   
   function calculateOrderTotals(totalItems, serviceLevel) {
-    const baseAmount = totalItems * 17;
+    const baseAmount = totalItems * 20;
     const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0;
     const totalAmount = baseAmount + upgradeAmount;
 

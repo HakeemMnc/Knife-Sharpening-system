@@ -10,7 +10,7 @@ function testMobileBooking() {
   console.log('1. Testing price calculations...');
   
   function calculateOrderTotals(totalItems, serviceLevel) {
-    const baseAmount = totalItems * 17;
+    const baseAmount = totalItems * 20;
     const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0;
     const totalAmount = baseAmount + upgradeAmount;
 
@@ -23,16 +23,16 @@ function testMobileBooking() {
   }
 
   // Test standard service
-  const standardOrder = calculateOrderTotals(5, 'standard');
-  console.log('   Standard Service (5 items):');
+  const standardOrder = calculateOrderTotals(4, 'standard');
+  console.log('   Standard Service (4 items):');
   console.log(`     Base: $${standardOrder.base_amount}`);
   console.log(`     Upgrade: $${standardOrder.upgrade_amount}`);
   console.log(`     Delivery: $${standardOrder.delivery_fee} (mobile service)`);
   console.log(`     Total: $${standardOrder.total_amount}`);
   
   // Test premium service
-  const premiumOrder = calculateOrderTotals(5, 'premium');
-  console.log('   Premium Service (5 items):');
+  const premiumOrder = calculateOrderTotals(4, 'premium');
+  console.log('   Premium Service (4 items):');
   console.log(`     Base: $${premiumOrder.base_amount}`);
   console.log(`     Upgrade: $${premiumOrder.upgrade_amount}`);
   console.log(`     Delivery: $${premiumOrder.delivery_fee} (mobile service)`);
@@ -54,14 +54,14 @@ function testMobileBooking() {
     },
     specialInstructions: 'Ring doorbell',
     quantities: {
-      items: 5,
+      items: 4,
       scissors: 1,
       garden: 0,
       other: 0
     },
     selectedServiceDate: new Date('2025-08-25'),
     serviceLevel: 'standard',
-    total: 85
+    total: 80
   };
 
   console.log('   ✅ BookingState structure validated');
@@ -77,13 +77,13 @@ function testMobileBooking() {
   
   const oldSystemCosts = [
     { items: 3, cost: 76 }, // Would not qualify for free delivery (under $80)
-    { items: 5, cost: 85 }, // Would qualify for free delivery (over $80)
+    { items: 4, cost: 80 }, // Would qualify for free delivery (over $80)
     { items: 8, cost: 136 } // Premium with free delivery
   ];
   
   console.log('   Comparison with old delivery system:');
   oldSystemCosts.forEach(order => {
-    const baseAmount = order.items * 17;
+    const baseAmount = order.items * 20;
     const oldDeliveryFee = baseAmount >= 80 ? 0 : 25;
     const oldTotal = baseAmount + oldDeliveryFee;
     const newTotal = baseAmount; // No delivery fee

@@ -530,7 +530,7 @@ export const dbHelpers = {
     delivery_fee: number;
     total_amount: number;
   } => {
-    const baseAmount = totalItems * 17;
+    const baseAmount = totalItems * 20;
     let upgradeAmount = 0;
     
     if (serviceLevel === 'premium') {

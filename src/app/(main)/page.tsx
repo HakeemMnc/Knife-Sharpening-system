@@ -20,7 +20,7 @@ export default function Home() {
   });
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [quantities, setQuantities] = useState({
-    items: 5,
+    items: 4,
     scissors: 0,
     garden: 0,
     other: 0
@@ -389,7 +389,7 @@ export default function Home() {
       postalCode: ''
     });
     setSpecialInstructions('');
-    setQuantities({ items: 5, scissors: 0, garden: 0, other: 0 });
+    setQuantities({ items: 4, scissors: 0, garden: 0, other: 0 });
     setShowUpsells(false);
   };
 
@@ -461,7 +461,7 @@ export default function Home() {
 
   // Helper functions for calculations
   const getItemCount = () => Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
-  const getSubtotal = () => getItemCount() * 17;
+  const getSubtotal = () => getItemCount() * 20;
   const getUpsellsCost = () => Object.entries(selectedBundles).reduce((total, [category, bundle]) => {
     const cost = getBundleCost(category);
     return total + (isNaN(cost) ? 0 : cost);
@@ -567,7 +567,7 @@ export default function Home() {
   // Handle quantity changes
   const updateQuantity = (category: string, change: number) => {
     setQuantities(prev => {
-      const minValue = category === 'items' ? 5 : 0;
+      const minValue = category === 'items' ? 4 : 0;
       const newQuantities = {
         ...prev,
         [category]: Math.max(minValue, prev[category as keyof typeof prev] + change)
@@ -579,7 +579,7 @@ export default function Home() {
   // Calculate total
   useEffect(() => {
     const itemCount = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
-    setTotal(itemCount * 17);
+    setTotal(itemCount * 20);
   }, [quantities]);
 
   // Calculate final total with upsells and delivery
@@ -2423,7 +2423,7 @@ export default function Home() {
                     color: '#4a5568',
                     marginBottom: '8px'
                   }}>
-                    Professional sharpening service - $17 per item
+                    Professional sharpening service - $20 per item
                   </p>
                   <p className="mb-6" style={{
                     marginBottom: 'clamp(16px, 4vw, 24px)'
@@ -2538,7 +2538,7 @@ export default function Home() {
                     color: '#6b7280',
                     fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                   }}>
-                    Minimum 5 items
+                    Minimum 4 items
                   </p>
                 </div>
 
@@ -2644,7 +2644,7 @@ export default function Home() {
                       lineHeight: '1.5',
                       fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                     }}>
-                      {quantities.items} items × $17 each
+                      {quantities.items} items × $20 each
                     </p>
                   </div>
                 </div>

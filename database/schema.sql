@@ -22,7 +22,7 @@ CREATE TABLE orders (
   service_level VARCHAR(20) NOT NULL DEFAULT 'standard', -- 'standard' or 'premium'
   
   -- Pricing Breakdown
-  base_amount DECIMAL(10,2) NOT NULL, -- total_items × $17
+  base_amount DECIMAL(10,2) NOT NULL, -- total_items × $20
   upgrade_amount DECIMAL(10,2) DEFAULT 0, -- $5 × items if premium
   delivery_fee DECIMAL(10,2) NOT NULL, -- $25 or $0
   total_amount DECIMAL(10,2) NOT NULL,

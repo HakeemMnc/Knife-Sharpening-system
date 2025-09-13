@@ -328,7 +328,7 @@ const testOrders = {
 
 // Calculate pricing
 function calculatePricing(totalItems, serviceLevel) {
-  const baseAmount = totalItems * 17; // $17 per item
+  const baseAmount = totalItems * 20; // $20 per item
   const upgradeAmount = serviceLevel === 'premium' ? totalItems * 5 : 0; // $5 upgrade per item
   const deliveryFee = 25; // $25 delivery fee
   const totalAmount = baseAmount + upgradeAmount + deliveryFee;
