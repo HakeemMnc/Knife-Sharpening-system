@@ -3117,7 +3117,7 @@ export default function Home() {
             
             {/* Content */}
             <div className="p-6 space-y-5">
-              {/* Kitchen Items Section */}
+              {/* Knives We Sharpen Section */}
               <div className="p-4 rounded-lg" style={{
                 backgroundColor: 'rgba(248, 250, 252, 0.5)',
                 border: '1px solid rgba(0,0,0,0.08)'
@@ -3128,56 +3128,22 @@ export default function Home() {
                   fontWeight: 600,
                   lineHeight: '1.4'
                 }}>
-                  <span className="mr-2" style={{fontSize: '1.2rem'}}>🍴</span>
-                  Kitchen Items
+                  <span className="mr-2" style={{fontSize: '1.2rem'}}>🔪</span>
+                  Knives We Sharpen
                 </h3>
                 <ul className="space-y-2" style={{color: '#4a5568'}}>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Chef knives and paring knives</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Bread knives and steak knives</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Kitchen scissors and shears</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Meat cleavers and utility knives</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Scissors for fabric and paper</li>
-                </ul>
-              </div>
-
-              {/* Garden Tools Section */}
-              <div className="p-4 rounded-lg" style={{
-                backgroundColor: 'rgba(248, 250, 252, 0.5)',
-                border: '1px solid rgba(0,0,0,0.08)'
-              }}>
-                <h3 className="text-lg font-semibold mb-3 flex items-center" style={{
-                  color: '#1B1B1B',
-                  fontSize: '1.1rem',
-                  fontWeight: 600,
-                  lineHeight: '1.4'
-                }}>
-                  <span className="mr-2" style={{fontSize: '1.2rem'}}>🌿</span>
-                  Garden & Outdoor Tools
-                </h3>
-                <ul className="space-y-2" style={{color: '#4a5568'}}>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Garden scissors and secateurs</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Pruning shears (hand-held only)</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Bush knives and clearing blades</li>
-                </ul>
-              </div>
-
-              {/* Other Tools Section */}
-              <div className="p-4 rounded-lg" style={{
-                backgroundColor: 'rgba(248, 250, 252, 0.5)',
-                border: '1px solid rgba(0,0,0,0.08)'
-              }}>
-                <h3 className="text-lg font-semibold mb-3 flex items-center" style={{
-                  color: '#1B1B1B',
-                  fontSize: '1.1rem',
-                  fontWeight: 600,
-                  lineHeight: '1.4'
-                }}>
-                  <span className="mr-2" style={{fontSize: '1.2rem'}}>🛠️</span>
-                  Other Tools
-                </h3>
-                <ul className="space-y-2" style={{color: '#4a5568'}}>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Pocket knives and hunting knives</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Fishing knives and fillet knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Chef knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Paring knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Boning knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Cleavers</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Nakiri knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Santoku knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Utility knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Pocket knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hunting knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Fishing knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Fillet knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Bush knives</li>
                 </ul>
               </div>
 
@@ -3196,12 +3162,11 @@ export default function Home() {
                   What We Don't Sharpen
                 </h3>
                 <ul className="space-y-2" style={{color: '#4a5568'}}>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Chainsaws</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hair or fur clipper blades</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Salon or hairdresser scissors</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hedge trimmers</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Lawn mower blades</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Power tool blades</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Garden Tools and Outdoor Tools (chainsaw, hedge trimmer, lawn mower blade, etc.)</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Serrated Knives (bread knives, steak knives)</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Single Bevel Japanese Knives</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Scissors and Shears</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Clipper Blades</li>
                 </ul>
               </div>
 
