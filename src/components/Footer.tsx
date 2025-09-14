@@ -352,6 +352,18 @@ export default function Footer() {
                   Get in Touch
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {formStatus === 'success' && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-green-700 font-semibold">✓ Message sent successfully!</p>
+                      <p className="text-green-600 text-sm">I'll get back to you soon.</p>
+                    </div>
+                  )}
+                  {formStatus === 'error' && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-700 font-semibold">✗ Something went wrong</p>
+                      <p className="text-red-600 text-sm">Please try again or call me directly on 0451 494 922.</p>
+                    </div>
+                  )}
                   <div>
                     <input
                       type="text"
