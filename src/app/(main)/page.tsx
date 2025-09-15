@@ -50,7 +50,26 @@ export default function Home() {
   useEffect(() => {
     setSelectedServiceDate(null);
   }, [address.postalCode]);
-  
+
+  // Check for success URL parameters on page load (Google Ads conversion tracking)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for success parameters (Google Ads conversion tracking)
+    const success = urlParams.get('success');
+    const orderId = urlParams.get('orderId');
+    const total = urlParams.get('total');
+    const serviceDate = urlParams.get('serviceDate');
+
+    if (success === 'true' && orderId && total && serviceDate) {
+      setSuccessData({
+        orderId,
+        total,
+        serviceDate
+      });
+    }
+  }, []); // Run once on mount
+
   // Memoized date selection handler to prevent infinite re-renders
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedServiceDate(date);
@@ -92,6 +111,14 @@ export default function Home() {
     error: '',
     success: ''
   });
+
+  // Success page state for Google Ads tracking
+  const [successData, setSuccessData] = useState<{
+    orderId: string;
+    total: string;
+    serviceDate: string;
+  } | null>(null);
+
 
   // Mobile service scheduling - dates handled by ServiceScheduler component
   
@@ -337,9 +364,11 @@ export default function Home() {
       const checkResult = await checkResponse.json();
       
       if (checkResult.success && checkResult.order) {
-        // Webhook already created the order
+        // Webhook already created the order - redirect to success page
         console.log('✅ Order already exists from webhook:', checkResult.order.id);
-        alert(`Payment successful! Order #${checkResult.order.id}\n\nService Date: ${checkResult.order.pickup_date}\nTotal: $${checkResult.order.total_amount.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
+        const successUrl = `/?success=true&orderId=${checkResult.order.id}&total=${checkResult.order.total_amount}&serviceDate=${checkResult.order.service_date}`;
+        window.location.href = successUrl;
+        return; // Exit early since we're redirecting
       } else {
         // Webhook didn't create order yet, create it now
         console.log('💾 Creating order from frontend (webhook didn\'t create it yet)...');
@@ -361,7 +390,9 @@ export default function Home() {
 
         if (result.success) {
           console.log('✅ Order created successfully from frontend:', result.order.id);
-          alert(`Payment successful! Order #${result.order.id}\n\nService Date: ${result.order.serviceDate}\nTotal: $${result.order.total.toFixed(2)}\n\nYou will receive a confirmation SMS shortly.`);
+          const successUrl = `/?success=true&orderId=${result.order.id}&total=${result.order.total}&serviceDate=${result.order.serviceDate}`;
+          window.location.href = successUrl;
+          return; // Exit early since we're redirecting
         } else {
           console.error('Failed to create order from frontend:', result.error);
           alert('Payment successful but failed to create order. Please contact support.');
@@ -461,7 +492,10 @@ export default function Home() {
 
   // Helper functions for calculations
   const getItemCount = () => Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
-  const getSubtotal = () => getItemCount() * 20;
+  const getSubtotal = () => {
+    const pricePerItem = 20;
+    return getItemCount() * pricePerItem;
+  };
   const getUpsellsCost = () => Object.entries(selectedBundles).reduce((total, [category, bundle]) => {
     const cost = getBundleCost(category);
     return total + (isNaN(cost) ? 0 : cost);
@@ -729,6 +763,48 @@ export default function Home() {
           </div>
         </div>
       )}
+      
+      {/* SUCCESS MESSAGE BANNER - For Google Ads Conversion Tracking */}
+      {successData && (
+        <div className="bg-green-50 border-b-4 border-green-500 shadow-lg">
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-4 flex-1">
+                <h2 className="text-2xl font-bold text-green-800 mb-2">
+                  🎉 Payment Successful! Order #{successData.orderId}
+                </h2>
+                <div className="text-green-700">
+                  <p className="mb-1">
+                    <strong>Service Date:</strong> {new Date(successData.serviceDate).toLocaleDateString('en-AU', { 
+                      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' 
+                    })}
+                  </p>
+                  <p className="mb-1"><strong>Total Paid:</strong> ${parseFloat(successData.total).toFixed(2)}</p>
+                  <p className="text-sm">
+                    ✅ You will receive a confirmation SMS shortly with pickup details.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSuccessData(null)}
+                className="ml-4 text-green-600 hover:text-green-800 transition-colors duration-200"
+                aria-label="Dismiss success message"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      
       {/* SECTION 1 - Hero Header */}
       <section className="pt-4 pb-8 md:pt-6 md:pb-12 lg:pt-8 lg:pb-16" style={{backgroundColor: '#fff8e8', paddingTop: '40px', paddingBottom: '80px'}}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2644,7 +2720,7 @@ export default function Home() {
                       lineHeight: '1.5',
                       fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                     }}>
-                      {quantities.items} items × $20 each
+                      {quantities.items} item{quantities.items === 1 ? '' : 's'} × $20 each
                     </p>
                   </div>
                 </div>
@@ -3147,6 +3223,28 @@ export default function Home() {
                 </ul>
               </div>
 
+              {/* Scissors We Sharpen Section */}
+              <div className="p-4 rounded-lg" style={{
+                backgroundColor: 'rgba(248, 250, 252, 0.5)',
+                border: '1px solid rgba(0,0,0,0.08)'
+              }}>
+                <h3 className="text-lg font-semibold mb-3 flex items-center" style={{
+                  color: '#1B1B1B',
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  lineHeight: '1.4'
+                }}>
+                  <span className="mr-2" style={{fontSize: '1.2rem'}}>✂️</span>
+                  Scissors & Shears We Sharpen
+                </h3>
+                <ul className="space-y-2" style={{color: '#4a5568'}}>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Kitchen scissors</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Household scissors</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Fabric and sewing scissors</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Pruning shears</li>
+                </ul>
+              </div>
+
               {/* What We Don't Sharpen Section */}
               <div className="p-4 rounded-lg" style={{
                 backgroundColor: 'rgba(254, 226, 226, 0.5)',
@@ -3165,7 +3263,7 @@ export default function Home() {
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Garden Tools and Outdoor Tools (chainsaw, hedge trimmer, lawn mower blade, etc.)</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Serrated Knives (bread knives, steak knives)</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Single Bevel Japanese Knives</li>
-                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Scissors and Shears</li>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Hair styling/salon scissors</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Clipper Blades</li>
                 </ul>
               </div>
