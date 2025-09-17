@@ -3260,6 +3260,7 @@ export default function Home() {
                   What We Don't Sharpen
                 </h3>
                 <ul className="space-y-2" style={{color: '#4a5568'}}>
+                  <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Ceramic Knives</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Garden Tools and Outdoor Tools (chainsaw, hedge trimmer, lawn mower blade, etc.)</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Serrated Knives (bread knives, steak knives)</li>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Single Bevel Japanese Knives</li>
