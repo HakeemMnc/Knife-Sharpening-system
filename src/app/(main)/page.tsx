@@ -3108,7 +3108,7 @@ export default function Home() {
         borderTop: '1px solid rgba(255,255,255,0.1)',
         borderBottom: '1px solid rgba(255,255,255,0.1)'
       }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-center mb-12" style={{
             color: '#ffffff',
             fontSize: 'clamp(2rem, 5vw, 2.5rem)',
@@ -3117,25 +3117,72 @@ export default function Home() {
             textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
           }}>About Me</h2>
           
-          <div className="bg-white rounded-3xl shadow-lg p-8 md:p-10">
-            <div className="text-lg space-y-6 leading-relaxed" style={{color: '#1B1B1B'}}>
-              <p>
-                Hi there! I'm passionate about keeping your knives in top shape. There's nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
-              </p>
-              <p>
-                I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
-              </p>
-              <p>
-                My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
-              </p>
-              <p>
-                I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
-              </p>
-              
-              <div className="text-right mt-8 pt-6 border-t border-gray-200">
-                <p className="text-xl font-semibold italic" style={{color: '#013350'}}>
-                  Hakeem Manco, Founder
+          {/* Mobile Layout: Image on top, text below */}
+          <div className="flex flex-col gap-6 md:hidden">
+            {/* Image - Mobile (no container) */}
+            <img
+              src="/ProfilePicture.jpg"
+              alt="Hakeem Manco - Knife Sharpening Professional"
+              className="w-full aspect-square rounded-2xl object-cover shadow-lg"
+            />
+
+            {/* Text Container - Mobile */}
+            <div className="bg-white rounded-3xl shadow-lg p-8">
+              <div className="text-lg space-y-6 leading-relaxed" style={{color: '#1B1B1B'}}>
+                <p>
+                  Hi there! I'm passionate about keeping your knives in top shape. There's nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
                 </p>
+                <p>
+                  I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
+                </p>
+                <p>
+                  My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
+                </p>
+                <p>
+                  I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
+                </p>
+
+                <div className="text-right mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-xl font-semibold italic" style={{color: '#013350'}}>
+                    Hakeem Manco, Founder
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout: Image and text container side by side, equal size */}
+          <div className="hidden md:flex md:gap-6">
+            {/* Image - Desktop (no container, just the image) */}
+            <div className="flex-1">
+              <img
+                src="/ProfilePicture.jpg"
+                alt="Hakeem Manco - Knife Sharpening Professional"
+                className="w-full aspect-square rounded-2xl object-cover shadow-lg"
+              />
+            </div>
+
+            {/* Text Container - Desktop */}
+            <div className="flex-1 bg-white rounded-3xl shadow-lg p-10">
+              <div className="text-lg space-y-6 leading-relaxed" style={{color: '#1B1B1B'}}>
+                <p>
+                  Hi there! I'm passionate about keeping your knives in top shape. There's nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
+                </p>
+                <p>
+                  I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
+                </p>
+                <p>
+                  My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
+                </p>
+                <p>
+                  I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
+                </p>
+
+                <div className="text-right mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-xl font-semibold italic" style={{color: '#013350'}}>
+                    Hakeem Manco, Founder
+                  </p>
+                </div>
               </div>
             </div>
           </div>
