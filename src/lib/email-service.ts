@@ -14,7 +14,7 @@ export async function sendContactFormEmail(data: ContactFormData) {
     
     const result = await resend.emails.send({
       from: 'Northern Rivers Knife Sharpening <noreply@northernriversknifesharpening.com>',
-      to: ['hakeem@northernriversknifessharpening.com'],
+      to: ['hakeem@northernriversknifesharpening.com'],
       subject: `New Contact Form Message from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

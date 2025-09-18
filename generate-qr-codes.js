@@ -2,7 +2,7 @@ const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 
-const url = 'https://northernriversknifessharpening.com/';
+const url = 'https://northernriversknifesharpening.com/';
 
 // Create output directory
 const outputDir = path.join(__dirname, 'qr-codes-for-print');

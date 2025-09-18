@@ -13,7 +13,7 @@ async function checkWebhooks() {
       console.log('\n📋 You need to create a webhook endpoint in Stripe Dashboard:');
       console.log('   1. Go to: https://dashboard.stripe.com/webhooks');
       console.log('   2. Click "Add endpoint"');
-      console.log('   3. Endpoint URL: https://northernriversknifessharpening.com/api/payments/webhook');
+      console.log('   3. Endpoint URL: https://northernriversknifesharpening.com/api/payments/webhook');
       console.log('   4. Events to send: payment_intent.succeeded');
       return;
     }
@@ -28,7 +28,7 @@ async function checkWebhooks() {
       console.log(`   Created: ${new Date(webhook.created * 1000).toLocaleString()}`);
       
       // Check if it's pointing to the right URL
-      const expectedUrl = 'https://northernriversknifessharpening.com/api/payments/webhook';
+      const expectedUrl = 'https://northernriversknifesharpening.com/api/payments/webhook';
       if (webhook.url === expectedUrl) {
         console.log(`   ✅ URL is correct`);
       } else {
