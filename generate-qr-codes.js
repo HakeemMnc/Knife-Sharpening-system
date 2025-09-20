@@ -19,7 +19,7 @@ QRCode.toFile(
     margin: 4,
     errorCorrectionLevel: 'H',
     color: {
-      dark: '#1f2c69',
+      dark: '#000000',
       light: '#00000000', // Transparent background
     }
   },
@@ -38,7 +38,7 @@ QRCode.toFile(
     margin: 3,
     errorCorrectionLevel: 'H',
     color: {
-      dark: '#1f2c69',
+      dark: '#000000',
       light: '#00000000', // Transparent background
     }
   },
@@ -57,7 +57,7 @@ QRCode.toString(
     margin: 4,
     errorCorrectionLevel: 'H',
     color: {
-      dark: '#1f2c69',
+      dark: '#000000',
       light: '#00000000', // Transparent background using hex with alpha
     }
   },
