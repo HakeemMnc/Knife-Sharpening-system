@@ -239,7 +239,8 @@ export default function BallinaKnifeSharpeningPage() {
                 </p>
               </div>
               
-              <div className="text-4xl mb-4">🏗️</div>
+              <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+                <div className="text-4xl mb-4">🏗️</div>
                 <h3 className="text-xl font-semibold text-green-900 mb-4">Construction Catering</h3>
                 <p className="text-gray-700">
                   Mobile service perfect for construction industry catering operations 
