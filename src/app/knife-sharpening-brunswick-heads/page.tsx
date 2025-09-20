@@ -74,7 +74,7 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
                     "@type": "Service",
                     "name": "Restaurant Knife Sharpening Brunswick Heads"
                   },
-                  "price": "17.00",
+                  "price": "20.00",
                   "priceCurrency": "AUD",
                   "availability": "https://schema.org/InStock"
                 },
@@ -84,13 +84,13 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
                     "@type": "Service",
                     "name": "Fishing Village Cafe Knife Sharpening"
                   },
-                  "price": "17.00",
+                  "price": "20.00",
                   "priceCurrency": "AUD",
                   "availability": "https://schema.org/InStock"
                 }
               ]
             },
-            "priceRange": "$17-$27",
+            "priceRange": "$20-$27",
             "openingHours": ["Mo-Fr 08:00-17:00", "Sa 08:00-15:00"],
             "sameAs": ["https://facebook.com/northernriversknifesharpening"]
           })
@@ -245,7 +245,7 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-gray-200">
                 <h3 className="text-xl font-semibold text-blue-900 mb-4">Standard Care</h3>
-                <p className="text-3xl font-bold text-gray-900 mb-2">$17</p>
+                <p className="text-3xl font-bold text-gray-900 mb-2">$20</p>
                 <p className="text-gray-600 mb-4">per item</p>
                 <ul className="text-sm text-gray-700 space-y-2">
                   <li>• Razor-sharp edge restoration</li>
@@ -304,6 +304,37 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
                 </p>
                 <p className="font-semibold text-blue-900">- Festival Food Vendor</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Nearby Service Areas */}
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">
+              Also Servicing Nearby Areas
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <Link href="/knife-sharpening-byron-bay" className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 text-center">
+                <h3 className="font-semibold text-gray-900">Byron Bay</h3>
+                <p className="text-sm text-gray-600">Professional knife sharpening</p>
+              </Link>
+              <Link href="/knife-sharpening-mullumbimby" className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 text-center">
+                <h3 className="font-semibold text-gray-900">Mullumbimby</h3>
+                <p className="text-sm text-gray-600">Professional knife sharpening</p>
+              </Link>
+              <Link href="/knife-sharpening-bangalow" className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 text-center">
+                <h3 className="font-semibold text-gray-900">Bangalow</h3>
+                <p className="text-sm text-gray-600">Professional knife sharpening</p>
+              </Link>
+              <Link href="/knife-sharpening-ocean-shores" className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 text-center">
+                <h3 className="font-semibold text-gray-900">Ocean Shores</h3>
+                <p className="text-sm text-gray-600">Professional knife sharpening</p>
+              </Link>
+              <Link href="/knife-sharpening-suffolk-park" className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 text-center">
+                <h3 className="font-semibold text-gray-900">Suffolk Park</h3>
+                <p className="text-sm text-gray-600">Professional knife sharpening</p>
+              </Link>
             </div>
           </div>
         </section>

@@ -334,7 +334,21 @@ export default function Footer() {
                   
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-2">Service Areas</h4>
-                    <p className="text-gray-600 text-sm">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</p>
+                    <p className="text-gray-600 text-sm mb-3">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</p>
+                    <div className="grid grid-cols-2 gap-1 text-xs">
+                      <a href="/knife-sharpening-byron-bay" className="text-blue-600 hover:text-blue-800 transition-colors">Byron Bay</a>
+                      <a href="/knife-sharpening-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">Ballina</a>
+                      <a href="/knife-sharpening-mullumbimby" className="text-blue-600 hover:text-blue-800 transition-colors">Mullumbimby</a>
+                      <a href="/knife-sharpening-bangalow" className="text-blue-600 hover:text-blue-800 transition-colors">Bangalow</a>
+                      <a href="/knife-sharpening-alstonville" className="text-blue-600 hover:text-blue-800 transition-colors">Alstonville</a>
+                      <a href="/knife-sharpening-ocean-shores" className="text-blue-600 hover:text-blue-800 transition-colors">Ocean Shores</a>
+                      <a href="/knife-sharpening-brunswick-heads" className="text-blue-600 hover:text-blue-800 transition-colors">Brunswick Heads</a>
+                      <a href="/knife-sharpening-suffolk-park" className="text-blue-600 hover:text-blue-800 transition-colors">Suffolk Park</a>
+                      <a href="/knife-sharpening-lennox-head" className="text-blue-600 hover:text-blue-800 transition-colors">Lennox Head</a>
+                      <a href="/knife-sharpening-east-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">East Ballina</a>
+                      <a href="/knife-sharpening-west-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">West Ballina</a>
+                      <a href="/knife-sharpening-pottsville" className="text-blue-600 hover:text-blue-800 transition-colors">Pottsville</a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -593,7 +607,21 @@ export default function Footer() {
                     
                     <div>
                       <h4 className="font-semibold text-gray-800 mb-2">Service Areas</h4>
-                      <p className="text-gray-600 text-sm">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</p>
+                      <p className="text-gray-600 text-sm mb-3">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</p>
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <a href="/knife-sharpening-byron-bay" className="text-blue-600 hover:text-blue-800 transition-colors">Byron Bay</a>
+                        <a href="/knife-sharpening-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">Ballina</a>
+                        <a href="/knife-sharpening-mullumbimby" className="text-blue-600 hover:text-blue-800 transition-colors">Mullumbimby</a>
+                        <a href="/knife-sharpening-bangalow" className="text-blue-600 hover:text-blue-800 transition-colors">Bangalow</a>
+                        <a href="/knife-sharpening-alstonville" className="text-blue-600 hover:text-blue-800 transition-colors">Alstonville</a>
+                        <a href="/knife-sharpening-ocean-shores" className="text-blue-600 hover:text-blue-800 transition-colors">Ocean Shores</a>
+                        <a href="/knife-sharpening-brunswick-heads" className="text-blue-600 hover:text-blue-800 transition-colors">Brunswick Heads</a>
+                        <a href="/knife-sharpening-suffolk-park" className="text-blue-600 hover:text-blue-800 transition-colors">Suffolk Park</a>
+                        <a href="/knife-sharpening-lennox-head" className="text-blue-600 hover:text-blue-800 transition-colors">Lennox Head</a>
+                        <a href="/knife-sharpening-east-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">East Ballina</a>
+                        <a href="/knife-sharpening-west-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">West Ballina</a>
+                        <a href="/knife-sharpening-pottsville" className="text-blue-600 hover:text-blue-800 transition-colors">Pottsville</a>
+                      </div>
                     </div>
                   </div>
                 </div>
