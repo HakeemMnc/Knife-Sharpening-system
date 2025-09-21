@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://northernriversknifesharpening.com/knife-sharpening-pottsville",
     images: [
       {
-        url: "/knife-sharpening-pottsville-og.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Professional knife sharpening service Pottsville NSW 2489",

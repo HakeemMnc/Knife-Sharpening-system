@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://northernriversknifesharpening.com/knife-sharpening-west-ballina",
     images: [
       {
-        url: "/knife-sharpening-west-ballina-og.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Professional knife sharpening service West Ballina NSW 2478",

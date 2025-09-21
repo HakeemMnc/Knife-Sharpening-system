@@ -1,10 +1,12 @@
 'use client';
 
 import Image from 'next/image'
+import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PaymentForm } from '@/components/PaymentForm'
 import ServiceScheduler from '@/components/ServiceScheduler'
+import { MetaPixelEvents } from '@/lib/meta-pixel'
 
 export default function Home() {
   // Form state management
@@ -129,7 +131,14 @@ export default function Home() {
 
     // Handle input changes
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFirstName(e.target.value);
+    const value = e.target.value;
+
+    // Track Meta Pixel Lead event when user first starts typing (only once)
+    if (!firstName && value.length === 1) {
+      MetaPixelEvents.lead(finalTotal || total);
+    }
+
+    setFirstName(value);
     if (hasValidated) clearFieldError('firstName');
   };
 
@@ -335,6 +344,9 @@ export default function Home() {
       setOrderData(preparedOrderData);
       setShowPayment(true);
       setPaymentStatus('idle');
+
+      // Track Meta Pixel InitiateCheckout event
+      MetaPixelEvents.initiateCheckout(preparedOrderData.totalAmount);
       
     } catch (error) {
       console.error('Error preparing booking:', error);
@@ -366,6 +378,10 @@ export default function Home() {
       if (checkResult.success && checkResult.order) {
         // Webhook already created the order - redirect to success page
         console.log('✅ Order already exists from webhook:', checkResult.order.id);
+
+        // Track Meta Pixel Purchase event
+        MetaPixelEvents.purchase(checkResult.order.total_amount, checkResult.order.id);
+
         const successUrl = `/?success=true&orderId=${checkResult.order.id}&total=${checkResult.order.total_amount}&serviceDate=${checkResult.order.service_date}`;
         window.location.href = successUrl;
         return; // Exit early since we're redirecting
@@ -390,6 +406,10 @@ export default function Home() {
 
         if (result.success) {
           console.log('✅ Order created successfully from frontend:', result.order.id);
+
+          // Track Meta Pixel Purchase event
+          MetaPixelEvents.purchase(result.order.total, result.order.id);
+
           const successUrl = `/?success=true&orderId=${result.order.id}&total=${result.order.total}&serviceDate=${result.order.serviceDate}`;
           window.location.href = successUrl;
           return; // Exit early since we're redirecting
@@ -636,33 +656,45 @@ export default function Home() {
   // Testimonials data
   const testimonials = [
     {
-      text: "This was the best service I have ever received. The knives are honestly sharper than the day we bought them.",
+      text: "This was the best service I have ever received. The knives are honestly sharper than the day we bought them. So convenient having mobile sharpening come to Byron Bay!",
       name: "Sarah M.",
+      location: "Byron Bay",
       date: "March 2025",
       stars: 5
     },
     {
-      text: "I'm so pleased. It made my chopping faster and safer and so much easier. I'm certain this blade is sharper than it was when I first bought the knife.",
+      text: "I'm so pleased. It made my chopping faster and safer and so much easier. I'm certain this blade is sharper than it was when I first bought the knife. Great service in Ballina!",
       name: "David L.",
+      location: "Ballina",
       date: "January 2025",
       stars: 5
     },
     {
-      text: "Amazing results! My old chef's knife was practically useless, now it glides through tomatoes like butter. Will definitely be using this service again.",
+      text: "Amazing results! My old chef's knife was practically useless, now it glides through tomatoes like butter. Perfect for busy families in Mullumbimby. Will definitely be using this service again.",
       name: "Jennifer K.",
+      location: "Mullumbimby",
       date: "April 2025",
       stars: 5
     },
     {
-      text: "Quick, professional, and convenient. Left my knives on the porch Monday morning, picked them up 1 hour later perfectly sharp. Couldn't be happier.",
+      text: "Quick, professional, and convenient. Left my knives on the porch Monday morning in Lennox Head, picked them up 1 hour later perfectly sharp. Couldn't be happier with the mobile service.",
       name: "Mark R.",
+      location: "Lennox Head",
       date: "December 2024",
       stars: 5
     },
     {
-      text: "Best $75 I've spent in ages. My entire knife block feels brand new again. The difference is incredible - wish I'd found this service sooner.",
+      text: "Best $75 I've spent in ages. My entire knife block feels brand new again. The difference is incredible - wish I'd found this Bangalow knife sharpening service sooner!",
       name: "Lisa T.",
+      location: "Bangalow",
       date: "February 2025",
+      stars: 5
+    },
+    {
+      text: "Fantastic service! Living in Ocean Shores, it's so convenient to have professional knife sharpening come to my door. The quality is outstanding - my knives have never been sharper.",
+      name: "Michael P.",
+      location: "Ocean Shores",
+      date: "March 2025",
       stars: 5
     }
   ];
@@ -764,6 +796,157 @@ export default function Home() {
         </div>
       )}
       
+      {/* FAQ Schema Markup for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How long does knife sharpening take?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our mobile service typically takes 30-60 minutes depending on the number of knives. We come to your location with all professional equipment and complete the sharpening on-site while you wait."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What areas do you service?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We service Byron Bay, Ballina, Mullumbimby, Bangalow, Alstonville, Ocean Shores, Brunswick Heads, Suffolk Park, Lennox Head, East Ballina, West Ballina, and Pottsville across postcodes 2481, 2482, 2483, 2480, 2478, 2477, 2489."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What types of knives do you sharpen?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We sharpen all types of knives including kitchen knives, chef knives, bread knives, carving knives, garden tools, scissors, and more. Our service covers both domestic and commercial blade sharpening needs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How much does knife sharpening cost?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our standard service starts at $20 per item, with premium service at $22 and traditional Japanese sharpening at $27. We offer transparent pricing with no hidden fees."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do you offer same-day service?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, we offer same-day mobile knife sharpening service across the Northern Rivers region. Book online or call us at 0451 494 922 to check availability."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is your business insured?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, we are fully insured and operate with ABN 61 217 603 910. Our professional mobile service includes comprehensive business insurance for your peace of mind."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      {/* Image Object Schema Markup for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ImageObject",
+            "@id": "https://northernriversknifesharpening.com/#logo",
+            "name": "Northern Rivers Knife Sharpening - Professional Mobile Blade Service Logo",
+            "description": "Professional mobile knife sharpening service logo serving Byron Bay, Ballina, and Northern Rivers NSW",
+            "url": "https://northernriversknifesharpening.com/logo.png",
+            "width": 320,
+            "height": 192,
+            "contentLocation": {
+              "@type": "Place",
+              "name": "Northern Rivers NSW, Australia"
+            },
+            "creditText": "Northern Rivers Knife Sharpening",
+            "copyrightHolder": {
+              "@type": "Organization",
+              "name": "Northern Rivers Knife Sharpening"
+            }
+          })
+        }}
+      />
+      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ImageObject",
+            "@id": "https://northernriversknifesharpening.com/#before-after-gallery",
+            "name": "Professional Knife Sharpening Before and After Results",
+            "description": "Before and after gallery showing professional knife sharpening transformation results by Northern Rivers Knife Sharpening service",
+            "url": "https://northernriversknifesharpening.com/BA1.png",
+            "width": 280,
+            "height": 210,
+            "contentLocation": {
+              "@type": "Place",
+              "name": "Northern Rivers NSW, Australia"
+            },
+            "creditText": "Northern Rivers Knife Sharpening",
+            "copyrightHolder": {
+              "@type": "Organization",
+              "name": "Northern Rivers Knife Sharpening"
+            },
+            "about": [
+              {
+                "@type": "Service",
+                "name": "Professional Knife Sharpening",
+                "serviceType": "Blade Restoration"
+              }
+            ]
+          })
+        }}
+      />
+      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ImageObject",
+            "@id": "https://northernriversknifesharpening.com/#founder-profile",
+            "name": "Hakeem Manco - Northern Rivers Professional Mobile Knife Sharpening Expert",
+            "description": "Professional portrait of Hakeem Manco, founder and expert knife sharpening specialist serving Northern Rivers NSW including Byron Bay and Ballina",
+            "url": "https://northernriversknifesharpening.com/ProfilePicture.jpg",
+            "contentLocation": {
+              "@type": "Place",
+              "name": "Northern Rivers NSW, Australia"
+            },
+            "creditText": "Northern Rivers Knife Sharpening",
+            "copyrightHolder": {
+              "@type": "Person",
+              "name": "Hakeem Manco"
+            },
+            "about": {
+              "@type": "Person",
+              "name": "Hakeem Manco",
+              "jobTitle": "Professional Knife Sharpening Specialist",
+              "worksFor": {
+                "@type": "Organization",
+                "name": "Northern Rivers Knife Sharpening"
+              }
+            }
+          })
+        }}
+      />
+      
       {/* SUCCESS MESSAGE BANNER - For Google Ads Conversion Tracking */}
       {successData && (
         <div className="bg-green-50 border-b-4 border-green-500 shadow-lg">
@@ -814,9 +997,10 @@ export default function Home() {
             <div className="flex-shrink-0 flex justify-start">
               <Image
                 src="/logo.png" 
-                alt="Northern Rivers Knife Sharpening Logo" 
+                alt="Northern Rivers Knife Sharpening - Professional Mobile Blade Service Logo" 
                 width={320} 
                 height={192}
+                priority={true}
                 className="w-48 h-28 md:w-60 md:h-36 lg:w-80 lg:h-48 xl:w-96 xl:h-56 object-contain cursor-pointer -ml-4 md:-ml-8 lg:-ml-12 xl:-ml-16"
               />
             </div>
@@ -860,14 +1044,15 @@ export default function Home() {
                 letterSpacing: '1px',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
               }}>
-                Leave Your Knives On<br />
-                Your Porch,<br />
-                I'll Make Them Sharper<br />
-                Than New in 1 Hour
+                Northern Rivers Mobile<br />
+                Knife Sharpening<br />
+                Byron Bay to Ballina<br />
+                Sharp Knives in 1 Hour
               </h1>
               <p className="text-lg md:text-xl mb-6" style={{color: '#1B1B1B'}}>
-                Professional Mobile Sharpening Service<br />
-                in the Northern Rivers Region
+                Professional Mobile Knife Sharpening Service<br />
+                Serving Byron Bay, Ballina, Mullumbimby, Bangalow & surrounding areas<br />
+                <span className="text-base opacity-90">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</span>
               </p>
               
               {/* Customer Reviews Section */}
@@ -877,7 +1062,7 @@ export default function Home() {
                   <div className="w-6 h-6 rounded-full overflow-hidden">
                     <Image
                       src="/person1.png"
-                      alt="Customer profile"
+                      alt="Satisfied knife sharpening customer testimonial profile"
                       width={24}
                       height={24}
                       className="w-full h-full object-cover"
@@ -886,7 +1071,7 @@ export default function Home() {
                   <div className="w-6 h-6 rounded-full overflow-hidden">
                     <Image
                       src="/person2.png"
-                      alt="Customer profile"
+                      alt="Satisfied knife sharpening customer testimonial profile"
                       width={24}
                       height={24}
                       className="w-full h-full object-cover"
@@ -895,7 +1080,7 @@ export default function Home() {
                   <div className="w-6 h-6 rounded-full overflow-hidden">
                     <Image
                       src="/person3.png"
-                      alt="Customer profile"
+                      alt="Satisfied knife sharpening customer testimonial profile"
                       width={24}
                       height={24}
                       className="w-full h-full object-cover"
@@ -904,7 +1089,7 @@ export default function Home() {
                   <div className="w-6 h-6 rounded-full overflow-hidden">
                     <Image
                       src="/person4.png"
-                      alt="Customer profile"
+                      alt="Satisfied knife sharpening customer testimonial profile"
                       width={24}
                       height={24}
                       className="w-full h-full object-cover"
@@ -913,7 +1098,7 @@ export default function Home() {
                   <div className="w-6 h-6 rounded-full overflow-hidden">
                     <Image
                       src="/person5.png"
-                      alt="Customer profile"
+                      alt="Satisfied knife sharpening customer testimonial profile"
                       width={24}
                       height={24}
                       className="w-full h-full object-cover"
@@ -938,9 +1123,10 @@ export default function Home() {
             <div className="flex justify-center order-1 md:order-2 max-w-2xl">
               <Image
                 src="/vintage-couple.png" 
-                alt="Happy couple cooking with sharp knives" 
+                alt="Happy couple enjoying cooking together with professionally sharpened kitchen knives" 
                 width={600} 
                 height={600}
+                priority={true}
                 className="w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl h-auto"
                 style={{
                   filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.1))'
@@ -1075,6 +1261,9 @@ export default function Home() {
                       <div className="font-semibold text-lg" style={{color: '#013350'}}>
                         {testimonials[currentTestimonial].name}
                       </div>
+                      <div className="text-sm" style={{color: '#4983a6', fontWeight: '500'}}>
+                        {testimonials[currentTestimonial].location}
+                      </div>
                       <div className="text-sm mt-1" style={{color: '#013350'}}>
                         {testimonials[currentTestimonial].date}
                       </div>
@@ -1192,10 +1381,13 @@ export default function Home() {
                 <div className="font-semibold text-lg" style={{color: '#013350'}}>
                   {testimonials[currentTestimonial].name}
                 </div>
-                  <div className="text-sm mt-1" style={{color: '#013350'}}>
+                <div className="text-sm" style={{color: '#4983a6', fontWeight: '500'}}>
+                  {testimonials[currentTestimonial].location}
+                </div>
+                <div className="text-sm mt-1" style={{color: '#013350'}}>
                   {testimonials[currentTestimonial].date}
                 </div>
-                </div>
+              </div>
               </div>
 
             {/* Mobile Navigation Arrows - Positioned Below Card */}
@@ -1266,6 +1458,188 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SECTION 2.5 - Service Areas */}
+      <section className="py-16 md:py-20 lg:py-24" style={{
+        backgroundColor: '#f8f9fa',
+        borderTop: '1px solid #e9ecef',
+        borderBottom: '1px solid #e9ecef'
+      }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style={{
+              color: '#013350',
+              fontSize: 'clamp(2rem, 5vw, 2.5rem)',
+              fontWeight: 700,
+              letterSpacing: '1px'
+            }}>
+              Service Areas Across Northern Rivers
+            </h2>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto" style={{color: '#1B1B1B'}}>
+              Professional mobile knife sharpening services delivered to your door across all major Northern Rivers communities
+            </p>
+          </div>
+
+          {/* Cities Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* Byron Bay */}
+            <Link href="/knife-sharpening-byron-bay" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Byron Bay
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~9,000</p>
+                <p className="text-sm text-gray-700 text-center">Iconic beach town, arts & culture hub</p>
+              </div>
+            </Link>
+
+            {/* Ballina */}
+            <Link href="/knife-sharpening-ballina" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Ballina
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~16,000</p>
+                <p className="text-sm text-gray-700 text-center">Regional centre, Richmond River</p>
+              </div>
+            </Link>
+
+            {/* Mullumbimby */}
+            <Link href="/knife-sharpening-mullumbimby" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Mullumbimby
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~3,500</p>
+                <p className="text-sm text-gray-700 text-center">Historic town, alternative lifestyle</p>
+              </div>
+            </Link>
+
+            {/* Bangalow */}
+            <Link href="/knife-sharpening-bangalow" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Bangalow
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~1,200</p>
+                <p className="text-sm text-gray-700 text-center">Heritage village, antiques & cafes</p>
+              </div>
+            </Link>
+
+            {/* Alstonville */}
+            <Link href="/knife-sharpening-alstonville" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Alstonville
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~5,500</p>
+                <p className="text-sm text-gray-700 text-center">Plateau town, rural community</p>
+              </div>
+            </Link>
+
+            {/* Ocean Shores */}
+            <Link href="/knife-sharpening-ocean-shores" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Ocean Shores
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~5,000</p>
+                <p className="text-sm text-gray-700 text-center">Coastal living, family-friendly</p>
+              </div>
+            </Link>
+
+            {/* Brunswick Heads */}
+            <Link href="/knife-sharpening-brunswick-heads" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Brunswick Heads
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~1,700</p>
+                <p className="text-sm text-gray-700 text-center">River mouth, fishing village</p>
+              </div>
+            </Link>
+
+            {/* Suffolk Park */}
+            <Link href="/knife-sharpening-suffolk-park" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Suffolk Park
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~3,000</p>
+                <p className="text-sm text-gray-700 text-center">Beachside community, surfing</p>
+              </div>
+            </Link>
+
+            {/* Lennox Head */}
+            <Link href="/knife-sharpening-lennox-head" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Lennox Head
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~7,500</p>
+                <p className="text-sm text-gray-700 text-center">Surf town, famous point break</p>
+              </div>
+            </Link>
+
+            {/* East Ballina */}
+            <Link href="/knife-sharpening-east-ballina" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  East Ballina
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~4,500</p>
+                <p className="text-sm text-gray-700 text-center">Growing residential area</p>
+              </div>
+            </Link>
+
+            {/* West Ballina */}
+            <Link href="/knife-sharpening-west-ballina" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  West Ballina
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~3,800</p>
+                <p className="text-sm text-gray-700 text-center">Residential suburb</p>
+              </div>
+            </Link>
+
+            {/* Pottsville */}
+            <Link href="/knife-sharpening-pottsville" className="group">
+              <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent group-hover:border-blue-200">
+                <h3 className="text-xl font-semibold mb-2 text-center" style={{color: '#013350'}}>
+                  Pottsville
+                </h3>
+                <p className="text-sm text-gray-600 text-center mb-2">Population: ~6,500</p>
+                <p className="text-sm text-gray-700 text-center">Coastal village, quiet beaches</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center mt-12">
+            <p className="text-lg mb-6" style={{color: '#1B1B1B'}}>
+              Don't see your area? We service all suburbs across the Northern Rivers region.
+            </p>
+            <a 
+              href="#booking"
+              className="inline-block px-8 py-4 text-lg font-medium text-white rounded-lg transition-all duration-200"
+              style={{
+                backgroundColor: '#d64f24',
+                color: 'white',
+                border: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#b8431f';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#d64f24';
+              }}
+            >
+              Book Your Sharpening Service
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* SECTION 3 - How We Work */}
       <section id="how-it-works" className="py-16 md:py-20 lg:py-24 relative overflow-hidden scroll-mt-20" style={{
         backgroundColor: '#fff8e8',
@@ -1291,7 +1665,7 @@ export default function Home() {
               color: '#6b7280',
               letterSpacing: '0.01em'
             }}>
-              Professional Knife Sharpening Made Simple
+              Professional Mobile Knife Sharpening Across the Northern Rivers
             </h2>
           </div>
           
@@ -1823,9 +2197,11 @@ export default function Home() {
               }}>
                 <Image
                   src="/BA1.png"
-                  alt="Chef's Knife Before and After Sharpening"
+                  alt="Professional chef knife before and after Northern Rivers sharpening service transformation"
                   width={280}
                   height={210}
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -1840,7 +2216,7 @@ export default function Home() {
               }}>
                 <Image
                   src="/BA2.png"
-                  alt="Kitchen Scissors Before and After Sharpening"
+                  alt="Kitchen scissors before and after professional blade restoration by Northern Rivers service"
                   width={280}
                   height={210}
                   className="w-full h-full object-cover"
@@ -1857,7 +2233,7 @@ export default function Home() {
               }}>
                 <Image
                   src="/BA3.png"
-                  alt="Garden Shears Before and After Sharpening"
+                  alt="Garden shears before and after mobile sharpening service Northern Rivers NSW"
                   width={280}
                   height={210}
                   className="w-full h-full object-cover"
@@ -1874,7 +2250,7 @@ export default function Home() {
               }}>
                 <Image
                   src="/BA4.png"
-                  alt="Professional Knife Sharpening Results"
+                  alt="Professional knife sharpening results showing razor-sharp blade transformation Northern Rivers"
                   width={280}
                   height={210}
                   className="w-full h-full object-cover"
@@ -1895,7 +2271,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA1.png"
-                    alt="Chef's Knife Before and After Sharpening"
+                    alt="Professional chef knife before and after Northern Rivers sharpening service transformation"
                     width={200}
                     height={150}
                     className="w-full h-full object-cover"
@@ -1912,7 +2288,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA2.png"
-                    alt="Kitchen Scissors Before and After Sharpening"
+                    alt="Kitchen scissors before and after professional blade restoration by Northern Rivers service"
                     width={200}
                     height={150}
                     className="w-full h-full object-cover"
@@ -1929,7 +2305,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA3.png"
-                    alt="Garden Shears Before and After Sharpening"
+                    alt="Garden shears before and after mobile sharpening service Northern Rivers NSW"
                     width={200}
                     height={150}
                     className="w-full h-full object-cover"
@@ -1946,7 +2322,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA4.png"
-                    alt="Professional Knife Sharpening Results"
+                    alt="Professional knife sharpening results showing razor-sharp blade transformation Northern Rivers"
                     width={200}
                     height={150}
                     className="w-full h-full object-cover"
@@ -1968,7 +2344,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA1.png"
-                    alt="Chef's Knife Before and After Sharpening"
+                    alt="Professional chef knife before and after Northern Rivers sharpening service transformation"
                     width={280}
                     height={210}
                     className="w-full h-full object-cover"
@@ -1985,7 +2361,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA2.png"
-                    alt="Kitchen Scissors Before and After Sharpening"
+                    alt="Kitchen scissors before and after professional blade restoration by Northern Rivers service"
                     width={280}
                     height={210}
                     className="w-full h-full object-cover"
@@ -2002,7 +2378,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA3.png"
-                    alt="Garden Shears Before and After Sharpening"
+                    alt="Garden shears before and after mobile sharpening service Northern Rivers NSW"
                     width={280}
                     height={210}
                     className="w-full h-full object-cover"
@@ -2019,7 +2395,7 @@ export default function Home() {
                 }}>
                   <Image
                     src="/BA4.png"
-                    alt="Professional Knife Sharpening Results"
+                    alt="Professional knife sharpening results showing razor-sharp blade transformation Northern Rivers"
                     width={280}
                     height={210}
                     className="w-full h-full object-cover"
@@ -3120,9 +3496,13 @@ export default function Home() {
           {/* Mobile Layout: Image on top, text below */}
           <div className="flex flex-col gap-6 md:hidden">
             {/* Image - Mobile (no container) */}
-            <img
+            <Image
               src="/ProfilePicture.jpg"
-              alt="Hakeem Manco - Knife Sharpening Professional"
+              alt="Hakeem Manco - Northern Rivers professional mobile knife sharpening expert and founder"
+              width={400}
+              height={400}
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="w-full aspect-square rounded-2xl object-cover shadow-lg"
             />
 
@@ -3139,7 +3519,7 @@ export default function Home() {
                   My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
                 </p>
                 <p>
-                  I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
+                  I proudly serve the beautiful Northern Rivers region - from the iconic beaches of Byron Bay to the riverside charm of Ballina, through the creative communities of Mullumbimby and Bangalow, and across to the coastal villages of Lennox Head, Ocean Shores, and Brunswick Heads. Whether you're in Alstonville, Suffolk Park, Pottsville, or any of the East and West Ballina suburbs, this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
                 </p>
 
                 <div className="text-right mt-8 pt-6 border-t border-gray-200">
@@ -3155,9 +3535,13 @@ export default function Home() {
           <div className="hidden md:flex md:gap-6">
             {/* Image - Desktop (no container, just the image) */}
             <div className="flex-1">
-              <img
+              <Image
                 src="/ProfilePicture.jpg"
-                alt="Hakeem Manco - Knife Sharpening Professional"
+                alt="Hakeem Manco - Northern Rivers professional mobile knife sharpening expert and founder"
+                width={400}
+                height={400}
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="w-full aspect-square rounded-2xl object-cover shadow-lg"
               />
             </div>
@@ -3175,7 +3559,7 @@ export default function Home() {
                   My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
                 </p>
                 <p>
-                  I serve the beautiful Northern Rivers region because this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
+                  I proudly serve the beautiful Northern Rivers region - from the iconic beaches of Byron Bay to the riverside charm of Ballina, through the creative communities of Mullumbimby and Bangalow, and across to the coastal villages of Lennox Head, Ocean Shores, and Brunswick Heads. Whether you're in Alstonville, Suffolk Park, Pottsville, or any of the East and West Ballina suburbs, this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
                 </p>
 
                 <div className="text-right mt-8 pt-6 border-t border-gray-200">

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Pixel Test</title>
+</head>
+<body>
+    <h1>Meta Pixel Implementation Test</h1>
+    <p>Open browser console to see Meta Pixel tracking events.</p>
+
+    <h2>Implementation Status:</h2>
+    <ul>
+        <li>✅ Meta Pixel base code added to layout.tsx</li>
+        <li>✅ PageView event automatically tracked on page load</li>
+        <li>✅ Lead event tracked when user starts typing name</li>
+        <li>✅ InitiateCheckout event tracked when payment form is shown</li>
+        <li>✅ AddPaymentInfo event tracked when payment form is submitted</li>
+        <li>✅ Purchase event tracked when payment is successful</li>
+    </ul>
+
+    <h2>Events Implemented:</h2>
+    <ol>
+        <li><strong>PageView</strong> - Automatically tracked on every page load</li>
+        <li><strong>Lead</strong> - Tracked when user starts filling the booking form (first character in name field)</li>
+        <li><strong>InitiateCheckout</strong> - Tracked when payment form is displayed</li>
+        <li><strong>AddPaymentInfo</strong> - Tracked when user submits payment form</li>
+        <li><strong>Purchase</strong> - Tracked when payment is completed successfully</li>
+    </ol>
+
+    <h2>Testing Instructions:</h2>
+    <ol>
+        <li>Visit http://localhost:3005</li>
+        <li>Open browser Developer Tools (F12) and go to Console tab</li>
+        <li>Look for "Meta Pixel tracked:" messages in console</li>
+        <li>Start typing in the first name field - should see "Lead" event</li>
+        <li>Complete the booking form and proceed to payment - should see "InitiateCheckout" event</li>
+        <li>Submit payment form - should see "AddPaymentInfo" event</li>
+        <li>Complete payment - should see "Purchase" event</li>
+    </ol>
+
+    <h2>Meta Pixel ID:</h2>
+    <p><code>812571684456581</code></p>
+
+    <h2>Additional Notes:</h2>
+    <ul>
+        <li>The Meta Pixel Helper browser extension can be used to verify pixel installation</li>
+        <li>Events include relevant data like value, currency (AUD), and order ID</li>
+        <li>All events are properly categorized for the knife sharpening business</li>
+    </ul>
+</body>
+</html>

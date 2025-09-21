@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://northernriversknifesharpening.com/knife-sharpening-byron-bay",
     images: [
       {
-        url: "/knife-sharpening-byron-bay-og.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Professional knife sharpening service Byron Bay NSW 2481",
@@ -93,6 +93,37 @@ export default function ByronBayKnifeSharpeningPage() {
             "priceRange": "$20-$27",
             "openingHours": ["Mo-Fr 08:00-17:00", "Sa 08:00-15:00"],
             "sameAs": ["https://facebook.com/northernriversknifesharpening"]
+          })
+        }}
+      />
+
+      {/* Breadcrumb Schema for Byron Bay */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://northernriversknifesharpening.com"
+              },
+              {
+                "@type": "ListItem", 
+                "position": 2,
+                "name": "Knife Sharpening",
+                "item": "https://northernriversknifesharpening.com/#services"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Byron Bay",
+                "item": "https://northernriversknifesharpening.com/knife-sharpening-byron-bay"
+              }
+            ]
           })
         }}
       />

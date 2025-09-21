@@ -173,7 +173,44 @@ export default function RootLayout({
                 "Sa 08:00-15:00"
               ],
               "sameAs": [
-                "https://facebook.com/northernriversknifesharpening"
+                "https://facebook.com/northernriversknifesharpening",
+                "https://www.instagram.com/northernriversknifesharpening",
+                "https://northernriversknifesharpening.com"
+              ],
+              "founder": {
+                "@type": "Person",
+                "name": "Hakeem Manco",
+                "jobTitle": "Professional Knife Sharpening Specialist",
+                "worksFor": {
+                  "@type": "Organization", 
+                  "name": "Northern Rivers Knife Sharpening"
+                }
+              },
+              "knowsAbout": [
+                "Professional Knife Sharpening",
+                "Blade Restoration",
+                "Kitchen Knife Maintenance", 
+                "Japanese Sharpening Techniques",
+                "Garden Tool Sharpening",
+                "Commercial Kitchen Services"
+              ],
+              "naics": "811490",
+              "isicV4": "9529",
+              "vatID": "ABN 61 217 603 910",
+              "duns": "",
+              "legalName": "Northern Rivers Knife Sharpening",
+              "slogan": "Professional Mobile Blade Restoration",
+              "brand": {
+                "@type": "Brand",
+                "name": "Northern Rivers Knife Sharpening",
+                "logo": "https://northernriversknifesharpening.com/logo.png"
+              },
+              "hasCredential": [
+                {
+                  "@type": "EducationalOccupationalCredential",
+                  "credentialCategory": "Professional Certification",
+                  "name": "Professional Knife Sharpening Certification"
+                }
               ],
               "aggregateRating": {
                 "@type": "AggregateRating",
@@ -185,7 +222,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* Service Schema for Mobile Service */}
+        {/* Enhanced Service Schema for Mobile Service */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -193,86 +230,234 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Service",
               "name": "Mobile Knife Sharpening Service",
-              "description": "Professional mobile knife and blade sharpening service covering Northern Rivers NSW",
+              "description": "Professional mobile knife and blade sharpening service covering Northern Rivers NSW with same-day service availability",
               "provider": {
                 "@type": "LocalBusiness",
                 "name": "Northern Rivers Knife Sharpening",
-                "@id": "https://northernriversknifesharpening.com/#business"
+                "@id": "https://northernriversknifesharpening.com/#business",
+                "founder": {
+                  "@type": "Person",
+                  "name": "Hakeem Manco"
+                }
               },
-              "serviceType": "Knife Sharpening",
-              "category": "Knife Sharpening Service",
+              "serviceType": [
+                "Mobile Knife Sharpening",
+                "Professional Blade Restoration", 
+                "Kitchen Tool Maintenance",
+                "Garden Tool Sharpening"
+              ],
+              "category": [
+                "Knife Sharpening Service",
+                "Mobile Service",
+                "Blade Restoration",
+                "Kitchen Equipment Maintenance"
+              ],
               "hasOfferCatalog": {
                 "@type": "OfferCatalog",
-                "name": "Mobile Knife Sharpening",
+                "name": "Comprehensive Mobile Sharpening Services",
                 "itemListElement": [
                   {
                     "@type": "Offer",
                     "itemOffered": {
                       "@type": "Service",
-                      "name": "Kitchen Knife Sharpening"
+                      "name": "Kitchen Knife Sharpening",
+                      "description": "Professional restoration of kitchen knives, chef knives, and culinary tools"
                     },
-                    "price": "17.00",
-                    "priceCurrency": "AUD"
+                    "price": "20.00",
+                    "priceCurrency": "AUD",
+                    "availability": "https://schema.org/InStock"
                   },
                   {
                     "@type": "Offer", 
                     "itemOffered": {
                       "@type": "Service",
-                      "name": "Garden Tool Sharpening"
+                      "name": "Garden Tool Sharpening",
+                      "description": "Sharpening service for garden shears, pruning tools, and outdoor equipment"
                     },
-                    "price": "17.00",
-                    "priceCurrency": "AUD"
+                    "price": "20.00",
+                    "priceCurrency": "AUD",
+                    "availability": "https://schema.org/InStock"
                   },
                   {
                     "@type": "Offer",
                     "itemOffered": {
                       "@type": "Service", 
-                      "name": "Scissors Sharpening"
+                      "name": "Scissors Sharpening",
+                      "description": "Professional sharpening for household and professional scissors"
                     },
-                    "price": "17.00",
-                    "priceCurrency": "AUD"
+                    "price": "20.00",
+                    "priceCurrency": "AUD",
+                    "availability": "https://schema.org/InStock"
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Premium Knife Care Service",
+                      "description": "Mirror polish finish with rust prevention coating for superior blade maintenance"
+                    },
+                    "price": "22.00",
+                    "priceCurrency": "AUD",
+                    "availability": "https://schema.org/InStock"
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Traditional Japanese Sharpening",
+                      "description": "4-stone progression with leather strop finishing using traditional Japanese techniques"
+                    },
+                    "price": "27.00",
+                    "priceCurrency": "AUD",
+                    "availability": "https://schema.org/InStock"
                   }
                 ]
               },
-              "areaServed": {
-                "@type": "State",
-                "name": "New South Wales",
-                "containsPlace": [
-                  {
-                    "@type": "City",
-                    "name": "Ballina"
-                  },
-                  {
-                    "@type": "City", 
-                    "name": "Byron Bay"
-                  },
-                  {
+              "areaServed": [
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2477",
+                  "addressRegion": "NSW",
+                  "addressCountry": "AU",
+                  "containsPlace": {
                     "@type": "City",
                     "name": "Tweed Heads"
-                  },
-                  {
-                    "@type": "City",
-                    "name": "Murwillumbah" 
                   }
+                },
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2478",
+                  "addressRegion": "NSW", 
+                  "addressCountry": "AU",
+                  "containsPlace": {
+                    "@type": "City",
+                    "name": "Alstonville"
+                  }
+                },
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2480",
+                  "addressRegion": "NSW",
+                  "addressCountry": "AU",
+                  "containsPlace": {
+                    "@type": "City",
+                    "name": "Ballina"
+                  }
+                },
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2481",
+                  "addressRegion": "NSW",
+                  "addressCountry": "AU",
+                  "containsPlace": {
+                    "@type": "City",
+                    "name": "Byron Bay"
+                  }
+                },
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2482",
+                  "addressRegion": "NSW",
+                  "addressCountry": "AU",
+                  "containsPlace": {
+                    "@type": "City",
+                    "name": "Mullumbimby"
+                  }
+                },
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2483",
+                  "addressRegion": "NSW",
+                  "addressCountry": "AU",
+                  "containsPlace": {
+                    "@type": "City",
+                    "name": "Brunswick Heads"
+                  }
+                },
+                {
+                  "@type": "PostalCodeArea",
+                  "postalCode": "2489",
+                  "addressRegion": "NSW",
+                  "addressCountry": "AU",
+                  "containsPlace": {
+                    "@type": "City",
+                    "name": "Pottsville"
+                  }
+                }
+              ],
+              "audience": {
+                "@type": "Audience",
+                "audienceType": [
+                  "Restaurants",
+                  "Commercial Kitchens", 
+                  "Home Cooks",
+                  "Chefs",
+                  "Gardening Enthusiasts"
                 ]
+              },
+              "availableChannel": {
+                "@type": "ServiceChannel",
+                "serviceType": "Mobile Service",
+                "availableLanguage": "English"
               }
             })
           }}
         />
 
-        {/* Google Maps script temporarily removed for debugging
-        <script 
+        {/* Meta Pixel Code - 2025 Optimized Implementation */}
+        <script
           dangerouslySetInnerHTML={{
-            __html: `window.initMap = function() { 
-              console.log('Google Maps loaded successfully'); 
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+
+              // Initialize Meta Pixel with advanced configuration
+              fbq('init', '812571684456581', {
+                external_id: 'northern_rivers_knife_sharpening'
+              });
+
+              // Track PageView with enhanced data
+              fbq('track', 'PageView', {
+                content_name: 'Northern Rivers Knife Sharpening',
+                content_category: 'mobile_knife_sharpening_service'
+              });
+
+              // Set up advanced matching for better attribution
+              fbq('init', '812571684456581', {}, {
+                "agent": "plNextjs"
+              });
+            `
+          }}
+        />
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{display: 'none'}}
+            src="https://www.facebook.com/tr?id=812571684456581&ev=PageView&noscript=1"
+            alt=""
+          />
+        </noscript>
+
+        {/* Google Maps script temporarily removed for debugging
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.initMap = function() {
+              console.log('Google Maps loaded successfully');
               window.googleMapsLoaded = true;
               if (window.onGoogleMapsLoad) window.onGoogleMapsLoad();
             }`
           }}
         />
-        <script 
-          async 
-          defer 
+        <script
+          async
+          defer
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initMap`}
         ></script>
         */}

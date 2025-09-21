@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://northernriversknifesharpening.com/knife-sharpening-brunswick-heads",
     images: [
       {
-        url: "/knife-sharpening-brunswick-heads-og.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Professional knife sharpening service Brunswick Heads NSW 2483",

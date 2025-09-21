@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://northernriversknifesharpening.com/knife-sharpening-lennox-head",
     images: [
       {
-        url: "/knife-sharpening-lennox-head-og.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Professional knife sharpening service Lennox Head NSW 2478",

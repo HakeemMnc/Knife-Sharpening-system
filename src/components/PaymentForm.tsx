@@ -10,6 +10,7 @@ import {
 } from '@stripe/react-stripe-js';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { MetaPixelEvents } from '@/lib/meta-pixel';
 
 // Load Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -64,6 +65,9 @@ function PaymentFormContent({ orderData, amount, onSuccess, onError, onCancel }:
 
     setIsProcessing(true);
     setError(null);
+
+    // Track Meta Pixel AddPaymentInfo event
+    MetaPixelEvents.addPaymentInfo(amount);
 
     try {
       // Create payment intent with order data (no order exists yet)
