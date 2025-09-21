@@ -7,6 +7,7 @@ export default function Footer() {
   const [openSections, setOpenSections] = useState({
     quickLinks: false,
     businessInfo: false,
+    serviceAreas: false,
   })
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [formState, setFormState] = useState({
@@ -17,7 +18,7 @@ export default function Footer() {
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  const toggleSection = (section: 'quickLinks' | 'businessInfo') => {
+  const toggleSection = (section: 'quickLinks' | 'businessInfo' | 'serviceAreas') => {
     setOpenSections(prev => ({
       ...prev,
       [section]: !prev[section]
@@ -333,21 +334,41 @@ export default function Footer() {
                   </div>
                   
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">Service Areas</h4>
-                    <p className="text-gray-600 text-sm mb-3">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</p>
-                    <div className="grid grid-cols-2 gap-1 text-xs">
-                      <a href="/knife-sharpening-byron-bay" className="text-blue-600 hover:text-blue-800 transition-colors">Byron Bay</a>
-                      <a href="/knife-sharpening-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">Ballina</a>
-                      <a href="/knife-sharpening-mullumbimby" className="text-blue-600 hover:text-blue-800 transition-colors">Mullumbimby</a>
-                      <a href="/knife-sharpening-bangalow" className="text-blue-600 hover:text-blue-800 transition-colors">Bangalow</a>
-                      <a href="/knife-sharpening-alstonville" className="text-blue-600 hover:text-blue-800 transition-colors">Alstonville</a>
-                      <a href="/knife-sharpening-ocean-shores" className="text-blue-600 hover:text-blue-800 transition-colors">Ocean Shores</a>
-                      <a href="/knife-sharpening-brunswick-heads" className="text-blue-600 hover:text-blue-800 transition-colors">Brunswick Heads</a>
-                      <a href="/knife-sharpening-suffolk-park" className="text-blue-600 hover:text-blue-800 transition-colors">Suffolk Park</a>
-                      <a href="/knife-sharpening-lennox-head" className="text-blue-600 hover:text-blue-800 transition-colors">Lennox Head</a>
-                      <a href="/knife-sharpening-east-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">East Ballina</a>
-                      <a href="/knife-sharpening-west-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">West Ballina</a>
-                      <a href="/knife-sharpening-pottsville" className="text-blue-600 hover:text-blue-800 transition-colors">Pottsville</a>
+                    <button
+                      onClick={() => toggleSection('serviceAreas')}
+                      className="flex items-center justify-between w-full text-left mb-2 py-2 px-2 rounded-lg hover:bg-gray-100/20 transition-all duration-200"
+                    >
+                      <h4 className="font-semibold text-gray-800">Service Areas</h4>
+                      <svg 
+                        className={`w-5 h-5 transition-all duration-300 ${openSections.serviceAreas ? 'rotate-45 scale-110' : 'rotate-0'}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </button>
+                    
+                    <div className={`transition-all duration-500 ease-out overflow-hidden ${
+                      openSections.serviceAreas 
+                        ? 'max-h-96 opacity-100 transform translate-y-0' 
+                        : 'max-h-0 opacity-0 transform -translate-y-2'
+                    }`}>
+                      <p className="text-gray-600 text-sm mb-3">Postcodes: 2481, 2482, 2483, 2480, 2478, 2477, 2489</p>
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <a href="/knife-sharpening-byron-bay" className="text-blue-600 hover:text-blue-800 transition-colors">Byron Bay</a>
+                        <a href="/knife-sharpening-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">Ballina</a>
+                        <a href="/knife-sharpening-mullumbimby" className="text-blue-600 hover:text-blue-800 transition-colors">Mullumbimby</a>
+                        <a href="/knife-sharpening-bangalow" className="text-blue-600 hover:text-blue-800 transition-colors">Bangalow</a>
+                        <a href="/knife-sharpening-alstonville" className="text-blue-600 hover:text-blue-800 transition-colors">Alstonville</a>
+                        <a href="/knife-sharpening-ocean-shores" className="text-blue-600 hover:text-blue-800 transition-colors">Ocean Shores</a>
+                        <a href="/knife-sharpening-brunswick-heads" className="text-blue-600 hover:text-blue-800 transition-colors">Brunswick Heads</a>
+                        <a href="/knife-sharpening-suffolk-park" className="text-blue-600 hover:text-blue-800 transition-colors">Suffolk Park</a>
+                        <a href="/knife-sharpening-lennox-head" className="text-blue-600 hover:text-blue-800 transition-colors">Lennox Head</a>
+                        <a href="/knife-sharpening-east-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">East Ballina</a>
+                        <a href="/knife-sharpening-west-ballina" className="text-blue-600 hover:text-blue-800 transition-colors">West Ballina</a>
+                        <a href="/knife-sharpening-pottsville" className="text-blue-600 hover:text-blue-800 transition-colors">Pottsville</a>
+                      </div>
                     </div>
                   </div>
                 </div>
