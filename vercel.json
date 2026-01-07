@@ -32,6 +32,19 @@
     },
     "src/app/api/sms/follow-up/route.ts": {
       "maxDuration": 10
+    },
+    "src/app/api/cron/sms-automation/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/sms-automation?type=evening",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/sms-automation?type=morning",
+      "schedule": "0 21 * * *"
+    }
+  ]
 }

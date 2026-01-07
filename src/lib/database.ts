@@ -590,6 +590,79 @@ export class DatabaseService {
 
     if (error) throw new Error(`Failed to delete coupon: ${error.message}`);
   }
+
+  // SMS Automation Query Methods
+
+  // Get orders needing 24h reminder (service date = targetDate, reminder not sent, status = paid)
+  static async getOrdersNeeding24hReminder(targetDate: string): Promise<Order[]> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('service_date', targetDate)
+      .eq('status', 'paid')
+      .eq('reminder_24h_sent', false)
+      .neq('reminder_24h_status', 'sent');
+
+    if (error) {
+      console.error('Error fetching orders for 24h reminder:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  // Get orders needing morning reminder (service date = targetDate, reminder not sent, status = paid)
+  static async getOrdersNeedingMorningReminder(targetDate: string): Promise<Order[]> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('service_date', targetDate)
+      .eq('status', 'paid')
+      .eq('morning_reminder_sent', false)
+      .neq('morning_reminder_status', 'sent');
+
+    if (error) {
+      console.error('Error fetching orders for morning reminder:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  // Get orders needing follow-up (delivered 48+ hours ago, follow-up not sent)
+  static async getOrdersNeedingFollowUp(): Promise<Order[]> {
+    // Calculate 48 hours ago
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('status', 'delivered')
+      .eq('followup_sms_sent', false)
+      .neq('followup_sms_status', 'sent')
+      .lt('updated_at', fortyEightHoursAgo); // Delivered more than 48 hours ago
+
+    if (error) {
+      console.error('Error fetching orders for follow-up:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  // Get orders with failed SMS for retry (any SMS type that failed)
+  static async getOrdersWithFailedSMS(smsType: 'reminder_24h' | 'morning_reminder' | 'followup'): Promise<Order[]> {
+    const statusField = `${smsType}_status`;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq(statusField, 'failed')
+      .in('status', ['paid', 'delivered']); // Only active orders
+
+    if (error) {
+      console.error(`Error fetching orders with failed ${smsType}:`, error);
+      return [];
+    }
+    return data || [];
+  }
 }
 
 // Helper functions for common operations
