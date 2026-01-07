@@ -116,6 +116,16 @@ export interface ContactMessage {
   responded_at?: string;
 }
 
+export interface Coupon {
+  id: number;
+  code: string;
+  discount_percent: number;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database client initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -508,6 +518,77 @@ export class DatabaseService {
       .eq('id', id);
 
     if (error) throw new Error(`Failed to update contact message: ${error.message}`);
+  }
+
+  // Coupon operations
+  static async getCoupons(): Promise<Coupon[]> {
+    const { data, error } = await supabaseAdmin
+      .from('coupons')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`Failed to fetch coupons: ${error.message}`);
+    return data || [];
+  }
+
+  static async getCouponByCode(code: string): Promise<Coupon | null> {
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No rows found
+      throw new Error(`Failed to fetch coupon: ${error.message}`);
+    }
+    return data;
+  }
+
+  static async createCoupon(couponData: {
+    code: string;
+    discount_percent: number;
+    description?: string;
+    is_active?: boolean;
+  }): Promise<Coupon> {
+    const { data, error } = await supabaseAdmin
+      .from('coupons')
+      .insert({
+        code: couponData.code.toUpperCase(),
+        discount_percent: couponData.discount_percent,
+        description: couponData.description || null,
+        is_active: couponData.is_active ?? true,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to create coupon: ${error.message}`);
+    return data;
+  }
+
+  static async updateCoupon(id: number, updates: Partial<Omit<Coupon, 'id' | 'created_at'>>): Promise<Coupon> {
+    const { data, error } = await supabaseAdmin
+      .from('coupons')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update coupon: ${error.message}`);
+    return data;
+  }
+
+  static async deleteCoupon(id: number): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('coupons')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new Error(`Failed to delete coupon: ${error.message}`);
   }
 }
 

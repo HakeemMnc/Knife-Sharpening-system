@@ -379,13 +379,17 @@ export class StripeService {
       try {
         const orderData = JSON.parse(paymentIntent.metadata.orderDataJSON);
         console.log('Parsed order data:', orderData);
-        
+
         // Import dbHelpers to calculate totals properly
         const { dbHelpers } = await import('./database');
-        
-        // Calculate proper totals based on items and service level
-        const finalTotals = dbHelpers.calculateOrderTotals(orderData.totalItems, orderData.serviceLevel);
-        
+
+        // Calculate base totals (before any discounts) for record-keeping
+        const baseTotals = dbHelpers.calculateOrderTotals(orderData.totalItems, orderData.serviceLevel);
+
+        // Use the actual paid amount (which includes any coupon discounts)
+        // If no coupon was used, totalAmount equals baseTotals.total_amount
+        const paidAmount = orderData.totalAmount || baseTotals.total_amount;
+
         // Create the order with paid status - matching the structure from orders API
         const newOrder = {
           first_name: orderData.firstName,
@@ -397,13 +401,19 @@ export class StripeService {
           suburb: orderData.suburb || null,
           state: orderData.state ? orderData.state.substring(0, 10) : null, // Truncate to 10 chars
           postal_code: orderData.postalCode || null,
-          special_instructions: orderData.specialInstructions || null,
+          special_instructions: orderData.specialInstructions
+            ? (orderData.couponCode
+              ? `${orderData.specialInstructions}\n[Coupon: ${orderData.couponCode} - ${orderData.discountPercent}% off]`
+              : orderData.specialInstructions)
+            : (orderData.couponCode
+              ? `[Coupon: ${orderData.couponCode} - ${orderData.discountPercent}% off]`
+              : null),
           total_items: orderData.totalItems,
           service_level: orderData.serviceLevel,
-          base_amount: finalTotals.base_amount,
-          upgrade_amount: finalTotals.upgrade_amount,
-          delivery_fee: finalTotals.delivery_fee,
-          total_amount: finalTotals.total_amount,
+          base_amount: baseTotals.base_amount,
+          upgrade_amount: baseTotals.upgrade_amount,
+          delivery_fee: baseTotals.delivery_fee,
+          total_amount: paidAmount, // Use the actual paid amount (after discount)
           service_date: orderData.serviceDate,
           pickup_date: dbHelpers.getNextMonday(), // Legacy compatibility
           status: 'paid' as const,

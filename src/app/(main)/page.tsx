@@ -44,6 +44,12 @@ export default function Home() {
   const [applyToAll, setApplyToAll] = useState<string>('standard');
   const [finalTotal, setFinalTotal] = useState(0);
   const [showSharpenPopup, setShowSharpenPopup] = useState(false);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_percent: number; description: string | null } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   
   // Service scheduling state
   const [selectedServiceDate, setSelectedServiceDate] = useState<Date | null>(null);
@@ -287,6 +293,60 @@ export default function Home() {
     }, 50);
   };
 
+  // Coupon validation
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponError('');
+
+    try {
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setCouponError(result.error || 'Invalid coupon code');
+        setAppliedCoupon(null);
+        return;
+      }
+
+      setAppliedCoupon(result.coupon);
+      setCouponError('');
+      setCouponCode(''); // Clear input after successful application
+    } catch (error) {
+      console.error('Error validating coupon:', error);
+      setCouponError('Failed to validate coupon. Please try again.');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
+
+  // Calculate discounted total
+  const getDiscountedTotal = () => {
+    if (!appliedCoupon) return finalTotal;
+    const discount = (finalTotal * appliedCoupon.discount_percent) / 100;
+    return Math.round((finalTotal - discount) * 100) / 100; // Round to 2 decimal places
+  };
+
+  const getDiscountAmount = () => {
+    if (!appliedCoupon) return 0;
+    return Math.round((finalTotal * appliedCoupon.discount_percent) / 100 * 100) / 100;
+  };
+
   // Handle complete booking
   const handleCompleteBooking = async () => {
     console.log('✅ handleCompleteBooking called - preparing order data (NO order created yet)');
@@ -321,6 +381,7 @@ export default function Home() {
     setIsSubmittingBooking(true);
     try {
       // Prepare order data (but don't create order yet!)
+      const discountedTotal = getDiscountedTotal();
       const preparedOrderData = {
         firstName,
         lastName,
@@ -334,7 +395,10 @@ export default function Home() {
         specialInstructions,
         totalItems: getItemCount(),
         serviceLevel: applyToAll,
-        totalAmount: finalTotal,
+        totalAmount: discountedTotal,
+        originalAmount: finalTotal,
+        couponCode: appliedCoupon?.code || null,
+        discountPercent: appliedCoupon?.discount_percent || 0,
         serviceDate: selectedServiceDate?.toISOString().split('T')[0] // YYYY-MM-DD format
       };
 
@@ -3223,15 +3287,83 @@ export default function Home() {
                       <span className="text-base">Upgrade:</span>
                       <span className="text-base font-medium">${getUpsellsCost().toFixed(2)}</span>
                     </div>
+
+                    {/* Coupon Code Section */}
+                    <div className="border-t border-gray-200 pt-4">
+                      {appliedCoupon ? (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="text-green-700 font-medium">
+                                {appliedCoupon.code} applied
+                              </span>
+                              <span className="text-green-600 text-sm ml-2">
+                                ({appliedCoupon.discount_percent}% off)
+                              </span>
+                            </div>
+                            <button
+                              onClick={removeCoupon}
+                              className="text-green-700 hover:text-green-900 text-sm underline"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="flex justify-between items-center mt-2 text-green-700">
+                            <span>Discount:</span>
+                            <span className="font-medium">-${getDiscountAmount().toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="text-sm text-gray-600 mb-2 block">Have a coupon code?</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Enter code"
+                              value={couponCode}
+                              onChange={(e) => {
+                                setCouponCode(e.target.value.toUpperCase());
+                                setCouponError('');
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  validateCoupon();
+                                }
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase text-sm"
+                            />
+                            <button
+                              onClick={validateCoupon}
+                              disabled={validatingCoupon || !couponCode.trim()}
+                              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                            >
+                              {validatingCoupon ? 'Checking...' : 'Apply'}
+                            </button>
+                          </div>
+                          {couponError && (
+                            <p className="text-red-500 text-sm mt-1">{couponError}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="border-t border-gray-300 pt-4 flex justify-between items-center">
                       <span className="text-lg font-semibold" style={{color: '#1B1B1B'}}>Total:</span>
-                      <span className="text-2xl font-bold" style={{
-                        color: '#1B1B1B',
-                        fontSize: '1.5rem',
-                        fontWeight: 700
-                      }}>
-                        ${finalTotal.toFixed(2)}
-                      </span>
+                      <div className="text-right">
+                        {appliedCoupon && (
+                          <span className="text-gray-400 line-through text-base mr-2">
+                            ${finalTotal.toFixed(2)}
+                          </span>
+                        )}
+                        <span className="text-2xl font-bold" style={{
+                          color: appliedCoupon ? '#059669' : '#1B1B1B',
+                          fontSize: '1.5rem',
+                          fontWeight: 700
+                        }}>
+                          ${getDiscountedTotal().toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
