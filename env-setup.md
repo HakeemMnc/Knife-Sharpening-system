@@ -13,7 +13,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
 # Stripe Configuration (Get these from your Stripe Dashboard)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
 STRIPE_SECRET_KEY=your_stripe_secret_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret_here
 
 # Application Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
