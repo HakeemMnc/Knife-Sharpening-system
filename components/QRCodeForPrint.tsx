@@ -119,7 +119,7 @@ export default function QRCodeForPrint() {
           <li>• <strong>Business Cards:</strong> Use 1-1.5 inch QR code size</li>
           <li>• <strong>Flyers:</strong> Use 2-3 inch QR code size</li>
           <li>• <strong>Posters:</strong> Scale as needed (SVG recommended)</li>
-          <li>• <strong>Minimum Size:</strong> Don't go smaller than 0.8 inches</li>
+          <li>• <strong>Minimum Size:</strong> Don&apos;t go smaller than 0.8 inches</li>
           <li>• <strong>Quiet Zone:</strong> Keep white space around the QR code</li>
           <li>• <strong>Testing:</strong> Always test scan before printing in bulk</li>
         </ul>

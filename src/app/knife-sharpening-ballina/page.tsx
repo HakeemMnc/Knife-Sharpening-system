@@ -167,7 +167,7 @@ export default function BallinaKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-green-600">Ballina NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Northern Rivers' premier mobile knife sharpening service for Ballina's 140+ restaurants, 
+              Northern Rivers&apos; premier mobile knife sharpening service for Ballina&apos;s 140+ restaurants, 
               commercial kitchens, and residential customers. Servicing all of postcode 2478.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -191,19 +191,19 @@ export default function BallinaKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Ballina's Commercial Kitchens Choose Our Service
+              Why Ballina&apos;s Commercial Kitchens Choose Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-green-900 mb-6">
-                  Serving Ballina's Thriving Commercial Food Industry
+                  Serving Ballina&apos;s Thriving Commercial Food Industry
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    As Northern Rivers' major regional center, Ballina hosts 140+ restaurants and extensive 
+                    As Northern Rivers&apos; major regional center, Ballina hosts 140+ restaurants and extensive 
                     commercial food operations. From the Southern Cross Industrial Estate to busy riverside 
-                    dining, we keep Ballina's blades razor-sharp.
+                    dining, we keep Ballina&apos;s blades razor-sharp.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-start">
@@ -265,7 +265,7 @@ export default function BallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🍽️</div>
                 <h3 className="text-xl font-semibold text-green-900 mb-4">Restaurant District</h3>
                 <p className="text-gray-700">
-                  Supporting Ballina's 140+ restaurants with professional knife 
+                  Supporting Ballina&apos;s 140+ restaurants with professional knife 
                   maintenance and emergency sharpening services.
                 </p>
               </div>
@@ -340,15 +340,15 @@ export default function BallinaKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Essential service for our Ballina commercial kitchen. The mobile convenience 
-                  means we never have downtime. Professional results every visit!"
+                  &quot;Essential service for our Ballina commercial kitchen. The mobile convenience 
+                  means we never have downtime. Professional results every visit!&quot;
                 </p>
                 <p className="font-semibold text-green-900">- Ballina Restaurant Manager</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect for our industrial estate food processing facility. They understand 
-                  commercial kitchen requirements and deliver quality every time."
+                  &quot;Perfect for our industrial estate food processing facility. They understand 
+                  commercial kitchen requirements and deliver quality every time.&quot;
                 </p>
                 <p className="font-semibold text-green-900">- Southern Cross Industrial Estate</p>
               </div>
@@ -394,7 +394,7 @@ export default function BallinaKnifeSharpeningPage() {
               Ready for Professional Knife Sharpening in Ballina?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Ballina's leading restaurants and commercial kitchens who trust our mobile service
+              Join Ballina&apos;s leading restaurants and commercial kitchens who trust our mobile service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

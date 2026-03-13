@@ -153,7 +153,7 @@ export default function ByronBayKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-blue-600">Byron Bay NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Byron Bay's restaurants, cafes, and homes. 
+              Expert blade restoration service for Byron Bay&apos;s restaurants, cafes, and homes. 
               Servicing postcode 2481 with same-day mobile service. Book online today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -183,11 +183,11 @@ export default function ByronBayKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-blue-900 mb-6">
-                  Serving Byron Bay's Thriving Food Scene
+                  Serving Byron Bay&apos;s Thriving Food Scene
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Byron Bay's 25+ restaurants and cafes demand razor-sharp knives for their busy kitchens. 
+                    Byron Bay&apos;s 25+ restaurants and cafes demand razor-sharp knives for their busy kitchens. 
                     From the bustling Byron Bay Markets to award-winning establishments, we keep your blades 
                     performing at their peak.
                   </p>
@@ -198,11 +198,11 @@ export default function ByronBayKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Perfect for Byron's organic and wellness-focused food culture</span>
+                      <span>Perfect for Byron&apos;s organic and wellness-focused food culture</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Supporting Byron Bay's sustainable dining movement</span>
+                      <span>Supporting Byron Bay&apos;s sustainable dining movement</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
@@ -285,15 +285,15 @@ export default function ByronBayKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-gray-50 p-6 rounded-xl">
                 <p className="text-gray-700 mb-4">
-                  "Perfect service for our Byron Bay restaurant. The mobile service means we don't lose 
-                  knives during busy periods. Professional results every time!"
+                  &quot;Perfect service for our Byron Bay restaurant. The mobile service means we don&apos;t lose 
+                  knives during busy periods. Professional results every time!&quot;
                 </p>
                 <p className="font-semibold text-blue-900">- Local Byron Bay Restaurant</p>
               </div>
               <div className="bg-gray-50 p-6 rounded-xl">
                 <p className="text-gray-700 mb-4">
-                  "Love that they come to us in Byron Bay. Perfect for our home kitchen and they 
-                  understand the local food culture here."
+                  &quot;Love that they come to us in Byron Bay. Perfect for our home kitchen and they 
+                  understand the local food culture here.&quot;
                 </p>
                 <p className="font-semibold text-blue-900">- Byron Bay Resident</p>
               </div>
@@ -339,7 +339,7 @@ export default function ByronBayKnifeSharpeningPage() {
               Ready to Sharpen Your Knives in Byron Bay?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Byron Bay's top restaurants and home cooks who trust our mobile knife sharpening service
+              Join Byron Bay&apos;s top restaurants and home cooks who trust our mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

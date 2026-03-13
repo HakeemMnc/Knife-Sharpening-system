@@ -132,7 +132,7 @@ export default function AlstonvilleKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-emerald-600">Alstonville NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Alstonville's industrial estate, rural services, and residential customers. 
+              Expert blade restoration service for Alstonville&apos;s industrial estate, rural services, and residential customers. 
               Servicing the macadamia capital postcode 2477 with specialized commercial solutions!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -156,17 +156,17 @@ export default function AlstonvilleKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Alstonville's Industrial & Rural Services Choose Our Mobile Knife Sharpening
+              Why Alstonville&apos;s Industrial & Rural Services Choose Our Mobile Knife Sharpening
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-emerald-900 mb-6">
-                  Serving the Macadamia Capital's Industrial Operations
+                  Serving the Macadamia Capital&apos;s Industrial Operations
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Alstonville's 5,182 residents support extensive industrial operations including macadamia processing, 
+                    Alstonville&apos;s 5,182 residents support extensive industrial operations including macadamia processing, 
                     rural services, and the busy industrial estate. We provide specialized mobile knife sharpening 
                     for commercial food processing and residential customers.
                   </p>
@@ -305,15 +305,15 @@ export default function AlstonvilleKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Essential service for our macadamia processing facility in Alstonville. The mobile convenience 
-                  keeps our production lines running smoothly. Professional results every time!"
+                  &quot;Essential service for our macadamia processing facility in Alstonville. The mobile convenience 
+                  keeps our production lines running smoothly. Professional results every time!&quot;
                 </p>
                 <p className="font-semibold text-emerald-900">- Alstonville Processing Facility</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect for our industrial estate operation. They understand commercial knife requirements 
-                  and deliver quality service right to our door."
+                  &quot;Perfect for our industrial estate operation. They understand commercial knife requirements 
+                  and deliver quality service right to our door.&quot;
                 </p>
                 <p className="font-semibold text-emerald-900">- Alstonville Industrial Estate Business</p>
               </div>
@@ -355,7 +355,7 @@ export default function AlstonvilleKnifeSharpeningPage() {
               Ready for Professional Knife Sharpening in Alstonville?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Alstonville's industrial operations and residents who trust our mobile knife sharpening service
+              Join Alstonville&apos;s industrial operations and residents who trust our mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

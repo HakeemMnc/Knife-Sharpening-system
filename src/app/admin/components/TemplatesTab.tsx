@@ -2,9 +2,17 @@
 
 import { useState, useEffect } from 'react';
 
+interface SmsTemplate {
+  id: number;
+  template_name: string;
+  template_content: string;
+  description: string;
+  placeholders?: string[];
+}
+
 export default function TemplatesTab() {
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [templates, setTemplates] = useState<SmsTemplate[]>([]);
+  const [editingTemplate, setEditingTemplate] = useState<SmsTemplate | null>(null);
   const [templateContent, setTemplateContent] = useState('');
 
   const fetchTemplates = async () => {

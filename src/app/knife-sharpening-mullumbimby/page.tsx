@@ -153,8 +153,8 @@ export default function MullumbimbyKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-purple-600">Mullumbimby NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Mullumbimby's vibrant food scene. 
-              Servicing the "Biggest Little Town" postcode 2482 with same-day mobile service. Book online today!
+              Expert blade restoration service for Mullumbimby&apos;s vibrant food scene. 
+              Servicing the &quot;Biggest Little Town&quot; postcode 2482 with same-day mobile service. Book online today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link 
@@ -177,17 +177,17 @@ export default function MullumbimbyKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Mullumbimby's Counter-Culture Food Scene Chooses Our Service
+              Why Mullumbimby&apos;s Counter-Culture Food Scene Chooses Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-purple-900 mb-6">
-                  Serving the Biggest Little Town's Unique Food Culture
+                  Serving the Biggest Little Town&apos;s Unique Food Culture
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Mullumbimby's 4,180 residents support a thriving counter-culture food scene with organic cafes, 
+                    Mullumbimby&apos;s 4,180 residents support a thriving counter-culture food scene with organic cafes, 
                     artisan restaurants, and the famous weekly farmers market. We keep your blades razor-sharp 
                     for all your culinary adventures.
                   </p>
@@ -202,7 +202,7 @@ export default function MullumbimbyKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Supporting Mullumbimby's local food movement</span>
+                      <span>Supporting Mullumbimby&apos;s local food movement</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
@@ -285,15 +285,15 @@ export default function MullumbimbyKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-gray-50 p-6 rounded-xl">
                 <p className="text-gray-700 mb-4">
-                  "Perfect service for our organic cafe in Mullumbimby. The mobile service is so convenient 
-                  and they really understand our commitment to quality food preparation!"
+                  &quot;Perfect service for our organic cafe in Mullumbimby. The mobile service is so convenient 
+                  and they really understand our commitment to quality food preparation!&quot;
                 </p>
                 <p className="font-semibold text-purple-900">- Local Mullumbimby Cafe</p>
               </div>
               <div className="bg-gray-50 p-6 rounded-xl">
                 <p className="text-gray-700 mb-4">
-                  "Love that they come to us in the Biggest Little Town. Perfect for our home kitchen 
-                  and they support our local food culture beautifully."
+                  &quot;Love that they come to us in the Biggest Little Town. Perfect for our home kitchen 
+                  and they support our local food culture beautifully.&quot;
                 </p>
                 <p className="font-semibold text-purple-900">- Mullumbimby Resident</p>
               </div>
@@ -335,7 +335,7 @@ export default function MullumbimbyKnifeSharpeningPage() {
               Ready to Sharpen Your Knives in Mullumbimby?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Mullumbimby's organic cafes and home cooks who trust our mobile knife sharpening service
+              Join Mullumbimby&apos;s organic cafes and home cooks who trust our mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

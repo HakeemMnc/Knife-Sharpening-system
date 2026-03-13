@@ -136,7 +136,7 @@ export default function Footer() {
                   {formStatus === 'success' && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-green-700 font-semibold">✓ Message sent successfully!</p>
-                      <p className="text-green-600 text-sm">I'll get back to you soon.</p>
+                      <p className="text-green-600 text-sm">I&apos;ll get back to you soon.</p>
                     </div>
                   )}
                   {formStatus === 'error' && (
@@ -152,8 +152,8 @@ export default function Footer() {
                       value={formState.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
-                        formErrors.name 
-                          ? 'border-red-300 focus:ring-red-500' 
+                        formErrors.name
+                          ? 'border-red-300 focus:ring-red-500'
                           : 'border-gray-300 focus:ring-blue-600'
                       } focus:outline-none focus:ring-2 focus:border-transparent`}
                     />
@@ -168,8 +168,8 @@ export default function Footer() {
                       value={formState.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
-                        formErrors.phone 
-                          ? 'border-red-300 focus:ring-red-500' 
+                        formErrors.phone
+                          ? 'border-red-300 focus:ring-red-500'
                           : 'border-gray-300 focus:ring-blue-600'
                       } focus:outline-none focus:ring-2 focus:border-transparent`}
                     />
@@ -184,8 +184,8 @@ export default function Footer() {
                       value={formState.message}
                       onChange={(e) => handleInputChange('message', e.target.value)}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 resize-none ${
-                        formErrors.message 
-                          ? 'border-red-300 focus:ring-red-500' 
+                        formErrors.message
+                          ? 'border-red-300 focus:ring-red-500'
                           : 'border-gray-300 focus:ring-blue-600'
                       } focus:outline-none focus:ring-2 focus:border-transparent`}
                     ></textarea>
@@ -390,7 +390,7 @@ export default function Footer() {
                   {formStatus === 'success' && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-green-700 font-semibold">✓ Message sent successfully!</p>
-                      <p className="text-green-600 text-sm">I'll get back to you soon.</p>
+                      <p className="text-green-600 text-sm">I&apos;ll get back to you soon.</p>
                     </div>
                   )}
                   {formStatus === 'error' && (
@@ -406,8 +406,8 @@ export default function Footer() {
                       value={formState.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
-                        formErrors.name 
-                          ? 'border-red-300 focus:ring-red-500' 
+                        formErrors.name
+                          ? 'border-red-300 focus:ring-red-500'
                           : 'border-gray-300 focus:ring-blue-600'
                       } focus:outline-none focus:ring-2 focus:border-transparent`}
                       required

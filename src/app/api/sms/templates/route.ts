@@ -25,7 +25,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updates: any = {};
+    const updates: { template_content?: string; description?: string } = {};
     if (template_content) updates.template_content = template_content;
     if (description) updates.description = description;
 

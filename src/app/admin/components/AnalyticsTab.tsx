@@ -4,12 +4,46 @@ import { useState, useEffect } from 'react';
 import { Order } from '@/lib/database';
 import BookingLimitsWidget from '@/components/BookingLimitsWidget';
 
+interface GeoInsight {
+  postcode: string;
+  count: number;
+}
+
+interface DailyTrend {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+interface ServiceBreakdownEntry {
+  count: number;
+  revenue: number;
+}
+
+interface AnalyticsData {
+  revenue: {
+    currentWeek: number;
+    currentMonth: number;
+  };
+  orders: {
+    totalOrders: number;
+    totalItemsSharpened: number;
+  };
+  serviceBreakdown: {
+    standard: ServiceBreakdownEntry;
+    premium: ServiceBreakdownEntry;
+    traditional_japanese?: ServiceBreakdownEntry;
+  };
+  geoInsights: GeoInsight[];
+  dailyTrends: DailyTrend[];
+}
+
 interface AnalyticsTabProps {
   orders: Order[];
 }
 
 export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -220,7 +254,7 @@ export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <h3 className="text-lg font-medium mb-3">Top Areas (by orders)</h3>
                 <div className="space-y-2">
-                  {analytics.geoInsights.slice(0, 5).map((area: any) => (
+                  {analytics.geoInsights.slice(0, 5).map((area: GeoInsight) => (
                     <div key={area.postcode} className="flex justify-between text-sm">
                       <span>{area.postcode}</span>
                       <span className="font-medium">{area.count} orders</span>
@@ -235,7 +269,7 @@ export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
               <h3 className="text-lg font-medium mb-3">Daily Trends</h3>
               <div className="text-sm text-gray-600 mb-2">Revenue and order count by day</div>
               <div className="space-y-1 max-h-64 overflow-y-auto">
-                {analytics.dailyTrends.map((day: any) => (
+                {analytics.dailyTrends.map((day: DailyTrend) => (
                   <div key={day.date} className="flex justify-between items-center py-1 border-b border-gray-100">
                     <span className="text-sm">{new Date(day.date).toLocaleDateString()}</span>
                     <div className="flex gap-4 text-sm">

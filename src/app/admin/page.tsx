@@ -271,83 +271,84 @@ export default function AdminDashboard() {
   };
 
   // Helper function to validate and sanitize order data
-  const validateAndSanitizeOrder = (order: any): Order | null => {
+  const validateAndSanitizeOrder = (order: unknown): Order | null => {
     try {
       // Check required fields
-      if (!order || typeof order.id !== 'number' || order.id <= 0) {
+      const rec = order as Record<string, unknown>;
+      if (!order || typeof rec.id !== 'number' || rec.id <= 0) {
         console.warn('Invalid order: missing or invalid ID', order);
         return null;
       }
 
       // Sanitize strings and provide defaults
-      const sanitizeString = (value: any, fallback: string = 'N/A'): string => {
+      const sanitizeString = (value: unknown, fallback: string = 'N/A'): string => {
         if (typeof value !== 'string') return fallback;
         return value.trim() || fallback;
       };
 
-      const sanitizeOptionalString = (value: any): string | undefined => {
+      const sanitizeOptionalString = (value: unknown): string | undefined => {
         if (typeof value !== 'string') return undefined;
         const trimmed = value.trim();
         return trimmed === '' ? undefined : trimmed;
       };
 
-      const sanitizeNumber = (value: any, fallback: number = 0): number => {
+      const sanitizeNumber = (value: unknown, fallback: number = 0): number => {
         const num = Number(value);
         return isNaN(num) || num < 0 ? fallback : num;
       };
 
       return {
-        id: order.id,
-        first_name: sanitizeString(order.first_name, 'Unknown'),
-        last_name: sanitizeString(order.last_name, 'Customer'),
-        email: sanitizeString(order.email, 'no-email@example.com'),
-        phone: sanitizeString(order.phone, 'No phone'),
-        pickup_address: sanitizeString(order.pickup_address, 'No address provided'),
-        street_address: sanitizeOptionalString(order.street_address),
-        suburb: sanitizeOptionalString(order.suburb),
-        state: sanitizeOptionalString(order.state),
-        postal_code: sanitizeOptionalString(order.postal_code),
-        special_instructions: sanitizeOptionalString(order.special_instructions),
-        total_items: sanitizeNumber(order.total_items, 1),
-        service_level: sanitizeString(order.service_level, 'standard') as 'standard' | 'premium' | 'traditional_japanese',
-        base_amount: sanitizeNumber(order.base_amount, 0),
-        upgrade_amount: sanitizeNumber(order.upgrade_amount, 0),
-        delivery_fee: sanitizeNumber(order.delivery_fee, 0),
-        total_amount: sanitizeNumber(order.total_amount, 0),
-        service_date: sanitizeString(order.service_date, new Date().toISOString().split('T')[0]),
-        pickup_date: sanitizeString(order.pickup_date, new Date().toISOString().split('T')[0]),
-        status: sanitizeString(order.status, 'pending') as Order['status'],
-        payment_status: sanitizeString(order.payment_status, 'unpaid') as Order['payment_status'],
-        stripe_payment_id: sanitizeOptionalString(order.stripe_payment_id),
-        stripe_customer_id: sanitizeOptionalString(order.stripe_customer_id),
+        id: rec.id as number,
+        first_name: sanitizeString(rec.first_name, 'Unknown'),
+        last_name: sanitizeString(rec.last_name, 'Customer'),
+        email: sanitizeString(rec.email, 'no-email@example.com'),
+        phone: sanitizeString(rec.phone, 'No phone'),
+        pickup_address: sanitizeString(rec.pickup_address, 'No address provided'),
+        street_address: sanitizeOptionalString(rec.street_address),
+        suburb: sanitizeOptionalString(rec.suburb),
+        state: sanitizeOptionalString(rec.state),
+        postal_code: sanitizeOptionalString(rec.postal_code),
+        special_instructions: sanitizeOptionalString(rec.special_instructions),
+        total_items: sanitizeNumber(rec.total_items, 1),
+        service_level: sanitizeString(rec.service_level, 'standard') as 'standard' | 'premium' | 'traditional_japanese',
+        base_amount: sanitizeNumber(rec.base_amount, 0),
+        upgrade_amount: sanitizeNumber(rec.upgrade_amount, 0),
+        delivery_fee: sanitizeNumber(rec.delivery_fee, 0),
+        total_amount: sanitizeNumber(rec.total_amount, 0),
+        service_date: sanitizeString(rec.service_date, new Date().toISOString().split('T')[0]),
+        pickup_date: sanitizeString(rec.pickup_date, new Date().toISOString().split('T')[0]),
+        status: sanitizeString(rec.status, 'pending') as Order['status'],
+        payment_status: sanitizeString(rec.payment_status, 'unpaid') as Order['payment_status'],
+        stripe_payment_id: sanitizeOptionalString(rec.stripe_payment_id),
+        stripe_customer_id: sanitizeOptionalString(rec.stripe_customer_id),
 
         // SMS sent booleans
-        confirmation_sms_sent: !!order.confirmation_sms_sent,
-        reminder_24h_sent: !!order.reminder_24h_sent,
-        morning_reminder_sent: !!order.morning_reminder_sent,
-        pickup_sms_sent: !!order.pickup_sms_sent,
-        delivery_sms_sent: !!order.delivery_sms_sent,
-        followup_sms_sent: !!order.followup_sms_sent,
+        confirmation_sms_sent: !!rec.confirmation_sms_sent,
+        reminder_24h_sent: !!rec.reminder_24h_sent,
+        morning_reminder_sent: !!rec.morning_reminder_sent,
+        pickup_sms_sent: !!rec.pickup_sms_sent,
+        delivery_sms_sent: !!rec.delivery_sms_sent,
+        followup_sms_sent: !!rec.followup_sms_sent,
 
         // SMS Status fields
-        confirmation_sms_status: sanitizeString(order.confirmation_sms_status, 'pending') as Order['confirmation_sms_status'],
-        reminder_24h_status: sanitizeString(order.reminder_24h_status, 'pending') as Order['reminder_24h_status'],
-        morning_reminder_status: sanitizeString(order.morning_reminder_status, 'pending') as Order['morning_reminder_status'],
-        pickup_sms_status: sanitizeString(order.pickup_sms_status, 'pending') as Order['pickup_sms_status'],
-        delivery_sms_status: sanitizeString(order.delivery_sms_status, 'pending') as Order['delivery_sms_status'],
-        followup_sms_status: sanitizeString(order.followup_sms_status, 'pending') as Order['followup_sms_status'],
-        
+        confirmation_sms_status: sanitizeString(rec.confirmation_sms_status, 'pending') as Order['confirmation_sms_status'],
+        reminder_24h_status: sanitizeString(rec.reminder_24h_status, 'pending') as Order['reminder_24h_status'],
+        morning_reminder_status: sanitizeString(rec.morning_reminder_status, 'pending') as Order['morning_reminder_status'],
+        pickup_sms_status: sanitizeString(rec.pickup_sms_status, 'pending') as Order['pickup_sms_status'],
+        delivery_sms_status: sanitizeString(rec.delivery_sms_status, 'pending') as Order['delivery_sms_status'],
+        followup_sms_status: sanitizeString(rec.followup_sms_status, 'pending') as Order['followup_sms_status'],
+
         // SMS Timestamps
-        confirmation_sms_sent_at: sanitizeOptionalString(order.confirmation_sms_sent_at),
-        reminder_24h_sent_at: sanitizeOptionalString(order.reminder_24h_sent_at),
-        morning_reminder_sent_at: sanitizeOptionalString(order.morning_reminder_sent_at),
-        pickup_sms_sent_at: sanitizeOptionalString(order.pickup_sms_sent_at),
-        delivery_sms_sent_at: sanitizeOptionalString(order.delivery_sms_sent_at),
-        followup_sms_sent_at: sanitizeOptionalString(order.followup_sms_sent_at),
-        
-        internal_notes: sanitizeOptionalString(order.internal_notes),
-        created_at: sanitizeString(order.created_at, new Date().toISOString()),
-        updated_at: sanitizeString(order.updated_at, new Date().toISOString())
+        confirmation_sms_sent_at: sanitizeOptionalString(rec.confirmation_sms_sent_at),
+        reminder_24h_sent_at: sanitizeOptionalString(rec.reminder_24h_sent_at),
+        morning_reminder_sent_at: sanitizeOptionalString(rec.morning_reminder_sent_at),
+        pickup_sms_sent_at: sanitizeOptionalString(rec.pickup_sms_sent_at),
+        delivery_sms_sent_at: sanitizeOptionalString(rec.delivery_sms_sent_at),
+        followup_sms_sent_at: sanitizeOptionalString(rec.followup_sms_sent_at),
+
+        internal_notes: sanitizeOptionalString(rec.internal_notes),
+        created_at: sanitizeString(rec.created_at, new Date().toISOString()),
+        updated_at: sanitizeString(rec.updated_at, new Date().toISOString())
       };
     } catch (error) {
       console.error('Error validating order:', order, error);

@@ -114,7 +114,7 @@ export class BookingLimitsService {
   /**
    * Helper method to calculate availability status and spots remaining
    */
-  private static calculateAvailabilityStatus(limit: any): DailyLimit {
+  private static calculateAvailabilityStatus(limit: Omit<DailyLimit, 'spots_remaining' | 'availability_status'>): DailyLimit {
     let spotsRemaining = 0;
     let availabilityStatus: AvailabilityStatus = 'available';
 
@@ -152,9 +152,9 @@ export class BookingLimitsService {
     try {
       const settings = await this.getAllSystemSettings();
       return {
-        limit_type: settings.default_limit_type || 'customers',
-        max_customers: settings.default_daily_customer_limit || 7,
-        max_items: settings.default_daily_item_limit || 100
+        limit_type: (settings.default_limit_type as LimitType) || 'customers',
+        max_customers: (settings.default_daily_customer_limit as number) || 7,
+        max_items: (settings.default_daily_item_limit as number) || 100
       };
     } catch (error) {
       console.error('Error getting default settings:', error);
@@ -222,7 +222,7 @@ export class BookingLimitsService {
         [startDate, endDate, customerCount, itemCount]
       );
       
-      return result.rows.map(row => row.limit_date);
+      return result.rows.map(row => (row as Record<string, unknown>).limit_date as string);
     } catch (error) {
       console.error('Error getting available dates:', error);
       return [];
@@ -358,7 +358,7 @@ export class BookingLimitsService {
         'SELECT * FROM system_settings WHERE setting_key = $1',
         [key]
       );
-      return result.rows[0] || null;
+      return (result.rows[0] as SystemSetting) || null;
     } catch (error) {
       console.error('Error getting system setting:', error);
       return null;
@@ -401,8 +401,8 @@ export class BookingLimitsService {
     try {
       const allSettings = await this.getAllSystemSettings();
       return {
-        defaultDailyCustomerLimit: allSettings.default_daily_customer_limit || 7,
-        defaultDailyItemLimit: allSettings.default_daily_item_limit || 100,
+        defaultDailyCustomerLimit: (allSettings.default_daily_customer_limit as number) || 7,
+        defaultDailyItemLimit: (allSettings.default_daily_item_limit as number) || 100,
         enableBookingLimits: allSettings.enable_booking_limits !== false
       };
     } catch (error) {
@@ -418,7 +418,7 @@ export class BookingLimitsService {
   /**
    * Get all system settings as a key-value object
    */
-  static async getAllSystemSettings(): Promise<Record<string, any>> {
+  static async getAllSystemSettings(): Promise<Record<string, unknown>> {
     try {
       const { data, error } = await supabaseAdmin
         .from('system_settings')
@@ -426,22 +426,23 @@ export class BookingLimitsService {
       
       if (error) throw error;
       
-      const settings: Record<string, any> = {};
-      
+      const settings: Record<string, unknown> = {};
+
       for (const row of data || []) {
-        let value: any = row.setting_value;
-        
+        let value: unknown = row.setting_value;
+        const rawValue = row.setting_value as string;
+
         // Convert value based on type
         switch (row.setting_type) {
           case 'integer':
-            value = parseInt(value, 10);
+            value = parseInt(rawValue, 10);
             break;
           case 'boolean':
-            value = value === 'true';
+            value = rawValue === 'true';
             break;
           case 'json':
             try {
-              value = JSON.parse(value);
+              value = JSON.parse(rawValue);
             } catch {
               value = row.setting_value;
             }
@@ -523,7 +524,7 @@ export class BookingLimitsService {
     totalAvailableSpots: number;
     totalBookedSpots: number;
     upcomingDates: DailyLimit[];
-    settings: Record<string, any>;
+    settings: Record<string, unknown>;
   }> {
     try {
       const endDate = new Date();

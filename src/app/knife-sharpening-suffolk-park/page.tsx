@@ -122,7 +122,7 @@ export default function SuffolkParkKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-teal-600">Suffolk Park NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Suffolk Park's 4,222 residents. 
+              Expert blade restoration service for Suffolk Park&apos;s 4,222 residents. 
               Just 5km south of Byron Bay, we service this residential coastal destination in postcode 2481. Book online today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -152,7 +152,7 @@ export default function SuffolkParkKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-teal-900 mb-6">
-                  Serving Suffolk Park's Residential Coastal Community
+                  Serving Suffolk Park&apos;s Residential Coastal Community
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
@@ -210,7 +210,7 @@ export default function SuffolkParkKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏖️</div>
                 <h3 className="text-xl font-semibold text-teal-900 mb-4">Beachfront Living</h3>
                 <p className="text-gray-700">
-                  Professional knife maintenance for Suffolk Park's beachfront 
+                  Professional knife maintenance for Suffolk Park&apos;s beachfront 
                   homes and coastal lifestyle kitchens.
                 </p>
               </div>
@@ -219,7 +219,7 @@ export default function SuffolkParkKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏡</div>
                 <h3 className="text-xl font-semibold text-teal-900 mb-4">Residential Focus</h3>
                 <p className="text-gray-700">
-                  Mobile service designed for Suffolk Park's 4,222 residents 
+                  Mobile service designed for Suffolk Park&apos;s 4,222 residents 
                   and their home kitchen needs.
                 </p>
               </div>
@@ -292,15 +292,15 @@ export default function SuffolkParkKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect service for our Suffolk Park home. They come to us which is so convenient, 
-                  and the quality is excellent. Great for our coastal kitchen needs!"
+                  &quot;Perfect service for our Suffolk Park home. They come to us which is so convenient, 
+                  and the quality is excellent. Great for our coastal kitchen needs!&quot;
                 </p>
                 <p className="font-semibold text-teal-900">- Suffolk Park Resident</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Love the mobile service for our holiday home in Suffolk Park. Professional 
-                  results and they understand the local coastal community perfectly."
+                  &quot;Love the mobile service for our holiday home in Suffolk Park. Professional 
+                  results and they understand the local coastal community perfectly.&quot;
                 </p>
                 <p className="font-semibold text-teal-900">- Suffolk Park Holiday Home Owner</p>
               </div>
@@ -342,7 +342,7 @@ export default function SuffolkParkKnifeSharpeningPage() {
               Ready to Sharpen Your Knives in Suffolk Park?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Suffolk Park's coastal community who trust our professional mobile knife sharpening service
+              Join Suffolk Park&apos;s coastal community who trust our professional mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

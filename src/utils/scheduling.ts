@@ -57,16 +57,16 @@ export async function getNextAvailableSlots(
       const targetDayIndex = serviceDayIndices[alternatingIndex];
       
       // Find the next occurrence of this service day
-      let searchDate = new Date(currentDate);
+      const searchDate = new Date(currentDate);
       let daysToAdd = 0;
-      
+
       while (daysToAdd < 14) {
         const testDate = new Date(searchDate);
         testDate.setDate(searchDate.getDate() + daysToAdd);
-        
+
         if (testDate.getDay() === targetDayIndex && testDate >= currentDate) {
           const dateString = testDate.toISOString().split('T')[0];
-          
+
           try {
             const response = await fetch(`/api/admin/booking-limits?startDate=${dateString}&endDate=${dateString}`);
             const result = await response.json();
@@ -268,9 +268,9 @@ export async function getServiceDatesForCarousel(
       const targetDayIndex = serviceDayIndices[alternatingIndex];
       
       // Find the next occurrence of this service day
-      let searchDate = new Date(currentDate);
+      const searchDate = new Date(currentDate);
       let daysToAdd = 0;
-      
+
       while (daysToAdd < 14) { // Max 2 weeks to find the day
         const testDate = new Date(searchDate);
         testDate.setDate(searchDate.getDate() + daysToAdd);
@@ -301,7 +301,7 @@ export async function getServiceDatesForCarousel(
     const dateString = serviceDate.toISOString().split('T')[0];
     
     // Default to available - only change if we successfully get limit data
-    let dateInfo = {
+    const dateInfo = {
       date: new Date(serviceDate),
       dateString,
       isAvailable: true,

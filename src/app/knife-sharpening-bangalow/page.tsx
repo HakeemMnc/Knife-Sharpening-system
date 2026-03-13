@@ -153,7 +153,7 @@ export default function BangalowKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-amber-600">Bangalow NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Bangalow's heritage boutique restaurants and cafes. 
+              Expert blade restoration service for Bangalow&apos;s heritage boutique restaurants and cafes. 
               Servicing postcode 2479 with same-day mobile service. Perfect for Sample Food Festival venues!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -177,17 +177,17 @@ export default function BangalowKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Bangalow's Heritage Food Scene Chooses Our Service
+              Why Bangalow&apos;s Heritage Food Scene Chooses Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-amber-900 mb-6">
-                  Serving Bangalow's Boutique Heritage Restaurant Scene
+                  Serving Bangalow&apos;s Boutique Heritage Restaurant Scene
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Bangalow's 2,021 residents support an exceptional heritage boutique food scene featuring 
+                    Bangalow&apos;s 2,021 residents support an exceptional heritage boutique food scene featuring 
                     award-winning restaurants, artisan cafes, and the renowned Saturday farmers market. 
                     Our mobile service ensures your blades are always festival-ready.
                   </p>
@@ -285,15 +285,15 @@ export default function BangalowKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-gray-50 p-6 rounded-xl">
                 <p className="text-gray-700 mb-4">
-                  "Exceptional service for our heritage restaurant in Bangalow. The mobile service is perfect 
-                  for our boutique operation and they understand fine dining knife requirements!"
+                  &quot;Exceptional service for our heritage restaurant in Bangalow. The mobile service is perfect 
+                  for our boutique operation and they understand fine dining knife requirements!&quot;
                 </p>
                 <p className="font-semibold text-amber-900">- Local Bangalow Restaurant</p>
               </div>
               <div className="bg-gray-50 p-6 rounded-xl">
                 <p className="text-gray-700 mb-4">
-                  "Love that they come to us in beautiful Bangalow. Perfect for our heritage home kitchen 
-                  and they always deliver before the Saturday markets."
+                  &quot;Love that they come to us in beautiful Bangalow. Perfect for our heritage home kitchen 
+                  and they always deliver before the Saturday markets.&quot;
                 </p>
                 <p className="font-semibold text-amber-900">- Bangalow Resident</p>
               </div>
@@ -335,7 +335,7 @@ export default function BangalowKnifeSharpeningPage() {
               Ready to Sharpen Your Knives in Bangalow?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Bangalow's boutique restaurants and heritage cafes who trust our mobile knife sharpening service
+              Join Bangalow&apos;s boutique restaurants and heritage cafes who trust our mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

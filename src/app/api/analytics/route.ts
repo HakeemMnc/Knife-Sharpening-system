@@ -100,7 +100,16 @@ function getMonthEnd(date: Date): string {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
 }
 
-function calculateRevenue(orders: any[], startDate: string, endDate: string): number {
+interface AnalyticsOrder {
+  id: number;
+  payment_status: string;
+  created_at: string;
+  total_amount: number;
+  service_level: string;
+  postal_code?: string;
+}
+
+function calculateRevenue(orders: AnalyticsOrder[], startDate: string, endDate: string): number {
   return orders
     .filter(order => 
       order.payment_status === 'paid' &&
@@ -110,7 +119,7 @@ function calculateRevenue(orders: any[], startDate: string, endDate: string): nu
     .reduce((sum, order) => sum + (order.total_amount || 0), 0);
 }
 
-function calculateServiceBreakdown(orders: any[], startDate: string, endDate: string) {
+function calculateServiceBreakdown(orders: AnalyticsOrder[], startDate: string, endDate: string) {
   const paidOrders = orders.filter(order => 
     order.payment_status === 'paid' &&
     order.created_at >= startDate &&
@@ -132,7 +141,7 @@ function calculateServiceBreakdown(orders: any[], startDate: string, endDate: st
   };
 }
 
-function calculateGeographicInsights(orders: any[], startDate: string, endDate: string) {
+function calculateGeographicInsights(orders: AnalyticsOrder[], startDate: string, endDate: string) {
   const paidOrders = orders.filter(order => 
     order.payment_status === 'paid' &&
     order.created_at >= startDate &&
@@ -155,7 +164,7 @@ function calculateGeographicInsights(orders: any[], startDate: string, endDate: 
     .sort((a, b) => b.revenue - a.revenue); // Sort by revenue instead of count
 }
 
-function calculateDailyTrends(orders: any[], startDate: string, endDate: string) {
+function calculateDailyTrends(orders: AnalyticsOrder[], startDate: string, endDate: string) {
   const dailyStats: { [key: string]: { revenue: number; orders: number } } = {};
   
   const relevantOrders = orders.filter(order => 

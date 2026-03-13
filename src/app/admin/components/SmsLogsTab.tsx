@@ -2,8 +2,18 @@
 
 import { useState, useEffect } from 'react';
 
+interface SmsLog {
+  id: number;
+  sent_at: string;
+  orders?: { first_name: string; last_name: string };
+  phone_number: string;
+  sms_type: string;
+  status: string;
+  message_content: string;
+}
+
 export default function SmsLogsTab() {
-  const [smsLogs, setSmsLogs] = useState<any[]>([]);
+  const [smsLogs, setSmsLogs] = useState<SmsLog[]>([]);
 
   const fetchSmsLogs = async () => {
     try {
