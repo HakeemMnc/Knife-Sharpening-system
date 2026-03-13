@@ -50,19 +50,10 @@ Perform a complete session wrap-up: save all work, write a detailed session log 
    git push -u origin $(git branch --show-current)
    ```
 
-8. **CRITICAL — Sync context files to main**:
-   This ensures the NEXT session starts with correct, up-to-date context.
-   ```
-   FEATURE_BRANCH=$(git branch --show-current)
-   git checkout main
-   git pull origin main
-   git checkout $FEATURE_BRANCH -- CLAUDE.md docs/session-log.md .claude/rules/
-   git add CLAUDE.md docs/session-log.md .claude/rules/
-   git commit -m "Sync session state to main from $FEATURE_BRANCH"
-   git push origin main
-   git checkout $FEATURE_BRANCH
-   ```
-   If the push to main fails, retry up to 3 times. If it still fails, warn the user.
+8. **Context sync (automatic)**: Context files (CLAUDE.md, session-log.md, .claude/rules/, .claude/skills/)
+   are automatically synced to main via GitHub Action when you push to the feature branch.
+   No manual sync needed. The Action triggers on any push to `claude/*` branches that changes context files.
+   To verify: check GitHub repo → Actions tab → "Sync session context to main" workflow.
 
 9. **Output to user**: Display a formatted summary of:
    - What was accomplished
@@ -75,5 +66,5 @@ Perform a complete session wrap-up: save all work, write a detailed session log 
 - Be SPECIFIC in next steps — "Fix TypeScript error in sms-service-old.ts line 46" not "Fix errors"
 - The session log is the SOURCE OF TRUTH for the next session
 - Every session entry must have enough detail that a fresh Claude instance can resume perfectly
-- **ALWAYS sync to main** — this is what makes cross-session continuity work
+- Context sync to main is handled automatically by GitHub Action — do NOT manually push to main
 - Never force push to main
