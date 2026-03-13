@@ -30,7 +30,7 @@ export async function GET() {
             phone: order.phone,
             pickup_address: order.pickup_address,
             service_date: order.service_date,
-            pickup_time_slot: order.pickup_time_slot,
+            pickup_time_slot: (order as any).pickup_time_slot,
             total_items: order.total_items,
             service_level: order.service_level,
             total_amount: order.total_amount,
