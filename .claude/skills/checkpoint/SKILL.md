@@ -1,5 +1,7 @@
 ---
+name: checkpoint
 description: Mid-session save point — build, commit, push, update session log
+disable-model-invocation: true
 ---
 
 # Checkpoint — Mid-Session Save Point

@@ -1,5 +1,7 @@
 ---
+name: start-session
 description: Restore context from previous session — read logs, check git/build state, brief user
+disable-model-invocation: true
 ---
 
 # Start Session — Context Restoration
@@ -13,13 +15,13 @@ Restore full context from the previous session and brief the user on the current
    - The most recent session entry's **"Next Steps"** section
    - The **"Stage Progress"** table
 
-2. **Read the plan file**: Read the plan file at `/root/.claude/plans/dreamy-scribbling-sunset.md` for the overall 6-stage roadmap context.
+2. **Read the plan file**: Read the plan file at `/root/.claude/plans/dreamy-scribbling-sunset.md` for the overall 6-stage roadmap context. If this file doesn't exist, skip — the session log has enough context.
 
 3. **Check git state**:
    - `git status` — any uncommitted changes?
    - `git log --oneline -5` — recent commits
    - `git branch` — which branch are we on?
-   - Verify we're on the correct feature branch
+   - Verify we're on the correct feature branch (`claude/audit-sharpening-saas-4bB0H`)
 
 4. **Check build state**: Run `npm run build` to verify current build status. Note any errors.
 

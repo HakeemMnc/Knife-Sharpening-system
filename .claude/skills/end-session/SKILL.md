@@ -1,5 +1,7 @@
 ---
+name: end-session
 description: Full session debrief — save all work, write detailed session log, commit, push
+disable-model-invocation: true
 ---
 
 # End Session — Full Session Debrief & Save
@@ -8,7 +10,7 @@ Perform a complete session wrap-up: save all work, write a detailed session log 
 
 ## Steps
 
-1. **Run /checkpoint first**: Build, commit, push all pending work (follow the checkpoint skill steps).
+1. **Run checkpoint first**: Build, commit, push all pending work (follow the checkpoint skill steps).
 
 2. **Write session log entry**: Read `docs/session-log.md` and append a new session entry (or update the current one) with ALL of the following sections:
 
