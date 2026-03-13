@@ -29,10 +29,11 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/audit-sharpening-saas-4bB0H`
-- **Last commit**: `aeb4f30` — Update session log with commit state
+- **Last commit**: `8ce26a3` — Add CLAUDE.md and rules for cross-session context persistence
 - **Build status**: FAILING — ESLint errors in 35 files (see breakdown below)
 - **Stage**: 0 (Foundation & Security) — ~90% complete
 - **All work committed and pushed**: YES — safe on GitHub
+- **CLAUDE.md**: EXISTS — auto-loaded every session with project context, branch rules, session workflow
 
 ### Build Error Breakdown
 The build fails due to **pre-existing ESLint errors** that were hidden when `next.config.ts` had `ignoreDuringBuilds: true`. We changed it to `false` in Session 1, which surfaced these:
@@ -64,6 +65,9 @@ The build fails due to **pre-existing ESLint errors** that were hidden when `nex
 - 39 test/debug files deleted, migrations organized
 - Workflow skills created (/checkpoint, /end-session, /start-session)
 - Deleted unused legacy `sms-service-old.ts`
+- **CLAUDE.md** with project context auto-loaded every session
+- `.claude/rules/code-style.md` and `.claude/rules/architecture.md` for on-demand context
+- Skills upgraded to modern `.claude/skills/` format with YAML frontmatter
 
 ### What's Incomplete
 - **ESLint errors blocking build** (235 errors across 35 files — see breakdown above)
@@ -125,6 +129,47 @@ Once build passes and Stage 0 is complete:
 ---
 
 ## Session Log
+
+### Session 4 — 2026-03-13 (End-of-Session Debrief)
+
+**Summary**: Fixed cross-session context loss. New Claude sessions were starting blind — wrong branches, wrong goals, no project knowledge. Root cause: no `CLAUDE.md` file. Created CLAUDE.md (auto-loaded every session), `.claude/rules/` for code style and architecture context, and upgraded skills to modern `.claude/skills/` format with YAML frontmatter.
+
+**Files Changed**:
+
+Created:
+- `CLAUDE.md` — Project context auto-loaded every session (85 lines): project identity, tech stack, directory structure, commands, git branch rules, session workflow, current state, key files
+- `.claude/rules/code-style.md` — TypeScript/React patterns, ESLint rules, Supabase client patterns, naming conventions
+- `.claude/rules/architecture.md` — 6-stage roadmap summary, locked-in decisions, current vs target architecture
+- `.claude/skills/checkpoint/SKILL.md` — Modern skill format with YAML frontmatter
+- `.claude/skills/end-session/SKILL.md` — Modern skill format with YAML frontmatter
+- `.claude/skills/start-session/SKILL.md` — Modern skill format with YAML frontmatter
+
+Modified:
+- `.claude/commands/checkpoint.md` — Added YAML frontmatter for backward compat
+- `.claude/commands/end-session.md` — Added YAML frontmatter for backward compat
+- `.claude/commands/start-session.md` — Added YAML frontmatter for backward compat
+- `docs/session-log.md` — Updated Current State, added Session 4 entry
+
+**Git Activity**:
+- `2de8af0` — Add proper skill definitions with YAML frontmatter
+- `8ce26a3` — Add CLAUDE.md and rules for cross-session context persistence
+
+**Decisions Made**:
+- `CLAUDE.md` is the primary mechanism for cross-session context (auto-loaded, not skill-dependent)
+- Keep CLAUDE.md under ~100 lines (best practice for adherence)
+- Use `.claude/rules/` for detailed topic-specific guidance (loaded on demand)
+- Maintain both `.claude/commands/` (legacy) and `.claude/skills/` (modern) for compatibility
+- `disable-model-invocation: true` on all skills (user-triggered only)
+
+**Blockers**:
+- Build still fails (235 ESLint errors — unchanged from Session 3, not addressed this session)
+- Skills with `disable-model-invocation: true` cannot be invoked via the Skill tool — must be run manually
+
+**Next Steps**:
+- Same as Session 3: Priority 1 is fixing ESLint errors to get build passing
+- Then extract OrdersTab, then begin Stage 1
+
+---
 
 ### Session 3 — 2026-03-13 (End-of-Session Debrief)
 
