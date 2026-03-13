@@ -3,14 +3,46 @@
 import { useState, useEffect, useRef } from 'react';
 import { Order } from '@/lib/database';
 
-interface MessagesTabProps {
-  orders: Order[];
+
+interface SmsMessage {
+  message_content: string;
+  direction: 'inbound' | 'outbound';
+  created_at: string;
 }
 
-export default function MessagesTab({ orders }: MessagesTabProps) {
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [filteredConversations, setFilteredConversations] = useState<any[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+interface OrderDetails {
+  id: number;
+  status: string;
+  payment_status: string;
+  service_date: string;
+  pickup_time_slot: string;
+  total_items: number;
+  service_level: string;
+  total_amount: number;
+  email: string;
+  phone: string;
+  pickup_address: string;
+  special_instructions?: string;
+  internal_notes?: string;
+  confirmation_sms_status?: string;
+  pickup_sms_status?: string;
+  delivery_sms_status?: string;
+  followup_sms_status?: string;
+}
+
+interface Conversation {
+  phone_number: string;
+  order_id: number;
+  customer_name: string;
+  messages: SmsMessage[];
+  latestMessage: SmsMessage;
+  order_details?: OrderDetails;
+}
+
+export default function MessagesTab() {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [replyTexts, setReplyTexts] = useState<{[key: string]: string}>({});
   const [sendingReply, setSendingReply] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -112,7 +144,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
         conv.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         conv.phone_number.includes(searchQuery) ||
         conv.order_id.toString().includes(searchQuery) ||
-        conv.messages.some((msg: any) =>
+        conv.messages.some((msg: SmsMessage) =>
           msg.message_content.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
@@ -169,7 +201,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
       if (selectedConversation?.phone_number === phoneNumber && selectedConversation?.order_id === orderId) {
         const updatedConversations = await fetch('/api/sms/conversations').then(r => r.json());
         const updatedConversation = updatedConversations.conversations.find(
-          (c: any) => c.phone_number === phoneNumber && c.order_id === orderId
+          (c: Conversation) => c.phone_number === phoneNumber && c.order_id === orderId
         );
         if (updatedConversation) {
           setSelectedConversation(updatedConversation);
@@ -200,7 +232,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
       if (selectedConversation?.order_details?.id === orderId) {
         const updatedConversations = await fetch('/api/sms/conversations').then(r => r.json());
         const updatedConversation = updatedConversations.conversations.find(
-          (c: any) => c.order_details?.id === orderId
+          (c: Conversation) => c.order_details?.id === orderId
         );
         if (updatedConversation) {
           setSelectedConversation(updatedConversation);
@@ -376,7 +408,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto">
                 <div className="p-4 space-y-1">
-                  {selectedConversation.messages.map((msg: any, idx: number) => {
+                  {selectedConversation.messages.map((msg: SmsMessage, idx: number) => {
                     const isConsecutive = idx > 0 &&
                       selectedConversation.messages[idx - 1].direction === msg.direction &&
                       (new Date(msg.created_at).getTime() - new Date(selectedConversation.messages[idx - 1].created_at).getTime()) < 300000; // 5 minutes
@@ -445,51 +477,51 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Order #:</span>
-                        <span className="font-medium">{selectedConversation.order_details.id}</span>
+                        <span className="font-medium">{selectedConversation.order_details?.id}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status:</span>
                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          selectedConversation.order_details.status === 'paid' ? 'bg-green-100 text-green-800' :
-                          selectedConversation.order_details.status === 'sharpening' ? 'bg-yellow-100 text-yellow-800' :
-                          selectedConversation.order_details.status === 'ready' ? 'bg-orange-100 text-orange-800' :
-                          selectedConversation.order_details.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
-                          selectedConversation.order_details.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
-                          selectedConversation.order_details.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                          selectedConversation.order_details?.status === 'paid' ? 'bg-green-100 text-green-800' :
+                          selectedConversation.order_details?.status === 'sharpening' ? 'bg-yellow-100 text-yellow-800' :
+                          selectedConversation.order_details?.status === 'ready' ? 'bg-orange-100 text-orange-800' :
+                          selectedConversation.order_details?.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
+                          selectedConversation.order_details?.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
+                          selectedConversation.order_details?.status === 'completed' ? 'bg-gray-100 text-gray-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedConversation.order_details.status}
+                          {selectedConversation.order_details?.status}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Payment:</span>
                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          selectedConversation.order_details.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                          selectedConversation.order_details.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
+                          selectedConversation.order_details?.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                          selectedConversation.order_details?.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedConversation.order_details.payment_status}
+                          {selectedConversation.order_details?.payment_status}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Service Date:</span>
-                        <span className="font-medium">{new Date(selectedConversation.order_details.service_date).toLocaleDateString()}</span>
+                        <span className="font-medium">{new Date(selectedConversation.order_details?.service_date).toLocaleDateString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Time Slot:</span>
-                        <span className="font-medium capitalize">{selectedConversation.order_details.pickup_time_slot}</span>
+                        <span className="font-medium capitalize">{selectedConversation.order_details?.pickup_time_slot}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Items:</span>
-                        <span className="font-medium">{selectedConversation.order_details.total_items}</span>
+                        <span className="font-medium">{selectedConversation.order_details?.total_items}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Service:</span>
-                        <span className="font-medium capitalize">{selectedConversation.order_details.service_level}</span>
+                        <span className="font-medium capitalize">{selectedConversation.order_details?.service_level}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Total:</span>
-                        <span className="font-medium">${selectedConversation.order_details.total_amount}</span>
+                        <span className="font-medium">${selectedConversation.order_details?.total_amount}</span>
                       </div>
                     </div>
                   </div>
@@ -501,49 +533,49 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Confirmation:</span>
                         <span className={`px-2 py-1 rounded-full ${
-                          selectedConversation.order_details.confirmation_sms_status === 'sent' || selectedConversation.order_details.confirmation_sms_status === 'delivered'
+                          selectedConversation.order_details?.confirmation_sms_status === 'sent' || selectedConversation.order_details?.confirmation_sms_status === 'delivered'
                             ? 'bg-green-100 text-green-800'
-                            : selectedConversation.order_details.confirmation_sms_status === 'failed'
+                            : selectedConversation.order_details?.confirmation_sms_status === 'failed'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedConversation.order_details.confirmation_sms_status || 'pending'}
+                          {selectedConversation.order_details?.confirmation_sms_status || 'pending'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Pickup:</span>
                         <span className={`px-2 py-1 rounded-full ${
-                          selectedConversation.order_details.pickup_sms_status === 'sent' || selectedConversation.order_details.pickup_sms_status === 'delivered'
+                          selectedConversation.order_details?.pickup_sms_status === 'sent' || selectedConversation.order_details?.pickup_sms_status === 'delivered'
                             ? 'bg-green-100 text-green-800'
-                            : selectedConversation.order_details.pickup_sms_status === 'failed'
+                            : selectedConversation.order_details?.pickup_sms_status === 'failed'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedConversation.order_details.pickup_sms_status || 'pending'}
+                          {selectedConversation.order_details?.pickup_sms_status || 'pending'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Delivery:</span>
                         <span className={`px-2 py-1 rounded-full ${
-                          selectedConversation.order_details.delivery_sms_status === 'sent' || selectedConversation.order_details.delivery_sms_status === 'delivered'
+                          selectedConversation.order_details?.delivery_sms_status === 'sent' || selectedConversation.order_details?.delivery_sms_status === 'delivered'
                             ? 'bg-green-100 text-green-800'
-                            : selectedConversation.order_details.delivery_sms_status === 'failed'
+                            : selectedConversation.order_details?.delivery_sms_status === 'failed'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedConversation.order_details.delivery_sms_status || 'pending'}
+                          {selectedConversation.order_details?.delivery_sms_status || 'pending'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Follow-up:</span>
                         <span className={`px-2 py-1 rounded-full ${
-                          selectedConversation.order_details.followup_sms_status === 'sent' || selectedConversation.order_details.followup_sms_status === 'delivered'
+                          selectedConversation.order_details?.followup_sms_status === 'sent' || selectedConversation.order_details?.followup_sms_status === 'delivered'
                             ? 'bg-green-100 text-green-800'
-                            : selectedConversation.order_details.followup_sms_status === 'failed'
+                            : selectedConversation.order_details?.followup_sms_status === 'failed'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedConversation.order_details.followup_sms_status || 'pending'}
+                          {selectedConversation.order_details?.followup_sms_status || 'pending'}
                         </span>
                       </div>
                     </div>
@@ -555,21 +587,21 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="text-gray-600">Email:</span>
-                        <p className="font-medium break-all">{selectedConversation.order_details.email}</p>
+                        <p className="font-medium break-all">{selectedConversation.order_details?.email}</p>
                       </div>
                       <div>
                         <span className="text-gray-600">Address:</span>
-                        <p className="font-medium">{selectedConversation.order_details.pickup_address}</p>
+                        <p className="font-medium">{selectedConversation.order_details?.pickup_address}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Special Instructions */}
-                  {selectedConversation.order_details.special_instructions && (
+                  {selectedConversation.order_details?.special_instructions && (
                     <div className="p-4 border-b border-gray-200">
                       <h4 className="font-medium text-gray-900 mb-3">Instructions</h4>
                       <p className="text-sm text-gray-700 bg-yellow-50 border border-yellow-200 rounded p-3">
-                        {selectedConversation.order_details.special_instructions}
+                        {selectedConversation.order_details?.special_instructions}
                       </p>
                     </div>
                   )}
@@ -580,18 +612,18 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                       <h4 className="font-medium text-gray-900">Internal Notes</h4>
                       <button
                         onClick={() => setNotesModal({
-                          orderId: selectedConversation.order_details.id,
-                          notes: selectedConversation.order_details.internal_notes || '',
+                          orderId: selectedConversation.order_details?.id ?? 0,
+                          notes: selectedConversation.order_details?.internal_notes || '',
                           customerName: selectedConversation.customer_name
                         })}
                         className="text-blue-600 hover:text-blue-700 text-xs font-medium"
                       >
-                        {selectedConversation.order_details.internal_notes ? 'Edit' : 'Add'}
+                        {selectedConversation.order_details?.internal_notes ? 'Edit' : 'Add'}
                       </button>
                     </div>
-                    {selectedConversation.order_details.internal_notes ? (
+                    {selectedConversation.order_details?.internal_notes ? (
                       <div className="text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded p-3">
-                        <p className="whitespace-pre-wrap">{selectedConversation.order_details.internal_notes}</p>
+                        <p className="whitespace-pre-wrap">{selectedConversation.order_details?.internal_notes}</p>
                       </div>
                     ) : (
                       <p className="text-xs text-gray-500 italic">No internal notes yet</p>
@@ -603,13 +635,13 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                     <h4 className="font-medium text-gray-900 mb-3">Quick Actions</h4>
                     <div className="space-y-2">
                       <button
-                        onClick={() => handleCallCustomer(selectedConversation.order_details.phone, selectedConversation.customer_name)}
+                        onClick={() => handleCallCustomer(selectedConversation.order_details?.phone ?? '', selectedConversation.customer_name)}
                         className="w-full bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors"
                       >
                         📞 Call Customer
                       </button>
                       <button
-                        onClick={() => handleSMSCustomer(selectedConversation.order_details.phone, selectedConversation.customer_name, selectedConversation.order_details.id)}
+                        onClick={() => handleSMSCustomer(selectedConversation.order_details?.phone ?? '', selectedConversation.customer_name, selectedConversation.order_details?.id ?? 0)}
                         className="w-full bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
                       >
                         💬 Open SMS

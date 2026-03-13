@@ -122,8 +122,8 @@ export default function PottsvilleKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-emerald-600">Pottsville NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration for Pottsville's sustainable dining scene and pristine beach venues. 
-              Serving Tweed Shire's 7,209 residents with eco-conscious mobile service. Book online today!
+              Expert blade restoration for Pottsville&apos;s sustainable dining scene and pristine beach venues. 
+              Serving Tweed Shire&apos;s 7,209 residents with eco-conscious mobile service. Book online today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link 
@@ -146,19 +146,19 @@ export default function PottsvilleKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Pottsville's Sustainable Dining Scene Chooses Our Service
+              Why Pottsville&apos;s Sustainable Dining Scene Chooses Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-emerald-900 mb-6">
-                  Serving Pottsville's Eco-Conscious Dining Culture
+                  Serving Pottsville&apos;s Eco-Conscious Dining Culture
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Pottsville's 7,209 residents in Tweed Shire are renowned for their commitment to sustainable 
+                    Pottsville&apos;s 7,209 residents in Tweed Shire are renowned for their commitment to sustainable 
                     dining and pristine beach conservation. Our mobile knife sharpening service aligns perfectly 
-                    with the town's eco-conscious values and quality dining standards.
+                    with the town&apos;s eco-conscious values and quality dining standards.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-start">
@@ -167,7 +167,7 @@ export default function PottsvilleKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Perfect for Pottsville's sustainable dining focus</span>
+                      <span>Perfect for Pottsville&apos;s sustainable dining focus</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
@@ -175,7 +175,7 @@ export default function PottsvilleKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Tweed Shire's preferred mobile knife service</span>
+                      <span>Tweed Shire&apos;s preferred mobile knife service</span>
                     </li>
                   </ul>
                 </div>
@@ -202,7 +202,7 @@ export default function PottsvilleKnifeSharpeningPage() {
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Supporting Pottsville's Sustainable Dining Movement
+              Supporting Pottsville&apos;s Sustainable Dining Movement
             </h2>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -210,7 +210,7 @@ export default function PottsvilleKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🌱</div>
                 <h3 className="text-xl font-semibold text-emerald-900 mb-4">Sustainable Dining</h3>
                 <p className="text-gray-700">
-                  Mobile knife sharpening supporting Pottsville's commitment to sustainable 
+                  Mobile knife sharpening supporting Pottsville&apos;s commitment to sustainable 
                   dining practices and eco-conscious restaurant operations.
                 </p>
               </div>
@@ -219,7 +219,7 @@ export default function PottsvilleKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏖️</div>
                 <h3 className="text-xl font-semibold text-emerald-900 mb-4">Pristine Beach Venues</h3>
                 <p className="text-gray-700">
-                  Specialized service for Pottsville's beautiful beach dining venues 
+                  Specialized service for Pottsville&apos;s beautiful beach dining venues 
                   and coastal restaurants committed to environmental protection.
                 </p>
               </div>
@@ -229,7 +229,7 @@ export default function PottsvilleKnifeSharpeningPage() {
                 <h3 className="text-xl font-semibold text-emerald-900 mb-4">Eco-Conscious Service</h3>
                 <p className="text-gray-700">
                   Environmentally responsible mobile service that aligns with 
-                  Tweed Shire's conservation values and sustainable practices.
+                  Tweed Shire&apos;s conservation values and sustainable practices.
                 </p>
               </div>
             </div>
@@ -289,20 +289,20 @@ export default function PottsvilleKnifeSharpeningPage() {
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              What Pottsville's Sustainable Community Says
+              What Pottsville&apos;s Sustainable Community Says
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect for our sustainable dining restaurant in Pottsville. The mobile service 
-                  aligns with our eco-values and the quality supports our commitment to excellence."
+                  &quot;Perfect for our sustainable dining restaurant in Pottsville. The mobile service 
+                  aligns with our eco-values and the quality supports our commitment to excellence.&quot;
                 </p>
                 <p className="font-semibold text-emerald-900">- Pottsville Sustainable Restaurant</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Love how this service fits our beach venue's environmental values. Professional 
-                  results with minimal impact - exactly what Pottsville needs!"
+                  &quot;Love how this service fits our beach venue&apos;s environmental values. Professional 
+                  results with minimal impact - exactly what Pottsville needs!&quot;
                 </p>
                 <p className="font-semibold text-emerald-900">- Pristine Beach Venue Owner</p>
               </div>
@@ -344,7 +344,7 @@ export default function PottsvilleKnifeSharpeningPage() {
               Ready for Sustainable Knife Sharpening in Pottsville?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Pottsville's sustainable dining scene and pristine beach venues who trust our eco-conscious service
+              Join Pottsville&apos;s sustainable dining scene and pristine beach venues who trust our eco-conscious service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

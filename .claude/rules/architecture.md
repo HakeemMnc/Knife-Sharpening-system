@@ -4,9 +4,9 @@
 
 | Stage | What | Status |
 |-------|------|--------|
-| 0 | Foundation & Security (auth, RLS, cleanup, admin decomposition) | ~90% |
-| 1 | B2B Data Model (tenants, clients, contracts, zones, visits) | Not started |
-| 2 | Core B2B Features (client mgmt, scheduling, route optimization) | Not started |
+| 0 | Foundation & Security (auth, RLS, cleanup, admin decomposition) | **100%** |
+| 1 | B2B Data Model (tenants, clients, contracts, zones, visits) | **100%** |
+| 2 | Core B2B Features (client mgmt, scheduling, route optimization) | **100%** |
 | 3 | Billing & Subscriptions (Stripe Express Connect, metered billing) | Not started |
 | 4 | Client Portal (self-service for B2B clients) | Not started |
 | 5 | Mobile Admin (operator daily route view) | Not started |

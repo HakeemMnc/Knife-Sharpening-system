@@ -16,7 +16,7 @@ import { MetaPixelEvents } from '@/lib/meta-pixel';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface PaymentFormProps {
-  orderData: any; // Order data to be created after payment
+  orderData: Record<string, unknown>; // Order data to be created after payment
   amount: number;
   onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
