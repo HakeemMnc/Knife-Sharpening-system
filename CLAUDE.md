@@ -49,27 +49,34 @@ No test framework configured yet.
 
 ## Git Workflow
 
-**CRITICAL**: Always work on branch `claude/audit-sharpening-saas-4bB0H`.
-- Never create new branches without explicit permission
+**CRITICAL — Branch Detection**:
+1. Read `docs/session-log.md` → find **"Branch"** in the "Current State" section
+2. That is the **active development branch**. Switch to it before doing ANY work.
+3. If you are on `main` or any other branch, you are NOT on the right branch.
+4. To switch: `git fetch origin <branch-name> && git checkout <branch-name>`
+
+**Rules**:
 - Never force push
 - Never commit `.env`, credentials, or `node_modules`
 - Commit frequently with descriptive messages
-- Push with `git push -u origin claude/audit-sharpening-saas-4bB0H`
+- Push with `git push -u origin <current-branch-name>`
 
 ## Session Workflow
 
-**On every new session**, before doing ANY work:
+**MANDATORY on every new session** — do this BEFORE any work:
 1. Read `docs/session-log.md` — this is the **source of truth** for project state
-2. Check `git status` and `git log --oneline -5`
-3. Run `npm run build` to verify current build status
-4. Brief the user on current state and recommended next steps
+2. Find the **active branch** in the "Current State" section
+3. If not on that branch: `git fetch origin <branch> && git checkout <branch>`
+4. Check `git status` and `git log --oneline -5`
+5. Run `npm run build` to verify current build status
+6. Brief the user on current state and recommended next steps
 
 **Available skills**:
-- `/start-session` — Full context restoration + briefing
+- `/start-session` — Full context restoration (reads log, switches branch, checks build, briefs user)
 - `/checkpoint` — Mid-session save (build, commit, push, update log)
-- `/end-session` — Full debrief (detailed log entry, commit, push)
+- `/end-session` — Full debrief (log entry, commit, push, **sync context to main**)
 
-The session log at `docs/session-log.md` has: stage progress table, current state, build error breakdown, next session pickup instructions, and full session history.
+The session log at `docs/session-log.md` has: stage progress table, current state, next session pickup instructions, and full session history.
 
 ## Current State
 
