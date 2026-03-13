@@ -29,10 +29,11 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/start-new-session-eeVyD`
-- **Last commit**: `697fe5e` — Fix remaining ESLint errors and type issues across all files
+- **Last commit**: `f3922f9` — Update session log: Session 5
 - **Build status**: PASSING (ESLint + TypeScript) — runtime fails only due to missing Supabase env vars
-- **Stage**: 0 (Foundation & Security) — ~95% complete
+- **Stage**: 0 (Foundation & Security) — ~95% complete (OrdersTab extraction planned, not yet executed)
 - **All work committed and pushed**: YES — safe on GitHub
+- **Plan file**: `/root/.claude/plans/encapsulated-meandering-glacier.md` — detailed OrdersTab extraction plan
 - **CLAUDE.md**: EXISTS — auto-loaded every session with project context, branch rules, session workflow
 
 ### What's Working
@@ -57,8 +58,13 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### Priority 1: Extract OrdersTab
-The Orders tab is ~1,800 lines still inline in `src/app/admin/page.tsx` (2,509 lines total). Extract into `src/app/admin/components/OrdersTab.tsx` and add to barrel export in `index.ts`. This is the last piece of the admin decomposition (Stage 0.4).
+### Priority 1: Extract OrdersTab (PLAN READY — just needs execution)
+The plan is complete at `/root/.claude/plans/encapsulated-meandering-glacier.md`. Execute it:
+1. Create `src/app/admin/components/OrdersTab.tsx` (~1,800 lines) — move 19 state vars, 38 functions, MobileOrderCard, both modals, all Orders JSX from page.tsx. Props: `{ orders: Order[], fetchOrders: () => Promise<void>, refreshing: boolean }`
+2. Update `src/app/admin/page.tsx` — remove moved code, replace with `<OrdersTab orders={orders} fetchOrders={fetchOrders} refreshing={refreshing} />`
+3. Update `src/app/admin/components/index.ts` — add OrdersTab export
+4. Run `npm run build` to verify
+5. Commit and push
 
 ### Priority 2: Begin Stage 1 — B2B Data Model
 Once build passes and Stage 0 is complete:
@@ -74,6 +80,33 @@ Once build passes and Stage 0 is complete:
 ---
 
 ## Session Log
+
+### Session 6 — 2026-03-13
+
+**Summary**: Started OrdersTab extraction from `src/app/admin/page.tsx` (2,509 lines → ~500 lines target). Completed full analysis and planning: identified all 19 state variables, 38 functions, MobileOrderCard sub-component, both modals (Special Instructions + Internal Notes), and all JSX to move. Designed props interface (`orders`, `fetchOrders`, `refreshing`). Plan approved but file creation was interrupted by system plan mode issues before any code was written.
+
+**Files Changed**: None — no code changes this session, only analysis and planning.
+
+**Git Activity**: No commits this session.
+
+**Plan Created** (at `/root/.claude/plans/encapsulated-meandering-glacier.md`):
+- OrdersTab.tsx will receive 3 props: `orders: Order[]`, `fetchOrders: () => Promise<void>`, `refreshing: boolean`
+- 19 state variables move to OrdersTab (all except `orders`, `loading`, `error`, `refreshing`, `activeTab`)
+- ~38 functions move (all except `fetchOrders` and `validateAndSanitizeOrder`)
+- `MobileOrderCard` sub-component moves
+- Both modals (Special Instructions + Internal Notes) move
+- `isMobileView` duplicated in both parent (for header title) and OrdersTab (for layout)
+- `SMSActionDropdown` import NOT needed in OrdersTab (confirmed unused)
+- ESLint fixes: `_customerName` for unused param, `_error`/`_err` for unused catch vars
+
+**Next Steps**:
+- Create `src/app/admin/components/OrdersTab.tsx` (~1,800 lines) — the file content was fully designed but not written
+- Update `src/app/admin/page.tsx` — remove moved code, add `<OrdersTab>` usage
+- Update `src/app/admin/components/index.ts` — add OrdersTab export
+- Build and lint verification
+- Commit and push
+
+---
 
 ### Session 5 — 2026-03-13
 
