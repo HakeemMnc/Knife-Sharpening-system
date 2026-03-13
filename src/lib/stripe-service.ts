@@ -77,7 +77,7 @@ export class StripeService {
         metadata: {
           customerEmail: orderData.email,
           customerName: `${orderData.firstName} ${orderData.lastName}`,
-          serviceDate: orderData.serviceDate,
+          serviceDate: orderData.serviceDate || '',
           totalItems: orderData.totalItems?.toString() || '0',
           serviceLevel: orderData.serviceLevel || 'standard',
           // Store order data for webhook processing

@@ -104,7 +104,7 @@ export default function Home() {
 
   // Payment state
   const [showPayment, setShowPayment] = useState(false);
-  const [orderData, setOrderData] = useState<any | null>(null); // Will hold order data until payment succeeds
+  const [orderData, setOrderData] = useState<Record<string, unknown> | null>(null); // Will hold order data until payment succeeds
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   
   // Booking submission state
@@ -851,7 +851,7 @@ export default function Home() {
           <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20">
             <PaymentForm
               orderData={orderData}
-              amount={orderData.totalAmount}
+              amount={orderData.totalAmount as number}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               onCancel={handlePaymentCancel}

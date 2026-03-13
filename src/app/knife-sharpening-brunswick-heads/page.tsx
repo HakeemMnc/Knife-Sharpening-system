@@ -122,7 +122,7 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-blue-600">Brunswick Heads NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Brunswick Heads' fishing village community. 
+              Expert blade restoration service for Brunswick Heads&apos; fishing village community. 
               Servicing 25+ cafes, restaurants, and marine businesses in postcode 2483. Festival ready!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -146,17 +146,17 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Brunswick Heads' Fishing Village Chooses Our Service
+              Why Brunswick Heads&apos; Fishing Village Chooses Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-blue-900 mb-6">
-                  Serving Brunswick Heads' Thriving Marine Food Scene
+                  Serving Brunswick Heads&apos; Thriving Marine Food Scene
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Brunswick Heads' 1,686 residents support a vibrant fishing village with 25+ cafes and restaurants. 
+                    Brunswick Heads&apos; 1,686 residents support a vibrant fishing village with 25+ cafes and restaurants. 
                     From fresh seafood establishments to the famous Festival of Fish n Chips, we keep your blades 
                     razor-sharp for this unique coastal community.
                   </p>
@@ -210,7 +210,7 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🎣</div>
                 <h3 className="text-xl font-semibold text-blue-900 mb-4">Seafood Specialists</h3>
                 <p className="text-gray-700">
-                  Expert knife maintenance for Brunswick Heads' seafood restaurants 
+                  Expert knife maintenance for Brunswick Heads&apos; seafood restaurants 
                   and fishing industry catering operations.
                 </p>
               </div>
@@ -229,7 +229,7 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
                 <h3 className="text-xl font-semibold text-blue-900 mb-4">Riverside Dining</h3>
                 <p className="text-gray-700">
                   Mobile service for Brunswick River waterfront restaurants 
-                  and the village's 25+ dining establishments.
+                  and the village&apos;s 25+ dining establishments.
                 </p>
               </div>
             </div>
@@ -292,15 +292,15 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Essential for our seafood restaurant in Brunswick Heads. The mobile service 
-                  means we never miss service during busy fishing season. Perfect for our village!"
+                  &quot;Essential for our seafood restaurant in Brunswick Heads. The mobile service 
+                  means we never miss service during busy fishing season. Perfect for our village!&quot;
                 </p>
                 <p className="font-semibold text-blue-900">- Brunswick Heads Seafood Restaurant</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "They helped us prepare for the Festival of Fish n Chips with professional 
-                  knife sharpening. Great service for our fishing village community."
+                  &quot;They helped us prepare for the Festival of Fish n Chips with professional 
+                  knife sharpening. Great service for our fishing village community.&quot;
                 </p>
                 <p className="font-semibold text-blue-900">- Festival Food Vendor</p>
               </div>
@@ -346,7 +346,7 @@ export default function BrunswickHeadsKnifeSharpeningPage() {
               Ready for Professional Knife Sharpening in Brunswick Heads?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Brunswick Heads' fishing village restaurants and cafes who trust our mobile service
+              Join Brunswick Heads&apos; fishing village restaurants and cafes who trust our mobile service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

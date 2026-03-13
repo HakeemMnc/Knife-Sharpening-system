@@ -125,7 +125,7 @@ export default function EastBallinaKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-purple-600">East Ballina NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration for East Ballina's professional residential community and local businesses. 
+              Expert blade restoration for East Ballina&apos;s professional residential community and local businesses. 
               Servicing the established 2478 postcode area with premium mobile service.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -149,19 +149,19 @@ export default function EastBallinaKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why East Ballina's Professional Community Chooses Our Service
+              Why East Ballina&apos;s Professional Community Chooses Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-purple-900 mb-6">
-                  Serving East Ballina's Professional Residential Area
+                  Serving East Ballina&apos;s Professional Residential Area
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    East Ballina's 5,882 residents enjoy a professional, established community atmosphere. 
+                    East Ballina&apos;s 5,882 residents enjoy a professional, established community atmosphere. 
                     As a key residential suburb of greater Ballina, we provide premium knife sharpening 
-                    services that match the area's quality standards.
+                    services that match the area&apos;s quality standards.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-start">
@@ -170,7 +170,7 @@ export default function EastBallinaKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Perfect for East Ballina's quality-focused community</span>
+                      <span>Perfect for East Ballina&apos;s quality-focused community</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
@@ -205,7 +205,7 @@ export default function EastBallinaKnifeSharpeningPage() {
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Professional Service for East Ballina's Quality Community
+              Professional Service for East Ballina&apos;s Quality Community
             </h2>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -213,7 +213,7 @@ export default function EastBallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏘️</div>
                 <h3 className="text-xl font-semibold text-purple-900 mb-4">Professional Residences</h3>
                 <p className="text-gray-700">
-                  Mobile knife sharpening service perfectly suited for East Ballina's 
+                  Mobile knife sharpening service perfectly suited for East Ballina&apos;s 
                   professional residential community and quality home kitchens.
                 </p>
               </div>
@@ -222,7 +222,7 @@ export default function EastBallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">💼</div>
                 <h3 className="text-xl font-semibold text-purple-900 mb-4">Local Business Support</h3>
                 <p className="text-gray-700">
-                  Specialized service for East Ballina's local businesses, small commercial 
+                  Specialized service for East Ballina&apos;s local businesses, small commercial 
                   operations, and professional food establishments.
                 </p>
               </div>
@@ -231,7 +231,7 @@ export default function EastBallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">⭐</div>
                 <h3 className="text-xl font-semibold text-purple-900 mb-4">Quality Standards</h3>
                 <p className="text-gray-700">
-                  Premium service quality that matches East Ballina's established 
+                  Premium service quality that matches East Ballina&apos;s established 
                   community standards and professional expectations.
                 </p>
               </div>
@@ -297,15 +297,15 @@ export default function EastBallinaKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect professional service for our East Ballina home. The mobile convenience 
-                  fits our busy lifestyle and the quality matches our expectations."
+                  &quot;Perfect professional service for our East Ballina home. The mobile convenience 
+                  fits our busy lifestyle and the quality matches our expectations.&quot;
                 </p>
                 <p className="font-semibold text-purple-900">- East Ballina Professional Resident</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Excellent service for our local business in East Ballina. Professional, 
-                  reliable, and they understand the community's quality standards."
+                  &quot;Excellent service for our local business in East Ballina. Professional, 
+                  reliable, and they understand the community&apos;s quality standards.&quot;
                 </p>
                 <p className="font-semibold text-purple-900">- East Ballina Business Owner</p>
               </div>
@@ -351,7 +351,7 @@ export default function EastBallinaKnifeSharpeningPage() {
               Ready for Professional Knife Sharpening in East Ballina?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join East Ballina's professional community who trust our mobile knife sharpening service
+              Join East Ballina&apos;s professional community who trust our mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

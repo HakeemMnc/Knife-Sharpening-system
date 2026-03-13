@@ -612,13 +612,14 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                   )}
 
                   {/* Internal Notes */}
+                  {selectedConversation.order_details && (
                   <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-gray-900">Internal Notes</h4>
                       <button
                         onClick={() => setNotesModal({
-                          orderId: selectedConversation.order_details.id,
-                          notes: selectedConversation.order_details.internal_notes || '',
+                          orderId: selectedConversation.order_details!.id,
+                          notes: selectedConversation.order_details!.internal_notes || '',
                           customerName: selectedConversation.customer_name
                         })}
                         className="text-blue-600 hover:text-blue-700 text-xs font-medium"
@@ -634,19 +635,20 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
                       <p className="text-xs text-gray-500 italic">No internal notes yet</p>
                     )}
                   </div>
+                  )}
 
                   {/* Quick Actions */}
                   <div className="p-4">
                     <h4 className="font-medium text-gray-900 mb-3">Quick Actions</h4>
                     <div className="space-y-2">
                       <button
-                        onClick={() => handleCallCustomer(selectedConversation.order_details.phone, selectedConversation.customer_name)}
+                        onClick={() => handleCallCustomer(selectedConversation.order_details?.phone ?? '', selectedConversation.customer_name)}
                         className="w-full bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors"
                       >
                         📞 Call Customer
                       </button>
                       <button
-                        onClick={() => handleSMSCustomer(selectedConversation.order_details.phone, selectedConversation.customer_name, selectedConversation.order_details.id)}
+                        onClick={() => handleSMSCustomer(selectedConversation.order_details?.phone ?? '', selectedConversation.customer_name, selectedConversation.order_details?.id ?? 0)}
                         className="w-full bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
                       >
                         💬 Open SMS

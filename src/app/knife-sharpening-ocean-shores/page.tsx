@@ -122,7 +122,7 @@ export default function OceanShoresKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-cyan-600">Ocean Shores NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration service for Ocean Shores' coastal homes, cafes, and golf course facilities. 
+              Expert blade restoration service for Ocean Shores&apos; coastal homes, cafes, and golf course facilities. 
               Servicing postcode 2483 with same-day mobile service. Book online today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -152,11 +152,11 @@ export default function OceanShoresKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-cyan-900 mb-6">
-                  Serving Ocean Shores' Coastal Community
+                  Serving Ocean Shores&apos; Coastal Community
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Ocean Shores' 4,818 residents enjoy a relaxed coastal lifestyle with golf, dining, and beach living. 
+                    Ocean Shores&apos; 4,818 residents enjoy a relaxed coastal lifestyle with golf, dining, and beach living. 
                     From the Ocean Shores Golf Course kitchen to local tavern and cafes, we keep your blades 
                     performing at their peak in this beautiful coastal community.
                   </p>
@@ -171,7 +171,7 @@ export default function OceanShoresKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-teal-500 mr-2">✓</span>
-                      <span>Supporting Ocean Shores' golf course and hospitality venues</span>
+                      <span>Supporting Ocean Shores&apos; golf course and hospitality venues</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-teal-500 mr-2">✓</span>
@@ -219,7 +219,7 @@ export default function OceanShoresKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏖️</div>
                 <h3 className="text-xl font-semibold text-cyan-900 mb-4">Coastal Homes</h3>
                 <p className="text-gray-700">
-                  Mobile service perfect for Ocean Shores' residential coastal 
+                  Mobile service perfect for Ocean Shores&apos; residential coastal 
                   community and beachfront properties.
                 </p>
               </div>
@@ -228,7 +228,7 @@ export default function OceanShoresKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🍽️</div>
                 <h3 className="text-xl font-semibold text-cyan-900 mb-4">Local Dining</h3>
                 <p className="text-gray-700">
-                  Supporting Ocean Shores' tavern, cafes, and local food 
+                  Supporting Ocean Shores&apos; tavern, cafes, and local food 
                   establishments with professional blade maintenance.
                 </p>
               </div>
@@ -292,15 +292,15 @@ export default function OceanShoresKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect service for our Ocean Shores home. The mobile service is so convenient 
-                  and they understand our coastal community needs. Professional results every time!"
+                  &quot;Perfect service for our Ocean Shores home. The mobile service is so convenient 
+                  and they understand our coastal community needs. Professional results every time!&quot;
                 </p>
                 <p className="font-semibold text-cyan-900">- Ocean Shores Resident</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Great service for our golf course kitchen. They come to us which means no downtime 
-                  for our hospitality operations. Highly recommended for Ocean Shores businesses."
+                  &quot;Great service for our golf course kitchen. They come to us which means no downtime 
+                  for our hospitality operations. Highly recommended for Ocean Shores businesses.&quot;
                 </p>
                 <p className="font-semibold text-cyan-900">- Ocean Shores Golf Course</p>
               </div>
@@ -346,7 +346,7 @@ export default function OceanShoresKnifeSharpeningPage() {
               Ready to Sharpen Your Knives in Ocean Shores?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Ocean Shores' residents and businesses who trust our mobile knife sharpening service
+              Join Ocean Shores&apos; residents and businesses who trust our mobile knife sharpening service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

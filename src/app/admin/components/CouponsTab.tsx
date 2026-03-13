@@ -235,7 +235,7 @@ export default function CouponsTab() {
                     onClick={() => updateCoupon(coupon.id, {
                       code: editingCoupon.code,
                       discount_percent: editingCoupon.discount_percent,
-                      description: editingCoupon.description,
+                      description: editingCoupon.description ?? undefined,
                     })}
                     disabled={savingCoupon}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"

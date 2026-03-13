@@ -1,5 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { DatabaseService, dbHelpers } from '@/lib/database';
+import { NextResponse } from 'next/server';
+import { DatabaseService, dbHelpers, SMSConversation } from '@/lib/database';
+
+interface OrderDetails {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  pickup_address: string;
+  service_date: string;
+  pickup_time_slot?: string;
+  total_items: number;
+  service_level: string;
+  total_amount: number;
+  status: string;
+  payment_status: string;
+  special_instructions?: string | null;
+  confirmation_sms_status?: string | null;
+  pickup_sms_status?: string | null;
+  delivery_sms_status?: string | null;
+  followup_sms_status?: string | null;
+  internal_notes?: string | null;
+}
+
+interface ConversationGroup {
+  phone_number: string;
+  order_id: number | null;
+  customer_name: string;
+  order_details: OrderDetails | null;
+  messages: SMSConversation[];
+}
 
 export async function GET() {
   try {
@@ -10,7 +40,7 @@ export async function GET() {
     const orders = await DatabaseService.getOrdersByIds(orderIds);
     
     // Group conversations by phone number and order
-    const conversationGroups: { [key: string]: Record<string, unknown> } = {};
+    const conversationGroups: { [key: string]: ConversationGroup } = {};
     
     conversations.forEach(conversation => {
       // Normalize phone number for consistent grouping
@@ -30,7 +60,7 @@ export async function GET() {
             phone: order.phone,
             pickup_address: order.pickup_address,
             service_date: order.service_date,
-            pickup_time_slot: (order as Record<string, unknown>).pickup_time_slot,
+            pickup_time_slot: (order as unknown as { pickup_time_slot?: string }).pickup_time_slot,
             total_items: order.total_items,
             service_level: order.service_level,
             total_amount: order.total_amount,
@@ -53,10 +83,10 @@ export async function GET() {
     const groupedConversations = Object.values(conversationGroups).map(group => ({
       ...group,
       latestMessage: group.messages[group.messages.length - 1],
-      messages: group.messages.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+      messages: [...group.messages].sort((a, b) =>
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       )
-    })).sort((a, b) => 
+    })).sort((a, b) =>
       new Date(b.latestMessage.created_at).getTime() - new Date(a.latestMessage.created_at).getTime()
     );
 

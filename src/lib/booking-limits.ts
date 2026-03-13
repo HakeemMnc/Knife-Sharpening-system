@@ -32,6 +32,15 @@ export interface SystemSetting {
   description?: string;
 }
 
+interface SystemSettingsMap {
+  default_limit_type?: LimitType;
+  default_daily_customer_limit?: number;
+  default_daily_item_limit?: number;
+  enable_booking_limits?: boolean;
+  defaultDailyCustomerLimit?: number;
+  [key: string]: string | number | boolean | LimitType | undefined;
+}
+
 export class BookingLimitsService {
   /**
    * Check if booking is allowed for a specific date
@@ -222,7 +231,7 @@ export class BookingLimitsService {
         [startDate, endDate, customerCount, itemCount]
       );
       
-      return result.rows.map(row => row.limit_date);
+      return (result.rows as Array<{ limit_date: string }>).map(row => row.limit_date);
     } catch (error) {
       console.error('Error getting available dates:', error);
       return [];
@@ -358,7 +367,7 @@ export class BookingLimitsService {
         'SELECT * FROM system_settings WHERE setting_key = $1',
         [key]
       );
-      return result.rows[0] || null;
+      return (result.rows[0] as unknown as SystemSetting) || null;
     } catch (error) {
       console.error('Error getting system setting:', error);
       return null;
@@ -418,7 +427,7 @@ export class BookingLimitsService {
   /**
    * Get all system settings as a key-value object
    */
-  static async getAllSystemSettings(): Promise<Record<string, unknown>> {
+  static async getAllSystemSettings(): Promise<SystemSettingsMap> {
     try {
       const { data, error } = await supabaseAdmin
         .from('system_settings')
@@ -426,7 +435,7 @@ export class BookingLimitsService {
 
       if (error) throw error;
 
-      const settings: Record<string, unknown> = {};
+      const settings: SystemSettingsMap = {};
 
       for (const row of data || []) {
         const rawValue = row.setting_value as string;
@@ -450,7 +459,7 @@ export class BookingLimitsService {
           // string is default, no conversion needed
         }
         
-        settings[row.setting_key] = value;
+        settings[row.setting_key] = value as string | number | boolean;
       }
       
       return settings;

@@ -122,7 +122,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-orange-600">Lennox Head NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration for Lennox Head's surf culture dining scene and award-winning restaurants. 
+              Expert blade restoration for Lennox Head&apos;s surf culture dining scene and award-winning restaurants. 
               Servicing postcode 2478 with mobile convenience. Book online today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -146,17 +146,17 @@ export default function LennoxHeadKnifeSharpeningPage() {
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Why Lennox Head's Surf Culture Dining Chooses Our Service
+              Why Lennox Head&apos;s Surf Culture Dining Chooses Our Service
             </h2>
             
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-orange-900 mb-6">
-                  Serving Lennox Head's Award-Winning Restaurant Scene
+                  Serving Lennox Head&apos;s Award-Winning Restaurant Scene
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    Lennox Head's 7,741 residents and visitors enjoy world-class dining that matches the town's 
+                    Lennox Head&apos;s 7,741 residents and visitors enjoy world-class dining that matches the town&apos;s 
                     legendary surf culture. From beachfront cafes to award-winning restaurants, we keep your 
                     blades as sharp as the waves at The Point.
                   </p>
@@ -167,7 +167,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Perfect for Lennox Head's fresh seafood dining culture</span>
+                      <span>Perfect for Lennox Head&apos;s fresh seafood dining culture</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
@@ -202,7 +202,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Supporting Lennox Head's Surf Culture Dining
+              Supporting Lennox Head&apos;s Surf Culture Dining
             </h2>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -210,7 +210,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏄‍♂️</div>
                 <h3 className="text-xl font-semibold text-orange-900 mb-4">Surf Culture Venues</h3>
                 <p className="text-gray-700">
-                  Mobile knife sharpening for Lennox Head's iconic surf culture restaurants 
+                  Mobile knife sharpening for Lennox Head&apos;s iconic surf culture restaurants 
                   and beachfront dining establishments.
                 </p>
               </div>
@@ -219,7 +219,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🌊</div>
                 <h3 className="text-xl font-semibold text-orange-900 mb-4">Lake Ainsworth Dining</h3>
                 <p className="text-gray-700">
-                  Specialized service for Lake Ainsworth's unique tea-tree lake 
+                  Specialized service for Lake Ainsworth&apos;s unique tea-tree lake 
                   waterfront restaurants and cafes.
                 </p>
               </div>
@@ -228,7 +228,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏆</div>
                 <h3 className="text-xl font-semibold text-orange-900 mb-4">Award-Winning Restaurants</h3>
                 <p className="text-gray-700">
-                  Professional knife maintenance for Lennox Head's acclaimed 
+                  Professional knife maintenance for Lennox Head&apos;s acclaimed 
                   dining establishments and culinary destinations.
                 </p>
               </div>
@@ -294,15 +294,15 @@ export default function LennoxHeadKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect for our surf culture restaurant in Lennox Head. The mobile service 
-                  fits perfectly with our laid-back vibe. Sharp knives, professional service!"
+                  &quot;Perfect for our surf culture restaurant in Lennox Head. The mobile service 
+                  fits perfectly with our laid-back vibe. Sharp knives, professional service!&quot;
                 </p>
                 <p className="font-semibold text-orange-900">- Lennox Head Surf Culture Restaurant</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Love the convenience for our Lake Ainsworth venue. They understand the local 
-                  dining scene and deliver quality that matches our award-winning food."
+                  &quot;Love the convenience for our Lake Ainsworth venue. They understand the local 
+                  dining scene and deliver quality that matches our award-winning food.&quot;
                 </p>
                 <p className="font-semibold text-orange-900">- Lake Ainsworth Restaurant Owner</p>
               </div>
@@ -344,7 +344,7 @@ export default function LennoxHeadKnifeSharpeningPage() {
               Ready to Sharpen Your Knives in Lennox Head?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join Lennox Head's surf culture dining scene and award-winning restaurants who trust our mobile service
+              Join Lennox Head&apos;s surf culture dining scene and award-winning restaurants who trust our mobile service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

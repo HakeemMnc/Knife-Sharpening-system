@@ -125,8 +125,8 @@ export default function WestBallinaKnifeSharpeningPage() {
               Professional Mobile Knife Sharpening in <span className="text-teal-600">West Ballina NSW</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Expert blade restoration for West Ballina's established residential community and family neighborhoods. 
-              Convenient mobile service for the 3,023 residents of greater Ballina's western suburbs.
+              Expert blade restoration for West Ballina&apos;s established residential community and family neighborhoods. 
+              Convenient mobile service for the 3,023 residents of greater Ballina&apos;s western suburbs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link 
@@ -155,11 +155,11 @@ export default function WestBallinaKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h3 className="text-2xl font-semibold text-teal-900 mb-6">
-                  Serving West Ballina's Established Residential Community
+                  Serving West Ballina&apos;s Established Residential Community
                 </h3>
                 <div className="space-y-4 text-gray-700">
                   <p>
-                    West Ballina's 3,023 residents enjoy an established, family-friendly community atmosphere. 
+                    West Ballina&apos;s 3,023 residents enjoy an established, family-friendly community atmosphere. 
                     As an integral part of greater Ballina, we provide reliable knife sharpening services 
                     that fit seamlessly into busy family life and residential routines.
                   </p>
@@ -170,7 +170,7 @@ export default function WestBallinaKnifeSharpeningPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
-                      <span>Perfect for West Ballina's established neighborhoods</span>
+                      <span>Perfect for West Ballina&apos;s established neighborhoods</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-500 mr-2">✓</span>
@@ -205,7 +205,7 @@ export default function WestBallinaKnifeSharpeningPage() {
         <section className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-              Family-Friendly Service for West Ballina's Residential Community
+              Family-Friendly Service for West Ballina&apos;s Residential Community
             </h2>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -213,7 +213,7 @@ export default function WestBallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
                 <h3 className="text-xl font-semibold text-teal-900 mb-4">Family Households</h3>
                 <p className="text-gray-700">
-                  Mobile knife sharpening designed for busy family life in West Ballina's 
+                  Mobile knife sharpening designed for busy family life in West Ballina&apos;s 
                   established residential neighborhoods and family-friendly community.
                 </p>
               </div>
@@ -222,8 +222,8 @@ export default function WestBallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🏠</div>
                 <h3 className="text-xl font-semibold text-teal-900 mb-4">Established Neighborhoods</h3>
                 <p className="text-gray-700">
-                  Reliable service for West Ballina's mature residential areas, 
-                  supporting the established community's home cooking needs.
+                  Reliable service for West Ballina&apos;s mature residential areas, 
+                  supporting the established community&apos;s home cooking needs.
                 </p>
               </div>
               
@@ -231,7 +231,7 @@ export default function WestBallinaKnifeSharpeningPage() {
                 <div className="text-4xl mb-4">🤝</div>
                 <h3 className="text-xl font-semibold text-teal-900 mb-4">Community Focus</h3>
                 <p className="text-gray-700">
-                  Personalized service that understands West Ballina's community values 
+                  Personalized service that understands West Ballina&apos;s community values 
                   and residential lifestyle preferences.
                 </p>
               </div>
@@ -297,15 +297,15 @@ export default function WestBallinaKnifeSharpeningPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Perfect service for our West Ballina family home. The mobile convenience 
-                  means we don't have to disrupt our routine. Great quality and reliable!"
+                  &quot;Perfect service for our West Ballina family home. The mobile convenience 
+                  means we don&apos;t have to disrupt our routine. Great quality and reliable!&quot;
                 </p>
                 <p className="font-semibold text-teal-900">- West Ballina Family</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg">
                 <p className="text-gray-700 mb-4">
-                  "Love the family-friendly approach and flexible scheduling. They understand 
-                  our established neighborhood and deliver exactly what we need."
+                  &quot;Love the family-friendly approach and flexible scheduling. They understand 
+                  our established neighborhood and deliver exactly what we need.&quot;
                 </p>
                 <p className="font-semibold text-teal-900">- West Ballina Resident</p>
               </div>
@@ -347,7 +347,7 @@ export default function WestBallinaKnifeSharpeningPage() {
               Ready for Family-Friendly Knife Sharpening in West Ballina?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Join West Ballina's established residential community who trust our mobile service
+              Join West Ballina&apos;s established residential community who trust our mobile service
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 

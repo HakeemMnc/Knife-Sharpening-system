@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/database';
 
+interface OrderRecord {
+  payment_status: string;
+  created_at: string;
+  total_amount: number;
+  total_items: number;
+  service_level: string;
+  postal_code: string;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -100,7 +110,7 @@ function getMonthEnd(date: Date): string {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
 }
 
-function calculateRevenue(orders: Record<string, unknown>[], startDate: string, endDate: string): number {
+function calculateRevenue(orders: OrderRecord[], startDate: string, endDate: string): number {
   return orders
     .filter(order => 
       order.payment_status === 'paid' &&
@@ -110,7 +120,7 @@ function calculateRevenue(orders: Record<string, unknown>[], startDate: string, 
     .reduce((sum, order) => sum + (order.total_amount || 0), 0);
 }
 
-function calculateServiceBreakdown(orders: Record<string, unknown>[], startDate: string, endDate: string) {
+function calculateServiceBreakdown(orders: OrderRecord[], startDate: string, endDate: string) {
   const paidOrders = orders.filter(order => 
     order.payment_status === 'paid' &&
     order.created_at >= startDate &&
@@ -132,7 +142,7 @@ function calculateServiceBreakdown(orders: Record<string, unknown>[], startDate:
   };
 }
 
-function calculateGeographicInsights(orders: Record<string, unknown>[], startDate: string, endDate: string) {
+function calculateGeographicInsights(orders: OrderRecord[], startDate: string, endDate: string) {
   const paidOrders = orders.filter(order => 
     order.payment_status === 'paid' &&
     order.created_at >= startDate &&
@@ -155,7 +165,7 @@ function calculateGeographicInsights(orders: Record<string, unknown>[], startDat
     .sort((a, b) => b.revenue - a.revenue); // Sort by revenue instead of count
 }
 
-function calculateDailyTrends(orders: Record<string, unknown>[], startDate: string, endDate: string) {
+function calculateDailyTrends(orders: OrderRecord[], startDate: string, endDate: string) {
   const dailyStats: { [key: string]: { revenue: number; orders: number } } = {};
   
   const relevantOrders = orders.filter(order => 
