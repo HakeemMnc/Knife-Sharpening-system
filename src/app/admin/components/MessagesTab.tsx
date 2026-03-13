@@ -3,9 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Order } from '@/lib/database';
 
-interface MessagesTabProps {
-  orders: Order[];
-}
 
 interface SmsMessage {
   message_content: string;
@@ -42,7 +39,7 @@ interface Conversation {
   order_details?: OrderDetails;
 }
 
-export default function MessagesTab({ orders }: MessagesTabProps) {
+export default function MessagesTab() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);

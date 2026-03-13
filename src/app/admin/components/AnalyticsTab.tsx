@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Order } from '@/lib/database';
 import BookingLimitsWidget from '@/components/BookingLimitsWidget';
 
 interface GeoInsight {
@@ -38,11 +37,7 @@ interface AnalyticsData {
   dailyTrends: DailyTrend[];
 }
 
-interface AnalyticsTabProps {
-  orders: Order[];
-}
-
-export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
+export default function AnalyticsTab() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState('');
