@@ -16,7 +16,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 | Stage | What | Status | Notes |
 |-------|------|--------|-------|
-| 0 | Foundation & Security | ~90% | ESLint errors remain, OrdersTab not extracted |
+| 0 | Foundation & Security | ~95% | ESLint errors FIXED, OrdersTab not extracted |
 | 1 | B2B Data Model | Not started | tenants, clients, contracts, zones, visits |
 | 2 | Core B2B Features | Not started | client mgmt, scheduling, route optimization |
 | 3 | Billing & Subscriptions | Not started | Stripe Express Connect, metered billing |
@@ -28,49 +28,25 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 ## Current State
 
-- **Branch**: `claude/audit-sharpening-saas-4bB0H`
-- **Last commit**: `8ce26a3` — Add CLAUDE.md and rules for cross-session context persistence
-- **Build status**: FAILING — ESLint errors in 35 files (see breakdown below)
-- **Stage**: 0 (Foundation & Security) — ~90% complete
+- **Branch**: `claude/start-new-session-eeVyD`
+- **Last commit**: `697fe5e` — Fix remaining ESLint errors and type issues across all files
+- **Build status**: PASSING (ESLint + TypeScript) — runtime fails only due to missing Supabase env vars
+- **Stage**: 0 (Foundation & Security) — ~95% complete
 - **All work committed and pushed**: YES — safe on GitHub
 - **CLAUDE.md**: EXISTS — auto-loaded every session with project context, branch rules, session workflow
 
-### Build Error Breakdown
-The build fails due to **pre-existing ESLint errors** that were hidden when `next.config.ts` had `ignoreDuringBuilds: true`. We changed it to `false` in Session 1, which surfaced these:
-
-| Error | Count | Fix Strategy |
-|-------|-------|-------------|
-| `react/no-unescaped-entities` (apostrophes/quotes in JSX) | 189 | Replace `'` with `&apos;` and `"` with `&quot;` in JSX text |
-| `@typescript-eslint/no-explicit-any` | 43 | Add proper types or use `unknown` |
-| `prefer-const` | 3 | Change `let` to `const` in scheduling.ts |
-
-**Files with errors** (35 total):
-- 12 `knife-sharpening-*/page.tsx` — location landing pages (all `no-unescaped-entities`)
-- `src/app/(main)/page.tsx` — main page (unescaped entities)
-- `src/app/layout.tsx` — layout (unescaped entities)
-- `src/app/admin/page.tsx` — admin shell (any types)
-- `src/app/admin/components/*.tsx` — 5 tab components (any types)
-- `src/app/api/*/route.ts` — 4 API routes (any types)
-- `src/components/*.tsx` — 5 components (unescaped entities + any types)
-- `src/lib/*.ts` — 4 lib files (any types)
-- `src/utils/scheduling.ts` — prefer-const + unused vars
-
 ### What's Working
+- **All 235 ESLint errors FIXED** — zero lint errors remain (warnings only)
 - Auth system (auth.ts, middleware.ts, login page)
 - Row-Level Security policies (migration 009)
 - Webhook idempotency, pagination, audit logging (database.ts)
 - Rate limiting with Upstash Redis (fail-open design)
 - 5 of 6 admin tabs extracted (AnalyticsTab, MessagesTab, TemplatesTab, SmsLogsTab, CouponsTab)
-- 9+ TypeScript type errors fixed across sessions
+- Proper TypeScript interfaces for admin components (Coupon, SmsLog, SmsTemplate, Conversation, AnalyticsData, etc.)
 - 39 test/debug files deleted, migrations organized
-- Workflow skills created (/checkpoint, /end-session, /start-session)
-- Deleted unused legacy `sms-service-old.ts`
-- **CLAUDE.md** with project context auto-loaded every session
-- `.claude/rules/code-style.md` and `.claude/rules/architecture.md` for on-demand context
-- Skills upgraded to modern `.claude/skills/` format with YAML frontmatter
+- Workflow skills, CLAUDE.md, `.claude/rules/`
 
 ### What's Incomplete
-- **ESLint errors blocking build** (235 errors across 35 files — see breakdown above)
 - OrdersTab (~1,800 lines) still inline in page.tsx (2,509 lines total)
 - Supabase migration 009 not run against actual database
 - No Upstash Redis account/keys configured yet
@@ -81,41 +57,10 @@ The build fails due to **pre-existing ESLint errors** that were hidden when `nex
 
 **Read this section first when starting a new session.**
 
-### Priority 1: Fix ESLint errors to get build passing
-This is the blocker. The fastest approach:
-
-1. **Unescaped entities (189 errors)**: The bulk of errors. In all JSX files, replace literal `'` with `&apos;` and `"` with `&quot;`. The 12 `knife-sharpening-*/page.tsx` files are nearly identical — fix one, apply pattern to all. Main targets:
-   - `src/app/knife-sharpening-*/page.tsx` (12 files)
-   - `src/app/(main)/page.tsx`
-   - `src/app/layout.tsx`
-   - `src/components/Footer.tsx`
-   - `src/components/PaymentForm.tsx`
-   - `src/components/ServiceScheduler.tsx`
-   - `src/components/BookingLimitsWidget.tsx`
-   - `src/components/SMSStatusIndicator.tsx`
-
-2. **no-explicit-any (43 errors)**: Replace `any` with proper types or `unknown`. Main targets:
-   - `src/app/admin/page.tsx`
-   - `src/app/admin/components/*.tsx` (5 files)
-   - `src/app/api/analytics/route.ts`
-   - `src/app/api/cron/sms-automation/route.ts`
-   - `src/app/api/payments/create-intent/route.ts`
-   - `src/app/api/sms/conversations/route.ts`
-   - `src/app/api/sms/templates/route.ts`
-   - `src/lib/auth.ts`
-   - `src/lib/booking-limits.ts`
-   - `src/lib/database.ts`
-   - `src/lib/sms-service.ts`
-   - `src/lib/stripe-service.ts`
-
-3. **prefer-const (3 errors)**: Change `let` to `const` in `src/utils/scheduling.ts` at lines 60, 271, 304.
-
-4. Run `npm run build` to verify. Then `/checkpoint`.
-
-### Priority 2: Extract OrdersTab
+### Priority 1: Extract OrdersTab
 The Orders tab is ~1,800 lines still inline in `src/app/admin/page.tsx` (2,509 lines total). Extract into `src/app/admin/components/OrdersTab.tsx` and add to barrel export in `index.ts`. This is the last piece of the admin decomposition (Stage 0.4).
 
-### Priority 3: Begin Stage 1 — B2B Data Model
+### Priority 2: Begin Stage 1 — B2B Data Model
 Once build passes and Stage 0 is complete:
 - Create migration for new tables: `tenants`, `clients`, `service_contracts`, `service_zones`, `service_visits`
 - Create TypeScript interfaces in `src/types/b2b.ts`
@@ -129,6 +74,53 @@ Once build passes and Stage 0 is complete:
 ---
 
 ## Session Log
+
+### Session 5 — 2026-03-13
+
+**Summary**: Fixed all 235 ESLint errors that had been blocking the build since Session 1. Used parallel agents to fix unescaped entities, `any` types, and `prefer-const` errors across 38 files. Then resolved cascading TypeScript type errors from `any`→`unknown` replacements by adding proper interfaces (AnalyticsData, OrderRecord, ConversationGroup, SystemSettingsMap). Build now passes ESLint and TypeScript checks (only fails at runtime due to missing Supabase env vars).
+
+**Files Changed** (39 files across 2 commits):
+
+Modified:
+- `src/app/(main)/page.tsx` — Fixed unescaped entities, replaced `any` with `Record<string, unknown>`
+- `src/app/admin/page.tsx` — Replaced `any` params with `unknown` and `Record<string, unknown>`
+- `src/app/admin/components/AnalyticsTab.tsx` — Added `AnalyticsData` interface, removed `any` state
+- `src/app/admin/components/CouponsTab.tsx` — Added `Coupon` interface, fixed null vs undefined
+- `src/app/admin/components/MessagesTab.tsx` — Added `Conversation`/`OrderDetails` interfaces, null safety
+- `src/app/admin/components/SmsLogsTab.tsx` — Added `SmsLog` interface
+- `src/app/admin/components/TemplatesTab.tsx` — Added `SmsTemplate` interface
+- `src/app/api/analytics/route.ts` — Added `OrderRecord` interface for typed order access
+- `src/app/api/sms/conversations/route.ts` — Added `ConversationGroup` interface with proper typing
+- `src/app/api/sms/templates/route.ts` — `any` → `Record<string, string>`
+- `src/app/knife-sharpening-*/page.tsx` (12 files) — Fixed unescaped apostrophes and quotes
+- `src/components/Footer.tsx` — Fixed unescaped entities
+- `src/components/PaymentForm.tsx` — `any` → `unknown`
+- `src/components/ServiceScheduler.tsx` — Fixed unescaped entities
+- `src/lib/booking-limits.ts` — Added `SystemSettingsMap` interface, proper type casts
+- `src/lib/database.ts` — `any` → `unknown` in query method
+- `src/lib/sms-service.ts` — `any` → `unknown`
+- `src/lib/stripe-service.ts` — Fixed metadata type compatibility
+- `src/utils/scheduling.ts` — `let` → `const` (3 fixes)
+- `components/QRCodeForPrint.tsx` — Fixed unescaped entity
+
+**Git Activity**:
+- `33cb901` — Fix ESLint errors: unescaped entities, no-explicit-any, prefer-const
+- `697fe5e` — Fix remaining ESLint errors and type issues across all files
+- Branch: `claude/start-new-session-eeVyD`
+
+**Decisions Made**:
+- Used proper TypeScript interfaces instead of `Record<string, unknown>` where property access patterns are known
+- `SystemSettingsMap` with index signature for dynamic key-value settings from DB
+- Null coalescing (`??`) for nullable order_details access rather than non-null assertions
+
+**Blockers**:
+- Build fails at runtime (page data collection) due to missing `SUPABASE_URL`/`SUPABASE_KEY` env vars — not a code issue
+
+**Next Steps**:
+- Extract OrdersTab (last piece of admin decomposition)
+- Begin Stage 1 — B2B Data Model
+
+---
 
 ### Session 4 — 2026-03-13 (End-of-Session Debrief)
 
