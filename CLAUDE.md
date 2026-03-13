@@ -21,13 +21,17 @@ src/app/              # Next.js App Router pages and API routes
   (main)/             # Main customer-facing booking page
   admin/              # Admin dashboard (orders, analytics, SMS, coupons)
     components/       # Extracted admin tab components
-  api/                # API route handlers (payments, sms, cron, analytics)
+  api/                # API route handlers (payments, sms, cron, analytics, b2b/)
+  onboarding/         # Operator onboarding flow (3-step)
+  operator/           # B2B operator dashboard (clients, contracts, schedule, routes, settings)
+    components/       # Operator tab components
   knife-sharpening-*/ # 12 location-specific SEO landing pages
   login/              # Admin login page
 src/components/       # Shared UI components (booking, payments, SMS)
-src/lib/              # Core services (database, auth, stripe, sms, rate-limiter)
+src/lib/              # Core services (database, auth, stripe, sms, rate-limiter, b2b-database)
+src/types/            # TypeScript types (b2b.ts)
 src/utils/            # Utilities (scheduling, route optimization)
-database/migrations/  # Supabase SQL migrations (001-009)
+database/migrations/  # Supabase SQL migrations (001-010)
 docs/                 # Session log (source of truth for continuity)
 .claude/skills/       # Custom slash commands (/checkpoint, /end-session, /start-session)
 ```
@@ -69,19 +73,23 @@ The session log at `docs/session-log.md` has: stage progress table, current stat
 
 ## Current State
 
-- **Stage**: 0 (Foundation & Security) — ~90% complete
-- **Build**: FAILING — 235 ESLint errors across 35 files (unescaped entities, `any` types, `prefer-const`)
-- **Priority 1**: Fix ESLint errors to get build passing
-- **Priority 2**: Extract OrdersTab from admin page.tsx (~1,800 lines still inline)
-- **Priority 3**: Begin Stage 1 — B2B data model (tenants, clients, contracts, zones, visits)
-- See `docs/session-log.md` "Next Session Pickup Instructions" for detailed fix strategy
+- **Stage**: 2 (Core B2B Features) — COMPLETE
+- **Build**: PASSING (0 ESLint/TypeScript errors, only Supabase env var runtime issue)
+- **Migrations**: 009 + 010 both run successfully on Supabase
+- **Priority 1**: Begin Stage 3 — Stripe Express Connect + metered billing
+- **Priority 2**: Auto-generate visits from active contracts
+- **Priority 3**: Route optimization for daily visits
+- See `docs/session-log.md` "Next Session Pickup Instructions" for details
 
 ## Key Files
 
 - `docs/session-log.md` — Detailed project tracker and session history
-- `src/app/admin/page.tsx` — Main admin dashboard (2,509 lines, needs OrdersTab extraction)
-- `src/lib/database.ts` — Core database service (Supabase queries, audit logging, pagination)
-- `src/lib/auth.ts` — Authentication helpers (Supabase Auth)
-- `src/lib/sms-service.ts` — Twilio SMS service
-- `src/lib/stripe-service.ts` — Stripe payment service
-- `database/migrations/009_add_profiles_and_rls.sql` — Latest migration (not yet run on prod)
+- `src/app/admin/page.tsx` — B2C admin dashboard (113 lines, 6 tabs)
+- `src/app/operator/page.tsx` — B2B operator dashboard (5 tabs)
+- `src/app/onboarding/page.tsx` — Operator onboarding (3-step form)
+- `src/lib/database.ts` — Core database service (Supabase queries, audit logging)
+- `src/lib/b2b-database.ts` — B2B CRUD service (tenants, clients, contracts, zones, visits)
+- `src/types/b2b.ts` — TypeScript interfaces for all B2B entities
+- `src/lib/auth.ts` — Authentication helpers (Supabase Auth, tenant isolation)
+- `src/app/api/b2b/` — 10 B2B API routes with auth + tenant isolation
+- `database/migrations/010_b2b_data_model.sql` — B2B tables (run on Supabase)
