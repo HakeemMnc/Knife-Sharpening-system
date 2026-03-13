@@ -9,7 +9,7 @@ interface AnalyticsTabProps {
 }
 
 export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(null);
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'week' | 'month' | 'custom'>('week');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -220,7 +220,7 @@ export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <h3 className="text-lg font-medium mb-3">Top Areas (by orders)</h3>
                 <div className="space-y-2">
-                  {analytics.geoInsights.slice(0, 5).map((area: any) => (
+                  {(analytics.geoInsights as Array<{ postcode: string; count: number; revenue: number }>).slice(0, 5).map((area) => (
                     <div key={area.postcode} className="flex justify-between text-sm">
                       <span>{area.postcode}</span>
                       <span className="font-medium">{area.count} orders</span>
@@ -235,7 +235,7 @@ export default function AnalyticsTab({ orders }: AnalyticsTabProps) {
               <h3 className="text-lg font-medium mb-3">Daily Trends</h3>
               <div className="text-sm text-gray-600 mb-2">Revenue and order count by day</div>
               <div className="space-y-1 max-h-64 overflow-y-auto">
-                {analytics.dailyTrends.map((day: any) => (
+                {(analytics.dailyTrends as Array<{ date: string; revenue: number; orders: number }>).map((day) => (
                   <div key={day.date} className="flex justify-between items-center py-1 border-b border-gray-100">
                     <span className="text-sm">{new Date(day.date).toLocaleDateString()}</span>
                     <div className="flex gap-4 text-sm">

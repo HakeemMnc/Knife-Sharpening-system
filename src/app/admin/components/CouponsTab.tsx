@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from 'react';
 
+interface Coupon {
+  id: number;
+  code: string;
+  discount_percent: number;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
 export default function CouponsTab() {
-  const [coupons, setCoupons] = useState<any[]>([]);
-  const [editingCoupon, setEditingCoupon] = useState<any>(null);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [newCouponCode, setNewCouponCode] = useState('');
   const [newCouponPercent, setNewCouponPercent] = useState('');
   const [newCouponDescription, setNewCouponDescription] = useState('');
@@ -109,7 +118,7 @@ export default function CouponsTab() {
     }
   };
 
-  const toggleCouponActive = async (coupon: any) => {
+  const toggleCouponActive = async (coupon: Coupon) => {
     await updateCoupon(coupon.id, { is_active: !coupon.is_active });
   };
 

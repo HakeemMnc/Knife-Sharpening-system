@@ -1266,7 +1266,7 @@ export default function Home() {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden'
                       }}>
-                        "{testimonials[(currentTestimonial - 1 + testimonials.length) % testimonials.length].text}"
+                        &quot;{testimonials[(currentTestimonial - 1 + testimonials.length) % testimonials.length].text}&quot;
                       </blockquote>
                     </div>
 
@@ -1316,7 +1316,7 @@ export default function Home() {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden'
                       }}>
-                        "{testimonials[currentTestimonial].text}"
+                        &quot;{testimonials[currentTestimonial].text}&quot;
                       </blockquote>
                     </div>
 
@@ -1370,7 +1370,7 @@ export default function Home() {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden'
                       }}>
-                        "{testimonials[(currentTestimonial + 1) % testimonials.length].text}"
+                        &quot;{testimonials[(currentTestimonial + 1) % testimonials.length].text}&quot;
                       </blockquote>
                     </div>
 
@@ -1436,7 +1436,7 @@ export default function Home() {
                   lineHeight: '1.6',
                   color: '#1B1B1B'
                 }}>
-                  "{testimonials[currentTestimonial].text}"
+                  &quot;{testimonials[currentTestimonial].text}&quot;
                 </blockquote>
               </div>
 
@@ -2698,7 +2698,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="mt-3 text-sm" style={{color: '#4a5568'}}>
-                    Don't see your area listed?{' '}
+                    Don&apos;t see your area listed?{' '}
                     <a 
                       href="#contact"
                       className="font-medium underline hover:no-underline transition-all duration-200"
@@ -3045,7 +3045,7 @@ export default function Home() {
                  !SUPPORTED_POSTCODES.includes(address.postalCode.trim()) && (
                   <div className="mt-3 text-center">
                     <p className="text-red-600 text-sm font-medium">
-                      Sorry, we currently don't service postcode {address.postalCode}
+                      Sorry, we currently don&apos;t service postcode {address.postalCode}
                     </p>
                     <p className="text-gray-600 text-xs mt-1">
                       We service: Byron Bay (2481), Ballina (2478), Mullumbimby (2482), Bangalow (2479), Pottsville (2489), Alstonville (2477), Brunswick Heads(2483)
@@ -3461,16 +3461,16 @@ export default function Home() {
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <div className="text-lg space-y-6 leading-relaxed" style={{color: '#1B1B1B'}}>
                 <p>
-                  Hi there! I'm passionate about keeping your knives in top shape. There's nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
+                  Hi there! I&apos;m passionate about keeping your knives in top shape. There&apos;s nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
                 </p>
                 <p>
-                  I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
+                  I&apos;ve been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it&apos;s your favorite chef&apos;s knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
                 </p>
                 <p>
-                  My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
+                  My mobile workshop means you don&apos;t have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I&apos;ll come directly to you with my fully-equipped van. I&apos;ll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It&apos;s that simple.
                 </p>
                 <p>
-                  I proudly serve the beautiful Northern Rivers region - from the iconic beaches of Byron Bay to the riverside charm of Ballina, through the creative communities of Mullumbimby and Bangalow, and across to the coastal villages of Lennox Head, Ocean Shores, and Brunswick Heads. Whether you're in Alstonville, Suffolk Park, Pottsville, or any of the East and West Ballina suburbs, this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
+                  I proudly serve the beautiful Northern Rivers region - from the iconic beaches of Byron Bay to the riverside charm of Ballina, through the creative communities of Mullumbimby and Bangalow, and across to the coastal villages of Lennox Head, Ocean Shores, and Brunswick Heads. Whether you&apos;re in Alstonville, Suffolk Park, Pottsville, or any of the East and West Ballina suburbs, this community deserves tools that work as hard as they do. Sharp knives aren&apos;t just safer - they make every meal prep easier and more enjoyable.
                 </p>
 
                 <div className="text-right mt-8 pt-6 border-t border-gray-200">
@@ -3501,16 +3501,16 @@ export default function Home() {
             <div className="flex-1 bg-white rounded-3xl shadow-lg p-10">
               <div className="text-lg space-y-6 leading-relaxed" style={{color: '#1B1B1B'}}>
                 <p>
-                  Hi there! I'm passionate about keeping your knives in top shape. There's nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
+                  Hi there! I&apos;m passionate about keeping your knives in top shape. There&apos;s nothing quite like the satisfaction of a perfectly sharp blade that glides through tomatoes and makes cooking a joy again.
                 </p>
                 <p>
-                  I've been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it's your favorite chef's knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
+                  I&apos;ve been sharpening knives for years, and I still get excited when I see the difference a proper edge makes. Whether it&apos;s your favorite chef&apos;s knife, garden shears, or that pocket knife passed down from grandpa - I treat every blade with the care it deserves.
                 </p>
                 <p>
-                  My mobile workshop means you don't have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I'll come directly to you with my fully-equipped van. I'll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It's that simple.
+                  My mobile workshop means you don&apos;t have to worry about going anywhere or waiting days for your knives back. Simply book online, pay securely on my website, and I&apos;ll come directly to you with my fully-equipped van. I&apos;ll sharpen your knives right there in your driveway and have them back in your hands in less than an hour. It&apos;s that simple.
                 </p>
                 <p>
-                  I proudly serve the beautiful Northern Rivers region - from the iconic beaches of Byron Bay to the riverside charm of Ballina, through the creative communities of Mullumbimby and Bangalow, and across to the coastal villages of Lennox Head, Ocean Shores, and Brunswick Heads. Whether you're in Alstonville, Suffolk Park, Pottsville, or any of the East and West Ballina suburbs, this community deserves tools that work as hard as they do. Sharp knives aren't just safer - they make every meal prep easier and more enjoyable.
+                  I proudly serve the beautiful Northern Rivers region - from the iconic beaches of Byron Bay to the riverside charm of Ballina, through the creative communities of Mullumbimby and Bangalow, and across to the coastal villages of Lennox Head, Ocean Shores, and Brunswick Heads. Whether you&apos;re in Alstonville, Suffolk Park, Pottsville, or any of the East and West Ballina suburbs, this community deserves tools that work as hard as they do. Sharp knives aren&apos;t just safer - they make every meal prep easier and more enjoyable.
                 </p>
 
                 <div className="text-right mt-8 pt-6 border-t border-gray-200">
@@ -3639,7 +3639,7 @@ export default function Home() {
                   lineHeight: '1.4'
                 }}>
                   <span className="mr-2" style={{fontSize: '1.2rem'}}>❌</span>
-                  What We Don't Sharpen
+                  What We Don&apos;t Sharpen
                 </h3>
                 <ul className="space-y-2" style={{color: '#4a5568'}}>
                   <li className="text-sm leading-relaxed" style={{lineHeight: '1.5'}}>• Ceramic Knives</li>
@@ -3660,7 +3660,7 @@ export default function Home() {
                   color: '#d64f24',
                   lineHeight: '1.5'
                 }}>
-                  <strong>Note:</strong> If you're unsure about a specific item, feel free to contact us and we'll let you know if we can help!
+                  <strong>Note:</strong> If you&apos;re unsure about a specific item, feel free to contact us and we&apos;ll let you know if we can help!
                 </p>
               </div>
             </div>

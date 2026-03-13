@@ -136,7 +136,7 @@ export default function Footer() {
                   {formStatus === 'success' && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-green-700 font-semibold">✓ Message sent successfully!</p>
-                      <p className="text-green-600 text-sm">I'll get back to you soon.</p>
+                      <p className="text-green-600 text-sm">I&apos;ll get back to you soon.</p>
                     </div>
                   )}
                   {formStatus === 'error' && (
@@ -390,7 +390,7 @@ export default function Footer() {
                   {formStatus === 'success' && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-green-700 font-semibold">✓ Message sent successfully!</p>
-                      <p className="text-green-600 text-sm">I'll get back to you soon.</p>
+                      <p className="text-green-600 text-sm">I&apos;ll get back to you soon.</p>
                     </div>
                   )}
                   {formStatus === 'error' && (

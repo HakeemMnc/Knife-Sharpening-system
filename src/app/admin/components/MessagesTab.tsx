@@ -3,14 +3,51 @@
 import { useState, useEffect, useRef } from 'react';
 import { Order } from '@/lib/database';
 
+interface ConversationMessage {
+  direction: 'inbound' | 'outbound';
+  message_content: string;
+  created_at: string;
+}
+
+interface OrderDetails {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  pickup_address: string;
+  service_date: string;
+  pickup_time_slot: string;
+  total_items: number;
+  service_level: string;
+  total_amount: number;
+  status: string;
+  payment_status: string;
+  special_instructions: string | null;
+  confirmation_sms_status: string | null;
+  pickup_sms_status: string | null;
+  delivery_sms_status: string | null;
+  followup_sms_status: string | null;
+  internal_notes: string | null;
+}
+
+interface Conversation {
+  phone_number: string;
+  order_id: number;
+  customer_name: string;
+  order_details: OrderDetails | null;
+  messages: ConversationMessage[];
+  latestMessage: ConversationMessage;
+}
+
 interface MessagesTabProps {
   orders: Order[];
 }
 
 export default function MessagesTab({ orders }: MessagesTabProps) {
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [filteredConversations, setFilteredConversations] = useState<any[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [replyTexts, setReplyTexts] = useState<{[key: string]: string}>({});
   const [sendingReply, setSendingReply] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -112,7 +149,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
         conv.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         conv.phone_number.includes(searchQuery) ||
         conv.order_id.toString().includes(searchQuery) ||
-        conv.messages.some((msg: any) =>
+        conv.messages.some((msg: ConversationMessage) =>
           msg.message_content.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
@@ -169,7 +206,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
       if (selectedConversation?.phone_number === phoneNumber && selectedConversation?.order_id === orderId) {
         const updatedConversations = await fetch('/api/sms/conversations').then(r => r.json());
         const updatedConversation = updatedConversations.conversations.find(
-          (c: any) => c.phone_number === phoneNumber && c.order_id === orderId
+          (c: Conversation) => c.phone_number === phoneNumber && c.order_id === orderId
         );
         if (updatedConversation) {
           setSelectedConversation(updatedConversation);
@@ -200,7 +237,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
       if (selectedConversation?.order_details?.id === orderId) {
         const updatedConversations = await fetch('/api/sms/conversations').then(r => r.json());
         const updatedConversation = updatedConversations.conversations.find(
-          (c: any) => c.order_details?.id === orderId
+          (c: Conversation) => c.order_details?.id === orderId
         );
         if (updatedConversation) {
           setSelectedConversation(updatedConversation);
@@ -376,7 +413,7 @@ export default function MessagesTab({ orders }: MessagesTabProps) {
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto">
                 <div className="p-4 space-y-1">
-                  {selectedConversation.messages.map((msg: any, idx: number) => {
+                  {selectedConversation.messages.map((msg: ConversationMessage, idx: number) => {
                     const isConsecutive = idx > 0 &&
                       selectedConversation.messages[idx - 1].direction === msg.direction &&
                       (new Date(msg.created_at).getTime() - new Date(selectedConversation.messages[idx - 1].created_at).getTime()) < 300000; // 5 minutes

@@ -100,7 +100,7 @@ function getMonthEnd(date: Date): string {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
 }
 
-function calculateRevenue(orders: any[], startDate: string, endDate: string): number {
+function calculateRevenue(orders: Record<string, unknown>[], startDate: string, endDate: string): number {
   return orders
     .filter(order => 
       order.payment_status === 'paid' &&
@@ -110,7 +110,7 @@ function calculateRevenue(orders: any[], startDate: string, endDate: string): nu
     .reduce((sum, order) => sum + (order.total_amount || 0), 0);
 }
 
-function calculateServiceBreakdown(orders: any[], startDate: string, endDate: string) {
+function calculateServiceBreakdown(orders: Record<string, unknown>[], startDate: string, endDate: string) {
   const paidOrders = orders.filter(order => 
     order.payment_status === 'paid' &&
     order.created_at >= startDate &&
@@ -132,7 +132,7 @@ function calculateServiceBreakdown(orders: any[], startDate: string, endDate: st
   };
 }
 
-function calculateGeographicInsights(orders: any[], startDate: string, endDate: string) {
+function calculateGeographicInsights(orders: Record<string, unknown>[], startDate: string, endDate: string) {
   const paidOrders = orders.filter(order => 
     order.payment_status === 'paid' &&
     order.created_at >= startDate &&
@@ -155,7 +155,7 @@ function calculateGeographicInsights(orders: any[], startDate: string, endDate: 
     .sort((a, b) => b.revenue - a.revenue); // Sort by revenue instead of count
 }
 
-function calculateDailyTrends(orders: any[], startDate: string, endDate: string) {
+function calculateDailyTrends(orders: Record<string, unknown>[], startDate: string, endDate: string) {
   const dailyStats: { [key: string]: { revenue: number; orders: number } } = {};
   
   const relevantOrders = orders.filter(order => 

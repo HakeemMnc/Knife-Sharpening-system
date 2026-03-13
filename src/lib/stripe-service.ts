@@ -56,7 +56,15 @@ export class StripeService {
   static async createPaymentIntentWithAmount(
     amount: number, 
     customerId: string, 
-    orderData: any
+    orderData: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      serviceDate?: string;
+      totalItems?: number;
+      serviceLevel?: string;
+      [key: string]: unknown;
+    }
   ): Promise<{
     clientSecret: string;
     paymentIntentId: string;

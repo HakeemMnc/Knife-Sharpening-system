@@ -371,7 +371,7 @@ export class DatabaseService {
     return data;
   }
 
-  static async updateSMSTemplateFields(id: number, updates: any): Promise<SMSTemplate> {
+  static async updateSMSTemplateFields(id: number, updates: Partial<Omit<SMSTemplate, 'id' | 'created_at' | 'updated_at'>>): Promise<SMSTemplate> {
     const { data, error } = await supabaseAdmin
       .from('sms_templates')
       .update({ 
@@ -419,7 +419,7 @@ export class DatabaseService {
   // Raw SQL query method for complex operations
   // For now, we'll implement the booking limits using Supabase ORM methods
   // This is a placeholder that maintains API compatibility
-  static async query(sql: string, params: any[] = []): Promise<{ rows: any[] }> {
+  static async query(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[] }> {
     console.warn('Raw SQL query not yet implemented in Supabase setup:', sql);
     
     // For booking limits system, we'll need to implement these specific queries

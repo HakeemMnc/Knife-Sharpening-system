@@ -176,7 +176,7 @@ export default function ServiceScheduler({ postcode, selectedDate, onDateSelect,
         </h3>
         <Card className="text-center py-8">
           <div className="text-gray-600 mb-2">📍 Enter your postcode first</div>
-          <div className="text-sm text-gray-500">We'll show available service dates for your area</div>
+          <div className="text-sm text-gray-500">We&apos;ll show available service dates for your area</div>
         </Card>
       </div>
     );

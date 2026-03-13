@@ -10,7 +10,7 @@ export async function GET() {
     const orders = await DatabaseService.getOrdersByIds(orderIds);
     
     // Group conversations by phone number and order
-    const conversationGroups: { [key: string]: any } = {};
+    const conversationGroups: { [key: string]: Record<string, unknown> } = {};
     
     conversations.forEach(conversation => {
       // Normalize phone number for consistent grouping
@@ -30,7 +30,7 @@ export async function GET() {
             phone: order.phone,
             pickup_address: order.pickup_address,
             service_date: order.service_date,
-            pickup_time_slot: (order as any).pickup_time_slot,
+            pickup_time_slot: (order as Record<string, unknown>).pickup_time_slot,
             total_items: order.total_items,
             service_level: order.service_level,
             total_amount: order.total_amount,
@@ -53,7 +53,7 @@ export async function GET() {
     const groupedConversations = Object.values(conversationGroups).map(group => ({
       ...group,
       latestMessage: group.messages[group.messages.length - 1],
-      messages: group.messages.sort((a: any, b: any) => 
+      messages: group.messages.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       )
     })).sort((a, b) => 

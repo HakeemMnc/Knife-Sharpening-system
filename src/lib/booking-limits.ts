@@ -114,7 +114,7 @@ export class BookingLimitsService {
   /**
    * Helper method to calculate availability status and spots remaining
    */
-  private static calculateAvailabilityStatus(limit: any): DailyLimit {
+  private static calculateAvailabilityStatus(limit: Omit<DailyLimit, 'spots_remaining' | 'availability_status'>): DailyLimit {
     let spotsRemaining = 0;
     let availabilityStatus: AvailabilityStatus = 'available';
 
@@ -418,32 +418,33 @@ export class BookingLimitsService {
   /**
    * Get all system settings as a key-value object
    */
-  static async getAllSystemSettings(): Promise<Record<string, any>> {
+  static async getAllSystemSettings(): Promise<Record<string, unknown>> {
     try {
       const { data, error } = await supabaseAdmin
         .from('system_settings')
         .select('setting_key, setting_value, setting_type');
-      
+
       if (error) throw error;
-      
-      const settings: Record<string, any> = {};
-      
+
+      const settings: Record<string, unknown> = {};
+
       for (const row of data || []) {
-        let value: any = row.setting_value;
-        
+        const rawValue = row.setting_value as string;
+        let value: unknown = rawValue;
+
         // Convert value based on type
         switch (row.setting_type) {
           case 'integer':
-            value = parseInt(value, 10);
+            value = parseInt(rawValue, 10);
             break;
           case 'boolean':
-            value = value === 'true';
+            value = rawValue === 'true';
             break;
           case 'json':
             try {
-              value = JSON.parse(value);
+              value = JSON.parse(rawValue);
             } catch {
-              value = row.setting_value;
+              value = rawValue;
             }
             break;
           // string is default, no conversion needed
@@ -523,7 +524,7 @@ export class BookingLimitsService {
     totalAvailableSpots: number;
     totalBookedSpots: number;
     upcomingDates: DailyLimit[];
-    settings: Record<string, any>;
+    settings: Record<string, unknown>;
   }> {
     try {
       const endDate = new Date();

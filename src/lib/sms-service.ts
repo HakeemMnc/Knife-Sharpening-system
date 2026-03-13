@@ -140,7 +140,7 @@ export class SMSService {
     status: 'sent' | 'delivered' | 'failed'
   ): Promise<void> {
     try {
-      const updates: any = {};
+      const updates: Record<string, string | boolean> = {};
       const timestamp = new Date().toISOString();
 
       // Map smsType to corresponding boolean and status fields
@@ -446,10 +446,10 @@ export class SMSService {
   static async sendBulkSMS(
     orders: Order[], 
     templateName: string
-  ): Promise<{ success: number; failed: number; results: any[] }> {
+  ): Promise<{ success: number; failed: number; results: Array<{ orderId: number; customerName: string; success: boolean; error?: string }> }> {
     let successCount = 0;
     let failedCount = 0;
-    const results: any[] = [];
+    const results: Array<{ orderId: number; customerName: string; success: boolean; error?: string }> = [];
 
     for (const order of orders) {
       const result = await this.sendTemplatedSMS(order, templateName);

@@ -271,7 +271,7 @@ export default function AdminDashboard() {
   };
 
   // Helper function to validate and sanitize order data
-  const validateAndSanitizeOrder = (order: any): Order | null => {
+  const validateAndSanitizeOrder = (order: Record<string, unknown>): Order | null => {
     try {
       // Check required fields
       if (!order || typeof order.id !== 'number' || order.id <= 0) {
@@ -280,18 +280,18 @@ export default function AdminDashboard() {
       }
 
       // Sanitize strings and provide defaults
-      const sanitizeString = (value: any, fallback: string = 'N/A'): string => {
+      const sanitizeString = (value: unknown, fallback: string = 'N/A'): string => {
         if (typeof value !== 'string') return fallback;
         return value.trim() || fallback;
       };
 
-      const sanitizeOptionalString = (value: any): string | undefined => {
+      const sanitizeOptionalString = (value: unknown): string | undefined => {
         if (typeof value !== 'string') return undefined;
         const trimmed = value.trim();
         return trimmed === '' ? undefined : trimmed;
       };
 
-      const sanitizeNumber = (value: any, fallback: number = 0): number => {
+      const sanitizeNumber = (value: unknown, fallback: number = 0): number => {
         const num = Number(value);
         return isNaN(num) || num < 0 ? fallback : num;
       };
