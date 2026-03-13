@@ -29,7 +29,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/continue-previous-session-HpatX`
-- **Last commit**: `9d7d32a` — Stage 2: Core B2B features — API routes, operator dashboard, onboarding
+- **Last commit**: `20ebf13` — Fix cross-session workflow: dynamic branch detection + sync context to main
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
 - **Stage**: 2 (Core B2B Features) — COMPLETE
 - **All work committed and pushed**: YES — safe on GitHub
@@ -91,6 +91,33 @@ Stage 2 is complete. The operator dashboard, API routes, and UI are built. Next:
 ---
 
 ## Session Log
+
+### Session 7 — 2026-03-13
+
+**Summary**: Fixed broken cross-session workflow. New Claude sessions were starting on main with stale CLAUDE.md (still said "Stage 0, 235 ESLint errors"). Root cause: context files only lived on feature branch, never synced to main. Fixed by: removing hardcoded branch from CLAUDE.md, adding dynamic branch detection, updating end-session to sync context to main, updating start-session to auto-switch branches. Merged PR to main.
+
+**Files Changed**:
+
+Modified:
+- `CLAUDE.md` — Removed hardcoded branch `claude/audit-sharpening-saas-4bB0H`, added dynamic branch detection (read session-log for active branch, switch before working)
+- `.claude/skills/end-session/SKILL.md` — Added "sync to main" step: copies CLAUDE.md, session-log, rules to main after every session end
+- `.claude/skills/start-session/SKILL.md` — Added auto-branch-switch: reads active branch from session log, fetches and checks out before doing any work
+- `.claude/skills/checkpoint/SKILL.md` — Uses dynamic branch via `git branch --show-current`, removed hardcoded references
+- `docs/session-log.md` — Updated current state, added Session 7 entry
+
+**Git Activity**:
+- `20ebf13` — Fix cross-session workflow: dynamic branch detection + sync context to main
+- PR merged to main: synced CLAUDE.md, session-log, rules, skills
+
+**Decisions Made**:
+- End-session ALWAYS syncs context files (CLAUDE.md, session-log.md, .claude/rules/, .claude/skills/) to main
+- No more hardcoded branch names — everything is dynamic via session-log "Current State" → "Branch"
+- Start-session auto-detects and switches to the active branch from session-log
+
+**Milestones**:
+- Cross-session workflow: **FIXED** — new sessions will auto-detect correct state and branch
+
+---
 
 ### Session 6 — 2026-03-13
 
