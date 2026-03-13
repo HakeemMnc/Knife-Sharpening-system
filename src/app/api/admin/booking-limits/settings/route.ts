@@ -58,11 +58,10 @@ export async function PUT(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error updating booking limit settings:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
     return NextResponse.json(
-      { success: false, error: `Failed to update settings: ${error.message}` },
+      { success: false, error: `Failed to update settings: ${errorMessage}` },
       { status: 500 }
     );
   }

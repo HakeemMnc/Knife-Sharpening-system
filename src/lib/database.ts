@@ -428,6 +428,72 @@ export class DatabaseService {
     return { rows: [] };
   }
 
+  // Webhook idempotency (RT-14)
+  static async isWebhookProcessed(eventId: string): Promise<boolean> {
+    const { data } = await supabaseAdmin
+      .from('processed_webhook_events')
+      .select('event_id')
+      .eq('event_id', eventId)
+      .single();
+    return !!data;
+  }
+
+  static async markWebhookProcessed(eventId: string, eventType: string): Promise<void> {
+    await supabaseAdmin
+      .from('processed_webhook_events')
+      .insert({ event_id: eventId, event_type: eventType })
+      .single();
+  }
+
+  // Audit logging (RT-16)
+  static async createAuditLog(logData: {
+    tenant_id?: string;
+    user_id?: string;
+    action: string;
+    entity_type: string;
+    entity_id?: string;
+    changes?: Record<string, unknown>;
+    ip_address?: string;
+  }): Promise<void> {
+    try {
+      await supabaseAdmin
+        .from('audit_log')
+        .insert(logData);
+    } catch (error) {
+      console.error('Failed to create audit log:', error);
+      // Don't throw — audit logging should never break the main operation
+    }
+  }
+
+  // Paginated query helper (RT-15)
+  static async getOrdersPaginated(page: number = 1, limit: number = 50, filters?: {
+    status?: Order['status'];
+    payment_status?: Order['payment_status'];
+    service_date?: string;
+  }): Promise<{ data: Order[]; total: number; page: number; limit: number }> {
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from('orders')
+      .select('*', { count: 'exact' });
+
+    if (filters?.status) query = query.eq('status', filters.status);
+    if (filters?.payment_status) query = query.eq('payment_status', filters.payment_status);
+    if (filters?.service_date) query = query.eq('service_date', filters.service_date);
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+    return {
+      data: data || [],
+      total: count || 0,
+      page,
+      limit,
+    };
+  }
+
   // Analytics and reporting
   static async getOrderStats(): Promise<{
     total_orders: number;

@@ -8,6 +8,7 @@ interface CardProps {
   hover?: boolean
   className?: string
   onClick?: () => void
+  style?: React.CSSProperties
 }
 
 export default function Card({ 
@@ -17,7 +18,8 @@ export default function Card({
   shadow = true, 
   hover = false,
   className = '',
-  onClick 
+  onClick,
+  style
 }: CardProps) {
   const baseClasses = 'bg-white rounded-lg transition-all duration-200'
   
@@ -38,6 +40,7 @@ export default function Card({
     <div 
       className={`${baseClasses} ${paddingClasses[padding]} ${conditionalClasses} ${className}`}
       onClick={onClick}
+      style={style}
     >
       {children}
     </div>

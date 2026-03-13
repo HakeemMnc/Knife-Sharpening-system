@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         
         // Update each setting
         for (const [key, value] of Object.entries(settings)) {
-          let type = 'string';
+          let type: 'string' | 'boolean' | 'json' | 'integer' = 'string';
           let stringValue = String(value);
 
           // Determine type based on the key or value

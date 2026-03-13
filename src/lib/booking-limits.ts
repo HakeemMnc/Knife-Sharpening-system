@@ -4,7 +4,7 @@
  * Adapted for Supabase ORM
  */
 
-import { supabaseAdmin } from './database';
+import { supabaseAdmin, DatabaseService } from './database';
 
 export type LimitType = 'customers' | 'items';
 export type AvailabilityStatus = 'available' | 'full' | 'closed';
@@ -516,28 +516,6 @@ export class BookingLimitsService {
   }
 
   /**
-   * Ensure daily limit records exist for a date range
-   * Creates records with default settings if they don't exist
-   */
-  private static async ensureLimitsExist(startDate: string, endDate: string): Promise<void> {
-    try {
-      // Create daily limits for each date in the range if they don't exist
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
-        
-        // This will create the limit if it doesn't exist
-        await this.getDailyLimit(dateStr);
-      }
-    } catch (error) {
-      console.error('Error ensuring limits exist:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Get booking summary for admin dashboard
    * Shows overview of limits and current bookings
    */
@@ -584,28 +562,6 @@ export class BookingLimitsService {
         upcomingDates: [],
         settings: {}
       };
-    }
-  }
-
-  /**
-   * Update a system setting using Supabase
-   */
-  static async updateSystemSetting(key: string, value: string): Promise<void> {
-    try {
-      const { error } = await supabaseAdmin
-        .from('system_settings')
-        .upsert({
-          setting_key: key,
-          setting_value: value,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'setting_key'
-        });
-        
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating system setting:', error);
-      throw error;
     }
   }
 
