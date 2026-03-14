@@ -12,7 +12,10 @@ const PUBLIC_ROUTES = [
   '/signup',
   '/api/payments/webhook',    // Stripe webhook (uses signature verification)
   '/api/sms/webhook',         // Twilio webhook (uses signature verification)
+  '/api/b2b/stripe/webhook',  // Stripe Express Connect webhook (signature verification)
+  '/api/b2b/platform/webhook', // Platform SaaS billing webhook (signature verification)
   '/api/cron',                // Cron jobs (use CRON_SECRET)
+  '/client-login',            // Client portal login page
   '/api/contact',             // Public contact form
   '/api/coupons/validate',    // Public coupon validation (during B2C transition)
 ];
@@ -25,6 +28,8 @@ const PUBLIC_PREFIXES = [
   '/logo',
   '/api/payments/webhook',
   '/api/sms/webhook',
+  '/api/b2b/stripe/webhook',
+  '/api/b2b/platform/webhook',
   '/api/cron/',
 ];
 
@@ -57,7 +62,7 @@ export async function middleware(request: NextRequest) {
   // Allow public routes (but apply rate limiting to public API endpoints)
   if (isPublicRoute(pathname)) {
     // Rate limit public API endpoints (contact form, coupon validation)
-    if (pathname.startsWith('/api/') && !pathname.startsWith('/api/payments/webhook') && !pathname.startsWith('/api/sms/webhook') && !pathname.startsWith('/api/cron')) {
+    if (pathname.startsWith('/api/') && !pathname.startsWith('/api/payments/webhook') && !pathname.startsWith('/api/sms/webhook') && !pathname.startsWith('/api/b2b/stripe/webhook') && !pathname.startsWith('/api/b2b/platform/webhook') && !pathname.startsWith('/api/cron')) {
       const rateLimitResponse = await rateLimit(request, apiRateLimiter);
       if (rateLimitResponse) return rateLimitResponse;
     }

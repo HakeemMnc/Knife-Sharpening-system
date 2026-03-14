@@ -26,8 +26,8 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 ## Current State
 
-- **Branch**: `claude/resume-session-bn6Mt`
-- **Last commit**: ff23f63 — Fix Next.js 15 build errors: Suspense boundary + viewport export
+- **Branch**: `claude/resume-session-2bzbZ`
+- **Last commit**: Post-deploy fixes — webhook middleware + env.example update
 - **Build status**: PASSING on Vercel (deployed to production)
 - **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE. All 6 stages done.
 - **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
@@ -133,6 +133,27 @@ Live at `knife-sharpening-system.vercel.app` — deployed from `claude/resume-se
 ---
 
 ## Session Log
+
+### Session 11 — 2026-03-14
+
+**Summary**: Post-deploy fixes. Merged Stages 3-6 code into new session branch. Fixed critical middleware bug — B2B Stripe webhook routes (`/api/b2b/stripe/webhook`, `/api/b2b/platform/webhook`) were missing from PUBLIC_ROUTES, meaning Stripe couldn't reach them. Also added `/client-login` as public route. Updated `env.example` with 9 missing environment variables from Stages 3-6 (Stripe Connect/Platform webhook secrets, platform price IDs, Upstash Redis, cron secret, admin phone, Google Maps API key).
+
+**Files Changed**:
+
+Modified:
+- `src/middleware.ts` — Added B2B webhook routes + client-login to PUBLIC_ROUTES and PUBLIC_PREFIXES, excluded from rate limiting
+- `env.example` — Added Stripe Connect, Platform, Upstash Redis, cron, admin phone, Google Maps env vars
+- `docs/session-log.md` — Updated branch to `claude/resume-session-2bzbZ`, added Session 11 entry
+
+**Git Activity**:
+- Merged `origin/claude/resume-session-bn6Mt` into `claude/resume-session-2bzbZ` (49 files, 5,053 insertions)
+- Branch: `claude/resume-session-2bzbZ`
+
+**Milestones**:
+- Webhook middleware bug: **FIXED** — all 3 Stripe webhooks now reachable
+- env.example: **COMPLETE** — all 16 env vars documented
+
+---
 
 ### Session 10 — 2026-03-14
 
