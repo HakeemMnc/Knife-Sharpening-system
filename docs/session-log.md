@@ -20,16 +20,16 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 | 3 | Billing & Subscriptions | **100%** | Stripe Express Connect, metered billing, visit auto-generation |
 | 4 | Client Portal | **100%** | Client login, dashboard, visits, billing, profile, invite flow |
 | 5 | Mobile Admin | **100%** | Mobile-first route view, navigation, quick data entry |
-| 6 | SaaS Multi-Tenancy | Not started | operator signup, tenant isolation |
+| 6 | SaaS Multi-Tenancy | **100%** | Operator signup, platform billing, tenant isolation, admin dashboard |
 
 ---
 
 ## Current State
 
-- **Branch**: `claude/review-and-plan-4QNQG`
-- **Last commit**: `e0573f8` — Stage 5: Mobile Admin — operator daily route view for field use
+- **Branch**: `claude/resume-session-bn6Mt`
+- **Last commit**: Stage 6: SaaS Multi-Tenancy — operator signup, platform billing, tenant isolation, admin dashboard
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
-- **Stage**: 5 (Mobile Admin) — COMPLETE
+- **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE. All 6 stages done.
 - **All work committed and pushed**: YES — safe on GitHub
 
 ### What's Working
@@ -74,12 +74,25 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
   - Current stop highlight banner, route progress bar, completion celebration
   - Desktop operator page links to mobile view on small screens
 
+- **Stage 6 — 100% complete**:
+  - Operator self-signup at `/signup` (email + password + business name → Supabase Auth)
+  - Onboarding updated: 4-step flow (plan selection → business → contact → settings)
+  - Platform billing service (`src/lib/stripe-platform.ts`) — SaaS subscriptions, plan tiers (free/pro/enterprise)
+  - Platform webhook for subscription lifecycle events
+  - Platform subscription API (GET/POST/DELETE) for plan management
+  - `requireActiveSubscription()` auth guard — blocks suspended/unpaid operators
+  - Tenant isolation hardening: RLS policies blocking suspended tenants from creating data
+  - Platform admin dashboard at `/platform-admin` with 2 tabs (Analytics, Operators)
+  - Platform analytics API — global metrics (MRR, tenant counts, visits, signups)
+  - Migration 012 for SaaS columns + platform_subscriptions table
+
 ### What's Incomplete
-- Migration 011 needs to be run on Supabase (required for client portal)
+- Migration 011 + 012 need to be run on Supabase
 - No Upstash Redis account/keys configured yet
 - Stripe Express Connect requires Stripe Dashboard configuration (Platform settings) by founder
 - `NEXT_PUBLIC_APP_URL` env var needed for Stripe redirect URLs
-- Stage 6 not started (see Next Session Pickup Instructions)
+- Stripe platform price IDs need to be created and set as env vars (`STRIPE_PLATFORM_PRO_PRICE_ID`, `STRIPE_PLATFORM_ENTERPRISE_PRICE_ID`)
+- `STRIPE_PLATFORM_WEBHOOK_SECRET` env var needed for platform webhook
 - PWA support (offline, push notifications) not yet implemented for mobile view
 
 ---
@@ -88,15 +101,10 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### Priority 1: Begin Stage 6 — SaaS Multi-Tenancy
-Stages 0-5 are complete. This is the final stage:
-- Operator self-signup flow (public `/signup` page → email verify → onboarding → Stripe Connect)
-- SaaS subscription management (platform charges operators monthly fee)
-- Tenant isolation hardening (comprehensive RLS audit, API middleware)
-- Platform admin dashboard (tenant management, global analytics, support tools)
-- See `docs/prd.md` Stage 6 section for full requirements
+### All 6 Stages Complete!
+The full 6-stage roadmap is implemented. Focus areas going forward:
 
-### Priority 2: Route Optimization Enhancement
+### Priority 1: Route Optimization Enhancement
 - Apply existing nearest-neighbor algorithm (`src/utils/scheduling.ts`) to daily visits
 - Auto-assign route_order based on optimized path
 - Map integration with client geolocation data
@@ -118,6 +126,50 @@ Stages 0-5 are complete. This is the final stage:
 ---
 
 ## Session Log
+
+### Session 9 — 2026-03-14
+
+**Summary**: Completed Stage 6 (SaaS Multi-Tenancy) — the final stage. Built operator self-signup flow, platform SaaS billing via Stripe (free/pro/enterprise tiers), tenant isolation hardening (RLS policies blocking suspended tenants), subscription auth guard, and platform admin dashboard with analytics.
+
+**Files Changed**:
+
+Created:
+- `database/migrations/012_saas_multi_tenancy.sql` — Platform subscription columns on tenants, platform_subscriptions table, RLS policies, tenant isolation hardening
+- `src/app/signup/page.tsx` — Public operator self-signup (email + password + business name → Supabase Auth)
+- `src/lib/stripe-platform.ts` — StripePlatformService (customer creation, subscription management, plan changes, webhook sync)
+- `src/app/api/b2b/platform/webhook/route.ts` — Platform Stripe webhook (subscription updates, payment events)
+- `src/app/api/b2b/platform/subscription/route.ts` — GET/POST/DELETE subscription management
+- `src/app/api/b2b/platform/analytics/route.ts` — Platform analytics API (tenant counts, MRR, visits, signups)
+- `src/app/platform-admin/page.tsx` — Platform admin dashboard shell (2 tabs)
+- `src/app/platform-admin/components/TenantsTab.tsx` — Tenant management (list, filter, suspend/reactivate)
+- `src/app/platform-admin/components/AnalyticsTab.tsx` — Global metrics cards
+
+Modified:
+- `src/types/b2b.ts` — Added PlatformPlan, PlatformSubscriptionStatus, PlatformSubscription, PlatformAnalytics, TenantSummary; extended Tenant with platform fields
+- `src/app/onboarding/page.tsx` — Added Step 0 (plan selection) making it a 4-step flow
+- `src/app/api/b2b/tenants/route.ts` — Creates platform Stripe customer + subscription on tenant creation
+- `src/lib/auth.ts` — Added requireActiveSubscription() guard
+- `CLAUDE.md` — Updated current state to Stage 6 complete
+- `.claude/rules/architecture.md` — Marked Stage 6 as 100%
+- `docs/session-log.md` — Stage 6 complete, session 9 entry
+
+**Git Activity**:
+- Branch: `claude/resume-session-bn6Mt` (based on `claude/review-and-plan-4QNQG`)
+- Stage 6 commit + context update
+
+**Milestones**:
+- Stage 6 (SaaS Multi-Tenancy): **100% COMPLETE**
+- **ALL 6 STAGES COMPLETE** — full B2B SaaS platform implemented
+- 9 new files, 5 modified files, 1 new migration
+
+**Decisions Made**:
+- Platform billing uses platform's own Stripe account (separate from Express Connect for operator-to-client billing)
+- Three tiers: free (5 clients, $0/mo), pro (unlimited, $49/mo), enterprise ($149/mo)
+- 14-day trial for paid plans
+- `requireActiveSubscription()` fails open if subscription check errors (availability over strictness)
+- Suspended tenants blocked at RLS level from creating new clients/contracts/visits
+
+---
 
 ### Session 8 — 2026-03-14
 

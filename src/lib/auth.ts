@@ -125,6 +125,65 @@ export async function requireRole(
 }
 
 /**
+ * Require an active platform subscription. Returns the user or a 403 response.
+ * Allows trialing and active subscriptions. Blocks past_due, cancelled, unpaid.
+ * Platform admins bypass this check.
+ */
+export async function requireActiveSubscription(
+  request: NextRequest
+): Promise<AuthUser | NextResponse> {
+  const result = await requireAuth(request);
+  if (result instanceof NextResponse) return result;
+
+  // Platform admins bypass subscription check
+  if (result.role === 'platform_admin') return result;
+
+  // Clients don't need their own subscription
+  if (result.role === 'client') return result;
+
+  // Operators must have an active subscription
+  if (!result.tenant_id) {
+    return NextResponse.json(
+      { error: 'No business account found. Please complete onboarding.' },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: tenant } = await adminClient
+      .from('tenants')
+      .select('platform_subscription_status, status')
+      .eq('id', result.tenant_id)
+      .single();
+
+    if (!tenant) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 403 });
+    }
+
+    if (tenant.status === 'suspended' || tenant.status === 'cancelled') {
+      return NextResponse.json(
+        { error: 'Your account has been suspended. Please contact support.' },
+        { status: 403 }
+      );
+    }
+
+    const blockedStatuses = ['past_due', 'cancelled', 'unpaid'];
+    if (tenant.platform_subscription_status && blockedStatuses.includes(tenant.platform_subscription_status)) {
+      return NextResponse.json(
+        { error: 'Your subscription is inactive. Please update your billing to continue.' },
+        { status: 403 }
+      );
+    }
+
+    return result;
+  } catch {
+    // Fail open — don't block operators if subscription check fails
+    return result;
+  }
+}
+
+/**
  * Check if a request is from a webhook (Stripe/Twilio) based on known headers.
  */
 export function isWebhookRequest(request: NextRequest): boolean {

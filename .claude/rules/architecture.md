@@ -10,7 +10,7 @@
 | 3 | Billing & Subscriptions (Stripe Express Connect, metered billing) | **100%** |
 | 4 | Client Portal (self-service for B2B clients) | **100%** |
 | 5 | Mobile Admin (operator daily route view) | **100%** |
-| 6 | SaaS Multi-Tenancy (operator signup, tenant isolation) | Not started |
+| 6 | SaaS Multi-Tenancy (operator signup, tenant isolation) | **100%** |
 
 ## Key Decisions (locked in)
 

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+type PlatformPlan = 'free' | 'pro' | 'enterprise';
+
 interface OnboardingData {
   name: string;
   business_name: string;
@@ -11,11 +13,12 @@ interface OnboardingData {
   abn: string;
   timezone: string;
   default_service_radius_km: number;
+  platform_plan: PlatformPlan;
 }
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState<OnboardingData>({
@@ -26,7 +29,30 @@ export default function OnboardingPage() {
     abn: '',
     timezone: 'Australia/Sydney',
     default_service_radius_km: 50,
+    platform_plan: 'free',
   });
+
+  const plans: { id: PlatformPlan; name: string; price: string; features: string[]; highlight?: boolean }[] = [
+    {
+      id: 'free',
+      name: 'Free',
+      price: '$0/mo',
+      features: ['Up to 5 clients', 'Route management', 'Visit tracking', 'Basic billing'],
+    },
+    {
+      id: 'pro',
+      name: 'Pro',
+      price: '$49/mo',
+      features: ['Unlimited clients', 'Route optimization', 'Metered billing', 'Client portal', 'Priority support'],
+      highlight: true,
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: '$149/mo',
+      features: ['Everything in Pro', 'Custom branding', 'API access', 'Dedicated support', 'Multi-user teams'],
+    },
+  ];
 
   const updateField = (field: keyof OnboardingData, value: string | number) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -71,9 +97,9 @@ export default function OnboardingPage() {
         <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Set Up Your Business</h1>
-            <p className="text-gray-600 mt-1">Step {step} of 3</p>
+            <p className="text-gray-600 mt-1">Step {step + 1} of 4</p>
             <div className="flex gap-2 mt-3">
-              {[1, 2, 3].map(s => (
+              {[0, 1, 2, 3].map(s => (
                 <div
                   key={s}
                   className={`h-2 flex-1 rounded ${s <= step ? 'bg-blue-600' : 'bg-gray-200'}`}
@@ -85,6 +111,47 @@ export default function OnboardingPage() {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
               {error}
+            </div>
+          )}
+
+          {/* Step 0: Choose Plan */}
+          {step === 0 && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 mb-2">Choose the plan that fits your business. You can upgrade anytime.</p>
+              <div className="space-y-3">
+                {plans.map(plan => (
+                  <button
+                    key={plan.id}
+                    onClick={() => updateField('platform_plan', plan.id)}
+                    className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
+                      data.platform_plan === plan.id
+                        ? 'border-blue-600 bg-blue-50'
+                        : plan.highlight
+                          ? 'border-blue-200 hover:border-blue-400'
+                          : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-gray-900">{plan.name}</span>
+                      <span className="font-bold text-blue-600">{plan.price}</span>
+                    </div>
+                    <ul className="text-xs text-gray-600 space-y-0.5">
+                      {plan.features.map(f => (
+                        <li key={f}>&#10003; {f}</li>
+                      ))}
+                    </ul>
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  setError('');
+                  setStep(1);
+                }}
+                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
+              >
+                Continue with {plans.find(p => p.id === data.platform_plan)?.name} Plan
+              </button>
             </div>
           )}
 
@@ -127,19 +194,27 @@ export default function OnboardingPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <button
-                onClick={() => {
-                  if (!data.name.trim()) {
-                    setError('Business name is required');
-                    return;
-                  }
-                  setError('');
-                  setStep(2);
-                }}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
-              >
-                Next
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setStep(0)}
+                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 font-medium"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => {
+                    if (!data.name.trim()) {
+                      setError('Business name is required');
+                      return;
+                    }
+                    setError('');
+                    setStep(2);
+                  }}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
 
