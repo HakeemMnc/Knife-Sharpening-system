@@ -306,7 +306,7 @@ export class B2BDatabaseService {
       .from('service_visits')
       .select(`
         *,
-        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude)
+        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude, access_instructions)
       `)
       .eq('tenant_id', tenantId)
       .eq('scheduled_date', date)
@@ -488,7 +488,7 @@ export class B2BDatabaseService {
       .from('service_visits')
       .select(`
         *,
-        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude)
+        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude, access_instructions)
       `)
       .eq('tenant_id', tenantId)
       .in('status', ['scheduled', 'en_route'])

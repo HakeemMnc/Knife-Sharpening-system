@@ -184,7 +184,7 @@ export interface ClientWithContract extends Client {
 }
 
 export interface VisitWithClient extends ServiceVisit {
-  client: Pick<Client, 'id' | 'business_name' | 'contact_name' | 'phone' | 'address_line1' | 'suburb' | 'latitude' | 'longitude'>;
+  client: Pick<Client, 'id' | 'business_name' | 'contact_name' | 'phone' | 'address_line1' | 'suburb' | 'latitude' | 'longitude' | 'access_instructions'>;
 }
 
 export interface TenantDashboardStats {
