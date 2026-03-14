@@ -86,12 +86,13 @@ The session log at `docs/session-log.md` has: stage progress table, current stat
 ## Current State
 
 - **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE
-- **Build**: PASSING (0 ESLint/TypeScript errors, only Supabase env var runtime issue)
-- **Migrations**: 009 + 010 + 011 + 012 (011 + 012 need to be run on Supabase)
+- **Build**: PASSING on Vercel
+- **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
+- **Migrations**: All run (009-012)
 - **All 6 stages complete** — platform is feature-complete
-- **Priority 1**: Route optimization enhancement (nearest-neighbor, auto route_order)
-- **Priority 2**: PWA support for mobile view (offline, push notifications)
-- **Priority 3**: Production deployment prep (env vars, DNS, Stripe setup)
+- **Priority 1**: Post-deploy config (webhooks, remaining env vars, key rotation)
+- **Priority 2**: Route optimization enhancement (nearest-neighbor, auto route_order)
+- **Priority 3**: PWA support for mobile view (offline, push notifications)
 - See `docs/session-log.md` "Next Session Pickup Instructions" for details
 
 ## Key Files

@@ -27,9 +27,10 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/resume-session-bn6Mt`
-- **Last commit**: Stage 6: SaaS Multi-Tenancy — operator signup, platform billing, tenant isolation, admin dashboard
-- **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
+- **Last commit**: ff23f63 — Fix Next.js 15 build errors: Suspense boundary + viewport export
+- **Build status**: PASSING on Vercel (deployed to production)
 - **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE. All 6 stages done.
+- **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
 - **All work committed and pushed**: YES — safe on GitHub
 
 ### What's Working
@@ -87,13 +88,19 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
   - Migration 012 for SaaS columns + platform_subscriptions table
 
 ### What's Incomplete
-- Migration 011 + 012 need to be run on Supabase
-- No Upstash Redis account/keys configured yet
-- Stripe Express Connect requires Stripe Dashboard configuration (Platform settings) by founder
-- `NEXT_PUBLIC_APP_URL` env var needed for Stripe redirect URLs
-- Stripe platform price IDs need to be created and set as env vars (`STRIPE_PLATFORM_PRO_PRICE_ID`, `STRIPE_PLATFORM_ENTERPRISE_PRICE_ID`)
-- `STRIPE_PLATFORM_WEBHOOK_SECRET` env var needed for platform webhook
+- ~~Migration 011 + 012 need to be run on Supabase~~ DONE
+- ~~Stripe Express Connect Dashboard configuration~~ DONE (test mode)
+- ~~Stripe platform price IDs~~ DONE (Pro: price_1TAo1nLN5asmomAfNGk80ehc, Enterprise: price_1TAo4YLN5asmomAfvGWIWNas)
+- Update `NEXT_PUBLIC_APP_URL` env var in Vercel to `https://knife-sharpening-system.vercel.app`
+- Update Supabase Auth Site URL and Redirect URLs to deployed URL
+- Create 3 Stripe webhooks using the deployed URL and add secrets to Vercel
+- Add Twilio env vars (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
+- Add Resend env var (RESEND_API_KEY)
+- Add Stripe Secret Key to Vercel env vars
+- No Upstash Redis account/keys configured yet (optional)
+- Redeploy after adding webhook secrets
 - PWA support (offline, push notifications) not yet implemented for mobile view
+- **IMPORTANT**: Rotate Supabase API keys — anon key and service_role key were exposed in chat
 
 ---
 
@@ -101,10 +108,19 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### All 6 Stages Complete!
-The full 6-stage roadmap is implemented. Focus areas going forward:
+### App is DEPLOYED!
+Live at `knife-sharpening-system.vercel.app` — deployed from `claude/resume-session-bn6Mt`.
 
-### Priority 1: Route Optimization Enhancement
+### Priority 1: Post-Deploy Configuration (by founder)
+1. Update `NEXT_PUBLIC_APP_URL` in Vercel env vars to `https://knife-sharpening-system.vercel.app`
+2. Update Supabase Auth → Site URL to `https://knife-sharpening-system.vercel.app`
+3. Add `https://knife-sharpening-system.vercel.app/**` to Supabase Auth → Redirect URLs
+4. Create 3 Stripe webhooks (see deployment checklist in plan file) and add signing secrets to Vercel
+5. Add Stripe Secret Key, Twilio keys, and Resend API key to Vercel env vars
+6. Redeploy on Vercel after adding all env vars
+7. **Rotate Supabase API keys** (anon + service_role were exposed in conversation)
+
+### Priority 2: Route Optimization Enhancement
 - Apply existing nearest-neighbor algorithm (`src/utils/scheduling.ts`) to daily visits
 - Auto-assign route_order based on optimized path
 - Map integration with client geolocation data
@@ -114,18 +130,52 @@ The full 6-stage roadmap is implemented. Focus areas going forward:
 - Push notifications for upcoming visits
 - App install prompt on mobile devices
 
-### Migrations Pending (by founder, not Claude)
-- Run `database/migrations/011_client_portal.sql` on Supabase — required for client portal to work
-
-### Environment Setup Needed (by founder, not Claude)
-- Create Upstash Redis account and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` env vars
-- Set up Stripe Express Connect application in Stripe Dashboard (Platform settings)
-- Set `NEXT_PUBLIC_APP_URL` env var (deployed URL, e.g. `https://yourdomain.com`)
-- Set `STRIPE_CONNECT_WEBHOOK_SECRET` for Connect-specific webhook events
-
 ---
 
 ## Session Log
+
+### Session 10 — 2026-03-14
+
+**Summary**: First production deployment to Vercel. Completed Supabase setup (migrations 011 + 012 run), Stripe setup (Express Connect enabled, Pro + Enterprise products created with price IDs), and Vercel deployment. Fixed 2 Next.js 15 build errors (useSearchParams Suspense boundary on /login, viewport/themeColor metadata export in layout.tsx). App is live at knife-sharpening-system.vercel.app.
+
+**Files Changed**:
+
+Modified:
+- `src/app/login/page.tsx` — Wrapped useSearchParams() in Suspense boundary (Next.js 15 requirement)
+- `src/app/layout.tsx` — Moved viewport + themeColor from metadata to separate viewport export (Next.js 15 breaking change)
+- `docs/session-log.md` — Updated deployment state, session 10 entry
+
+**Git Activity**:
+- `ff23f63` — Fix Next.js 15 build errors: Suspense boundary + viewport export
+- Branch: `claude/resume-session-bn6Mt`
+- Pushed to origin
+
+**Deployment**:
+- Vercel project: knife-sharpening-system
+- Production URL: knife-sharpening-system.vercel.app
+- Deployed from branch: claude/resume-session-bn6Mt
+- Build: PASSING (34 warnings, 0 errors)
+
+**External Setup Completed**:
+- Supabase: Migrations 011 + 012 run successfully
+- Supabase: Auth URL configuration set (localhost for now)
+- Stripe: Express Connect enabled (test mode, "Business management software", hosted onboarding, Stripe Dashboard)
+- Stripe: Pro Plan product created ($49 AUD/mo) — price_1TAo1nLN5asmomAfNGk80ehc
+- Stripe: Enterprise Plan product created ($149 AUD/mo) — price_1TAo4YLN5asmomAfvGWIWNas
+- Vercel: Env vars set (Supabase URL, anon key, service role key, Stripe publishable key, platform price IDs, app URL)
+
+**Still Needed (post-deploy)**:
+- Update NEXT_PUBLIC_APP_URL to actual Vercel URL
+- Update Supabase Auth Site URL + Redirect URLs
+- Create 3 Stripe webhooks and add signing secrets to Vercel
+- Add Stripe Secret Key, Twilio, Resend env vars
+- Rotate Supabase API keys (exposed in chat)
+- Redeploy after adding remaining env vars
+
+**Milestones**:
+- **FIRST PRODUCTION DEPLOYMENT** — app is live!
+
+---
 
 ### Session 9 — 2026-03-14
 
