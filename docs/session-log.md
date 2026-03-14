@@ -18,7 +18,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 | 1 | B2B Data Model | **100%** | Migrations run on Supabase, types + CRUD service complete |
 | 2 | Core B2B Features | **100%** | API routes, operator dashboard, onboarding, client/contract/schedule/route UI |
 | 3 | Billing & Subscriptions | **100%** | Stripe Express Connect, metered billing, visit auto-generation |
-| 4 | Client Portal | Not started | self-service for B2B clients |
+| 4 | Client Portal | **100%** | Client login, dashboard, visits, billing, profile, invite flow |
 | 5 | Mobile Admin | Not started | operator daily route view |
 | 6 | SaaS Multi-Tenancy | Not started | operator signup, tenant isolation |
 
@@ -27,9 +27,9 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/review-and-plan-4QNQG`
-- **Last commit**: `675ba56` — Add persistent PRD with full product vision, roadmap, and requirements
+- **Last commit**: `0cdc368` — Stage 4: Client Portal — self-service for B2B clients
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
-- **Stage**: 3 (Billing & Subscriptions) — COMPLETE
+- **Stage**: 4 (Client Portal) — COMPLETE
 - **All work committed and pushed**: YES — safe on GitHub
 
 ### What's Working
@@ -62,10 +62,11 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
   - Contracts tab: billing status display (Billing Active / No billing linked)
 
 ### What's Incomplete
+- Migration 011 needs to be run on Supabase (required for client portal)
 - No Upstash Redis account/keys configured yet
 - Stripe Express Connect requires Stripe Dashboard configuration (Platform settings) by founder
 - `NEXT_PUBLIC_APP_URL` env var needed for Stripe redirect URLs
-- Stage 4+ not started (see Next Session Pickup Instructions)
+- Stage 5+ not started (see Next Session Pickup Instructions)
 
 ---
 
@@ -73,28 +74,33 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### Priority 1: Begin Stage 4 — Client Portal
-Stage 3 is complete. Billing infrastructure is built. Next:
-- Client self-service portal for B2B clients (restaurants, butchers, etc.)
-- Clients can view their visit history, upcoming scheduled visits
-- Clients can view invoices and billing status
-- Client login/auth flow (separate from operator auth)
+### Priority 1: Begin Stage 5 — Mobile Admin
+Stages 3+4 are complete. Next:
+- Operator daily route view optimized for mobile (responsive, touch-friendly)
+- Turn-by-turn navigation integration (Google Maps / Apple Maps links)
+- Quick visit status updates from the field (swipe to complete)
+- GPS-based auto-arrival detection (optional)
+- See `docs/prd.md` Stage 5 section for full requirements
 
 ### Priority 2: Route Optimization Enhancement
 - Apply existing nearest-neighbor algorithm (`src/utils/scheduling.ts`) to daily visits
 - Auto-assign route_order based on optimized path
 - Map integration with client geolocation data
 
-### Priority 3: Stage 5 — Mobile Admin
-- Operator daily route view optimized for mobile
-- Turn-by-turn navigation integration
-- Quick visit status updates from the field
+### Priority 3: Stage 6 — SaaS Multi-Tenancy
+- Operator self-signup flow (register → onboard → start using)
+- Tenant isolation hardening
+- Platform admin dashboard for managing all tenants
+- See `docs/prd.md` Stage 6 section for full requirements
+
+### Migrations Pending (by founder, not Claude)
+- Run `database/migrations/011_client_portal.sql` on Supabase — required for client portal to work
 
 ### Environment Setup Needed (by founder, not Claude)
 - Create Upstash Redis account and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` env vars
 - Set up Stripe Express Connect application in Stripe Dashboard (Platform settings)
 - Set `NEXT_PUBLIC_APP_URL` env var (deployed URL, e.g. `https://yourdomain.com`)
-- Optionally set `STRIPE_CONNECT_WEBHOOK_SECRET` for Connect-specific webhook events
+- Set `STRIPE_CONNECT_WEBHOOK_SECRET` for Connect-specific webhook events
 
 ---
 
@@ -102,7 +108,7 @@ Stage 3 is complete. Billing infrastructure is built. Next:
 
 ### Session 8 — 2026-03-14
 
-**Summary**: Completed Stage 3 — Billing & Subscriptions. Built full Stripe Express Connect integration (account creation, onboarding, metered subscriptions, usage reporting, webhook handling). Created visit auto-generation from active contracts. Updated operator dashboard with real Stripe Connect UI, billing status displays, and Generate Visits button. Also created `docs/prd.md` — the persistent master PRD with full product vision, 6-stage roadmap with detailed requirements, architectural decisions, user flows, and security analysis. This ensures every future session understands the bigger picture. 14 files changed, 1,435 lines added.
+**Summary**: Completed Stage 3 (Billing & Subscriptions) AND Stage 4 (Client Portal). Stage 3: Built full Stripe Express Connect integration (account creation, onboarding, metered subscriptions, usage reporting, webhook handling), visit auto-generation from active contracts, operator dashboard Stripe UI. Stage 4: Built complete client self-service portal with login (password + magic link), dashboard, visit history, Stripe invoice viewing, profile management, and operator invite flow. Also created `docs/prd.md` — the persistent master PRD. 30+ files changed across both stages.
 
 **Files Changed**:
 
@@ -144,6 +150,41 @@ Modified:
 - Graceful billing failures — visit status updates succeed even if Stripe billing fails
 - Webhook idempotency reuses existing `isWebhookProcessed` pattern from B2C webhook handler
 - Created persistent PRD (`docs/prd.md`) in the repo — every future session reads it via CLAUDE.md reference
+
+**Stage 4 — Client Portal (completed same session)**:
+
+Created:
+- `database/migrations/011_client_portal.sql` — client_id on profiles, stripe_customer_id on clients, RLS policies for client self-access
+- `src/app/client-login/page.tsx` — Client-branded login (password + magic link OTP), redirects to /client-portal
+- `src/app/client-portal/page.tsx` — Client portal shell with 4 tabs (Dashboard, Visits, Billing, Profile) + inline profile editing
+- `src/app/client-portal/components/DashboardTab.tsx` — Stats cards, active contract summary, upcoming visits, business details
+- `src/app/client-portal/components/VisitsTab.tsx` — Upcoming/history toggle, visit cards with status badges and billing status
+- `src/app/client-portal/components/BillingTab.tsx` — Stripe invoice list with status badges, View Invoice + Download PDF links
+- `src/app/api/b2b/client/route.ts` — GET: client data + contract + stats, PATCH: update profile fields
+- `src/app/api/b2b/client/visits/route.ts` — GET: client's own visits (upcoming or history)
+- `src/app/api/b2b/client/invoices/route.ts` — GET: client's Stripe invoices via connected account
+- `src/app/api/b2b/client/invite/route.ts` — POST: operator invites client to portal (creates auth user, links profile)
+
+Modified:
+- `src/lib/auth.ts` — Added client_id to AuthUser interface
+- `src/types/b2b.ts` — Added stripe_customer_id to Client interface
+- `src/lib/b2b-database.ts` — Added client portal methods (getClientByEmail, getClientUpcomingVisits, getClientVisitHistory, getClientActiveContract, getClientPortalStats)
+- `src/lib/stripe-connect.ts` — Added listInvoices and getInvoice methods
+- `src/app/operator/components/ClientsTab.tsx` — Added "Invite" button + handleInvite flow
+
+Git Activity:
+- `0cdc368` — Stage 4: Client Portal — self-service for B2B clients
+
+Milestones:
+- Stage 4 (Client Portal): **100% COMPLETE**
+- 20+ B2B API routes total (10 core + 5 Stripe + 4 client portal + 1 invite)
+
+Decisions Made:
+- Client auth uses existing `client` role from migration 009 + new client_id field on profiles
+- Magic link (OTP) for passwordless client login — lower friction for restaurant staff
+- Client can only view/edit their own data — enforced via RLS + API-level checks
+- Operator invites clients via button in ClientsTab — creates Supabase auth user with client role
+- Migration 011 needs to be run on Supabase by founder before client portal is functional
 
 ---
 

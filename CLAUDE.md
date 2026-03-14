@@ -82,12 +82,12 @@ The session log at `docs/session-log.md` has: stage progress table, current stat
 
 ## Current State
 
-- **Stage**: 3 (Billing & Subscriptions) — COMPLETE
+- **Stage**: 4 (Client Portal) — COMPLETE
 - **Build**: PASSING (0 ESLint/TypeScript errors, only Supabase env var runtime issue)
-- **Migrations**: 009 + 010 both run successfully on Supabase
-- **Priority 1**: Begin Stage 4 — Client Portal (self-service for B2B clients)
+- **Migrations**: 009 + 010 + 011 (011 needs to be run on Supabase)
+- **Priority 1**: Begin Stage 5 — Mobile Admin (operator daily route view)
 - **Priority 2**: Route optimization for daily visits
-- **Priority 3**: Stage 5 — Mobile Admin (operator daily route view)
+- **Priority 3**: Stage 6 — SaaS Multi-Tenancy (operator signup, tenant isolation)
 - See `docs/session-log.md` "Next Session Pickup Instructions" for details
 
 ## Key Files

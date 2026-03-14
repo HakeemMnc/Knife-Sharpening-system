@@ -144,7 +144,7 @@ The platform enables knife sharpening operators worldwide to:
 
 ---
 
-### Stage 4 — Client Portal [NOT STARTED]
+### Stage 4 — Client Portal [COMPLETE]
 
 **Goal**: Self-service portal for B2B clients (restaurants, butchers) to view their service history, upcoming visits, and billing.
 
