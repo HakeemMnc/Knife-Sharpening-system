@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/admin';
@@ -113,5 +113,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

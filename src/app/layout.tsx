@@ -1,5 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" }
+  ],
+};
 
 export const metadata: Metadata = {
   title: "Mobile Knife Sharpening Northern Rivers NSW | Expert Blade Service Ballina Byron Bay Tweed",
@@ -9,11 +19,6 @@ export const metadata: Metadata = {
   creator: "Northern Rivers Knife Sharpening",
   publisher: "Northern Rivers Knife Sharpening",
   robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" }
-  ],
   openGraph: {
     type: "website",
     title: "Mobile Knife Sharpening Northern Rivers NSW | Expert Blade Service",
