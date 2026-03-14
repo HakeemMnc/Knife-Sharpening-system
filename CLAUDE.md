@@ -4,6 +4,8 @@ A mobile knife-sharpening booking app (B2C) being transformed into a **recurring
 
 **End goal**: Fully automated, self-running B2B platform — operators sign up, onboard clients, manage routes, bill automatically via Stripe Express Connect.
 
+**Master PRD**: `docs/prd.md` — Full product vision, 6-stage roadmap with detailed requirements, architectural decisions, user flows, and security analysis. **Read this to understand the bigger picture.**
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router, Turbopack), TypeScript
@@ -90,6 +92,7 @@ The session log at `docs/session-log.md` has: stage progress table, current stat
 
 ## Key Files
 
+- `docs/prd.md` — **Master PRD** (product vision, full roadmap, requirements, decisions, security)
 - `docs/session-log.md` — Detailed project tracker and session history
 - `src/app/admin/page.tsx` — B2C admin dashboard (113 lines, 6 tabs)
 - `src/app/operator/page.tsx` — B2B operator dashboard (5 tabs)

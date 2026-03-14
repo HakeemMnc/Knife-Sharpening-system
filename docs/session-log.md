@@ -6,9 +6,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Tech Stack**: Next.js 15 (App Router), TypeScript, Supabase (PostgreSQL + Auth), Stripe Express Connect, Twilio SMS, Upstash Redis, Vercel.
 
-**Plan file**: `/root/.claude/plans/dreamy-scribbling-sunset.md` — full 6-stage roadmap with 22-point red-team analysis.
-
-**Git branch**: `claude/audit-sharpening-saas-4bB0H`
+**Master PRD**: `docs/prd.md` — full product vision, 6-stage roadmap, detailed requirements, architectural decisions, user flows, and security analysis.
 
 ---
 
