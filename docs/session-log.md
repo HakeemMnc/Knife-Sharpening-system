@@ -26,12 +26,11 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 ## Current State
 
-- **Branch**: `claude/resume-session-bn6Mt`
 - **Last commit**: ff23f63 — Fix Next.js 15 build errors: Suspense boundary + viewport export
 - **Build status**: PASSING on Vercel (deployed to production)
 - **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE. All 6 stages done.
 - **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
-- **All work committed and pushed**: YES — safe on GitHub
+- **All work committed and pushed**: YES — `main` always has latest code (GitHub Action auto-merges)
 
 ### What's Working
 - **Stage 0 — 100% complete**:
