@@ -27,7 +27,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/review-and-plan-4QNQG`
-- **Last commit**: `795bef3` — Stage 3: Stripe Express Connect + metered billing + visit auto-generation
+- **Last commit**: `675ba56` — Add persistent PRD with full product vision, roadmap, and requirements
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
 - **Stage**: 3 (Billing & Subscriptions) — COMPLETE
 - **All work committed and pushed**: YES — safe on GitHub
@@ -102,11 +102,12 @@ Stage 3 is complete. Billing infrastructure is built. Next:
 
 ### Session 8 — 2026-03-14
 
-**Summary**: Completed Stage 3 — Billing & Subscriptions. Built full Stripe Express Connect integration (account creation, onboarding, metered subscriptions, usage reporting, webhook handling). Created visit auto-generation from active contracts. Updated operator dashboard with real Stripe Connect UI, billing status displays, and Generate Visits button. 13 files changed, 1,079 lines added.
+**Summary**: Completed Stage 3 — Billing & Subscriptions. Built full Stripe Express Connect integration (account creation, onboarding, metered subscriptions, usage reporting, webhook handling). Created visit auto-generation from active contracts. Updated operator dashboard with real Stripe Connect UI, billing status displays, and Generate Visits button. Also created `docs/prd.md` — the persistent master PRD with full product vision, 6-stage roadmap with detailed requirements, architectural decisions, user flows, and security analysis. This ensures every future session understands the bigger picture. 14 files changed, 1,435 lines added.
 
 **Files Changed**:
 
 Created:
+- `docs/prd.md` — **Master PRD** (product vision, target users, business model, 6-stage roadmap with full requirements, locked-in decisions, user flows, security/red-team analysis)
 - `src/lib/stripe-connect.ts` — Stripe Connect service (Express accounts, metered pricing, subscriptions, usage reporting, lifecycle management)
 - `src/app/api/b2b/stripe/connect/route.ts` — POST: create Express account + onboarding URL, GET: account status
 - `src/app/api/b2b/stripe/connect/callback/route.ts` — Handle Stripe onboarding redirect
@@ -117,6 +118,8 @@ Created:
 - `src/app/api/b2b/visits/generate/route.ts` — POST: bulk generate upcoming visits from active contracts
 
 Modified:
+- `CLAUDE.md` — Added PRD reference in intro and Key Files sections
+- `docs/session-log.md` — Replaced stale plan file reference with `docs/prd.md`
 - `src/app/operator/components/SettingsTab.tsx` — Real Stripe Connect UI (3 states: not connected, incomplete, connected + dashboard link)
 - `src/app/operator/components/ContractsTab.tsx` — Billing status display (Billing Active / No billing linked)
 - `src/app/operator/components/ScheduleTab.tsx` — Billing status on completed visits + Generate Visits button
@@ -125,6 +128,8 @@ Modified:
 
 **Git Activity**:
 - `795bef3` — Stage 3: Stripe Express Connect + metered billing + visit auto-generation
+- `03a8cc8` — Checkpoint: Update session log, CLAUDE.md, architecture — Stage 3 complete
+- `675ba56` — Add persistent PRD with full product vision, roadmap, and requirements
 - Branch: `claude/review-and-plan-4QNQG`
 
 **Milestones**:
@@ -138,6 +143,7 @@ Modified:
 - Visit generation on-demand via button (not cron) — operator controls when visits are scheduled
 - Graceful billing failures — visit status updates succeed even if Stripe billing fails
 - Webhook idempotency reuses existing `isWebhookProcessed` pattern from B2C webhook handler
+- Created persistent PRD (`docs/prd.md`) in the repo — every future session reads it via CLAUDE.md reference
 
 ---
 
