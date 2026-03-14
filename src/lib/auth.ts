@@ -13,6 +13,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   tenant_id: string | null;
+  client_id: string | null;
   display_name: string | null;
 }
 
@@ -77,7 +78,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('role, tenant_id, display_name')
+      .select('role, tenant_id, client_id, display_name')
       .eq('id', user.id)
       .single();
 
@@ -88,6 +89,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
       email: user.email || '',
       role: profile.role as UserRole,
       tenant_id: profile.tenant_id,
+      client_id: profile.client_id || null,
       display_name: profile.display_name,
     };
   } catch {

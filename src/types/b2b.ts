@@ -67,6 +67,8 @@ export interface Client {
   billing_email: string | null;
   payment_terms: number;
 
+  stripe_customer_id: string | null;
+
   status: ClientStatus;
   notes: string | null;
 
@@ -74,7 +76,9 @@ export interface Client {
   updated_at: string;
 }
 
-export type ClientInsert = Omit<Client, 'id' | 'created_at' | 'updated_at'>;
+export type ClientInsert = Omit<Client, 'id' | 'created_at' | 'updated_at' | 'stripe_customer_id'> & {
+  stripe_customer_id?: string;
+};
 
 // ============================================================
 // Service Contracts

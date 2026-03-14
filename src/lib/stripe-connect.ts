@@ -205,6 +205,35 @@ export class StripeConnectService {
   }
 
   // ============================================================
+  // INVOICES
+  // ============================================================
+
+  static async listInvoices(
+    stripeCustomerId: string,
+    connectedAccountId: string,
+    limit = 12
+  ): Promise<Stripe.Invoice[]> {
+    const invoices = await stripe.invoices.list(
+      {
+        customer: stripeCustomerId,
+        limit,
+      },
+      { stripeAccount: connectedAccountId }
+    );
+    return invoices.data;
+  }
+
+  static async getInvoice(
+    invoiceId: string,
+    connectedAccountId: string
+  ): Promise<Stripe.Invoice> {
+    return stripe.invoices.retrieve(
+      invoiceId,
+      { stripeAccount: connectedAccountId }
+    );
+  }
+
+  // ============================================================
   // SUBSCRIPTION LIFECYCLE
   // ============================================================
 
