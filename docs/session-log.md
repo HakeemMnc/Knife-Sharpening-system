@@ -27,7 +27,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/review-and-plan-4QNQG`
-- **Last commit**: `0cdc368` — Stage 4: Client Portal — self-service for B2B clients
+- **Last commit**: `30a82a6` — Add mandatory stage completion checkpoint rule to workflow
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
 - **Stage**: 4 (Client Portal) — COMPLETE
 - **All work committed and pushed**: YES — safe on GitHub
@@ -136,6 +136,10 @@ Modified:
 - `795bef3` — Stage 3: Stripe Express Connect + metered billing + visit auto-generation
 - `03a8cc8` — Checkpoint: Update session log, CLAUDE.md, architecture — Stage 3 complete
 - `675ba56` — Add persistent PRD with full product vision, roadmap, and requirements
+- `1613945` — Checkpoint: Record PRD creation in session log
+- `0cdc368` — Stage 4: Client Portal — self-service for B2B clients
+- `0b1db69` — Checkpoint: Stage 4 complete — update session log, PRD, and context files
+- `30a82a6` — Add mandatory stage completion checkpoint rule to workflow
 - Branch: `claude/review-and-plan-4QNQG`
 
 **Milestones**:
@@ -174,6 +178,8 @@ Modified:
 
 Git Activity:
 - `0cdc368` — Stage 4: Client Portal — self-service for B2B clients
+- `0b1db69` — Checkpoint: Stage 4 complete — update session log, PRD, and context files
+- `30a82a6` — Add mandatory stage completion checkpoint rule to workflow
 
 Milestones:
 - Stage 4 (Client Portal): **100% COMPLETE**
@@ -185,6 +191,10 @@ Decisions Made:
 - Client can only view/edit their own data — enforced via RLS + API-level checks
 - Operator invites clients via button in ClientsTab — creates Supabase auth user with client role
 - Migration 011 needs to be run on Supabase by founder before client portal is functional
+- Added mandatory stage completion checkpoint rule to `.claude/rules/workflow.md` — ensures automatic context updates after every stage
+
+**Additional Files Changed (end of session)**:
+- `.claude/rules/workflow.md` — Added "Stage Completion Checkpoint (MANDATORY)" section
 
 ---
 
