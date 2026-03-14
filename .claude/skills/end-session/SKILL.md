@@ -50,10 +50,25 @@ Perform a complete session wrap-up: save all work, write a detailed session log 
    git push -u origin $(git branch --show-current)
    ```
 
-8. **Context sync (automatic)**: Context files (CLAUDE.md, session-log.md, .claude/rules/, .claude/skills/)
-   are automatically synced to main via GitHub Action when you push to the feature branch.
-   No manual sync needed. The Action triggers on any push to `claude/*` branches that changes context files.
-   To verify: check GitHub repo → Actions tab → "Sync session context to main" workflow.
+8. **Sync context files to main** (CRITICAL — ensures next session starts correctly):
+   The GitHub Action in `.github/workflows/sync-context-to-main.yml` should auto-sync on push,
+   but as a safety net, ALWAYS manually sync too:
+   ```bash
+   FEATURE_BRANCH=$(git branch --show-current)
+   git checkout main
+   git pull origin main
+   git checkout $FEATURE_BRANCH -- docs/session-log.md CLAUDE.md .claude/rules/ .claude/skills/ .github/workflows/
+   git add docs/session-log.md CLAUDE.md .claude/rules/ .claude/skills/ .github/workflows/
+   # Only commit if there are actual changes
+   if ! git diff --staged --quiet; then
+     git commit -m "Auto-sync session context from $FEATURE_BRANCH"
+     git push origin main
+   fi
+   git checkout $FEATURE_BRANCH
+   ```
+   - If push to main fails, warn the user but do NOT block the session end
+   - Never force push to main
+   - The `.github/workflows/` directory MUST be included so the Action persists across branches
 
 9. **Output to user**: Display a formatted summary of:
    - What was accomplished
@@ -66,5 +81,5 @@ Perform a complete session wrap-up: save all work, write a detailed session log 
 - Be SPECIFIC in next steps — "Fix TypeScript error in sms-service-old.ts line 46" not "Fix errors"
 - The session log is the SOURCE OF TRUTH for the next session
 - Every session entry must have enough detail that a fresh Claude instance can resume perfectly
-- Context sync to main is handled automatically by GitHub Action — do NOT manually push to main
+- Context sync to main uses BOTH the GitHub Action AND manual sync in step 8 (belt-and-suspenders)
 - Never force push to main

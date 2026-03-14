@@ -30,6 +30,11 @@ Restore full context from the previous session and brief the user on the current
      git checkout -b <active-branch> origin/<active-branch>
      ```
    - **IMPORTANT**: If you are on `main` or any auto-created branch, you MUST switch. The real work is on the active branch.
+   - **Fallback**: If the branch from session-log does NOT exist on remote:
+     1. Run: `git branch -r --sort=-committerdate | grep claude/ | head -5`
+     2. Show the user the most recent branches and ask which to use
+     3. Check out the selected branch
+   - **Re-read after switch**: After switching branches, re-read `docs/session-log.md` again from the new branch — it may be newer than what `main` had. Use the re-read version for the rest of this workflow.
 
 3. **Check git state**:
    - `git status` — any uncommitted changes?
