@@ -13,6 +13,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   tenant_id: string | null;
+  client_id: string | null;
   display_name: string | null;
 }
 
@@ -77,7 +78,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('role, tenant_id, display_name')
+      .select('role, tenant_id, client_id, display_name')
       .eq('id', user.id)
       .single();
 
@@ -88,6 +89,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
       email: user.email || '',
       role: profile.role as UserRole,
       tenant_id: profile.tenant_id,
+      client_id: profile.client_id || null,
       display_name: profile.display_name,
     };
   } catch {
@@ -120,6 +122,65 @@ export async function requireRole(
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   }
   return result;
+}
+
+/**
+ * Require an active platform subscription. Returns the user or a 403 response.
+ * Allows trialing and active subscriptions. Blocks past_due, cancelled, unpaid.
+ * Platform admins bypass this check.
+ */
+export async function requireActiveSubscription(
+  request: NextRequest
+): Promise<AuthUser | NextResponse> {
+  const result = await requireAuth(request);
+  if (result instanceof NextResponse) return result;
+
+  // Platform admins bypass subscription check
+  if (result.role === 'platform_admin') return result;
+
+  // Clients don't need their own subscription
+  if (result.role === 'client') return result;
+
+  // Operators must have an active subscription
+  if (!result.tenant_id) {
+    return NextResponse.json(
+      { error: 'No business account found. Please complete onboarding.' },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: tenant } = await adminClient
+      .from('tenants')
+      .select('platform_subscription_status, status')
+      .eq('id', result.tenant_id)
+      .single();
+
+    if (!tenant) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 403 });
+    }
+
+    if (tenant.status === 'suspended' || tenant.status === 'cancelled') {
+      return NextResponse.json(
+        { error: 'Your account has been suspended. Please contact support.' },
+        { status: 403 }
+      );
+    }
+
+    const blockedStatuses = ['past_due', 'cancelled', 'unpaid'];
+    if (tenant.platform_subscription_status && blockedStatuses.includes(tenant.platform_subscription_status)) {
+      return NextResponse.json(
+        { error: 'Your subscription is inactive. Please update your billing to continue.' },
+        { status: 403 }
+      );
+    }
+
+    return result;
+  } catch {
+    // Fail open — don't block operators if subscription check fails
+    return result;
+  }
 }
 
 /**

@@ -75,9 +75,17 @@ export default function OperatorDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-3 md:p-6">
           <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
-              {tenant.name}
-            </h1>
+            <div>
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+                {tenant.name}
+              </h1>
+              <a
+                href="/operator/mobile"
+                className="text-xs text-blue-600 font-medium hover:text-blue-800 md:hidden"
+              >
+                Switch to Mobile View &rarr;
+              </a>
+            </div>
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               tenant.status === 'active'
                 ? 'bg-green-100 text-green-800'

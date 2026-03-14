@@ -335,6 +335,11 @@ export default function ContractsTab() {
                     <span>${contract.price_per_visit}/visit</span>
                     <span>~{contract.estimated_knives_per_visit} knives</span>
                     <span>Since {new Date(contract.start_date).toLocaleDateString()}</span>
+                    {contract.stripe_subscription_id ? (
+                      <span className="text-green-600 font-medium">Billing Active</span>
+                    ) : contract.status === 'active' ? (
+                      <span className="text-yellow-600">No billing linked</span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex gap-2 ml-4">

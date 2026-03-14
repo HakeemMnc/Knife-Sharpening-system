@@ -1,5 +1,29 @@
-// B2B SaaS Types — Stage 1 Data Model
-// These types mirror the database schema from migration 010_b2b_data_model.sql
+// B2B SaaS Types — Stage 1 Data Model + Stage 6 Platform Subscription
+// These types mirror the database schema from migrations 010 + 012
+
+// ============================================================
+// Platform / SaaS Types
+// ============================================================
+export type PlatformPlan = 'free' | 'pro' | 'enterprise';
+export type PlatformSubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'unpaid';
+
+export interface PlatformSubscription {
+  id: string;
+  tenant_id: string;
+
+  stripe_subscription_id: string | null;
+  stripe_customer_id: string | null;
+
+  plan: PlatformPlan;
+  status: PlatformSubscriptionStatus;
+
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+
+  created_at: string;
+  updated_at: string;
+}
 
 // ============================================================
 // Tenants
@@ -20,6 +44,14 @@ export interface Tenant {
   stripe_account_id: string | null;
   stripe_onboarding_complete: boolean;
 
+  // Platform SaaS subscription fields
+  platform_plan: PlatformPlan;
+  platform_subscription_status: PlatformSubscriptionStatus;
+  platform_customer_id: string | null;
+  platform_subscription_id: string | null;
+  trial_ends_at: string | null;
+  max_clients: number;
+
   timezone: string;
   currency: string;
   default_service_radius_km: number;
@@ -30,9 +62,15 @@ export interface Tenant {
   updated_at: string;
 }
 
-export type TenantInsert = Omit<Tenant, 'id' | 'created_at' | 'updated_at' | 'stripe_account_id' | 'stripe_onboarding_complete'> & {
+export type TenantInsert = Omit<Tenant, 'id' | 'created_at' | 'updated_at' | 'stripe_account_id' | 'stripe_onboarding_complete' | 'platform_plan' | 'platform_subscription_status' | 'platform_customer_id' | 'platform_subscription_id' | 'trial_ends_at' | 'max_clients'> & {
   stripe_account_id?: string;
   stripe_onboarding_complete?: boolean;
+  platform_plan?: PlatformPlan;
+  platform_subscription_status?: PlatformSubscriptionStatus;
+  platform_customer_id?: string;
+  platform_subscription_id?: string;
+  trial_ends_at?: string;
+  max_clients?: number;
 };
 
 // ============================================================
@@ -67,6 +105,8 @@ export interface Client {
   billing_email: string | null;
   payment_terms: number;
 
+  stripe_customer_id: string | null;
+
   status: ClientStatus;
   notes: string | null;
 
@@ -74,7 +114,9 @@ export interface Client {
   updated_at: string;
 }
 
-export type ClientInsert = Omit<Client, 'id' | 'created_at' | 'updated_at'>;
+export type ClientInsert = Omit<Client, 'id' | 'created_at' | 'updated_at' | 'stripe_customer_id'> & {
+  stripe_customer_id?: string;
+};
 
 // ============================================================
 // Service Contracts
@@ -180,7 +222,7 @@ export interface ClientWithContract extends Client {
 }
 
 export interface VisitWithClient extends ServiceVisit {
-  client: Pick<Client, 'id' | 'business_name' | 'contact_name' | 'phone' | 'address_line1' | 'suburb' | 'latitude' | 'longitude'>;
+  client: Pick<Client, 'id' | 'business_name' | 'contact_name' | 'phone' | 'address_line1' | 'suburb' | 'latitude' | 'longitude' | 'access_instructions'>;
 }
 
 export interface TenantDashboardStats {
@@ -189,4 +231,24 @@ export interface TenantDashboardStats {
   visits_this_week: number;
   visits_completed_this_week: number;
   revenue_this_month: number;
+}
+
+// ============================================================
+// Platform Admin Types
+// ============================================================
+export interface PlatformAnalytics {
+  total_tenants: number;
+  active_tenants: number;
+  trialing_tenants: number;
+  suspended_tenants: number;
+  total_visits_all_time: number;
+  visits_this_month: number;
+  signups_this_month: number;
+  mrr: number; // Monthly recurring revenue from platform subscriptions
+}
+
+export interface TenantSummary extends Tenant {
+  client_count: number;
+  visit_count: number;
+  last_activity: string | null;
 }

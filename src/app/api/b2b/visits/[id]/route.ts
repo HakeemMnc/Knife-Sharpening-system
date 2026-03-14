@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { B2BDatabaseService } from '@/lib/b2b-database';
+import { StripeConnectService } from '@/lib/stripe-connect';
 import type { VisitStatus } from '@/types/b2b';
 
 export async function GET(
@@ -47,14 +48,40 @@ export async function PATCH(
     }
 
     const body = await request.json();
+    const newStatus = body.status as VisitStatus | undefined;
 
     // If only status is being updated, use the status update method
-    if (body.status && Object.keys(body).length === 1) {
-      const visit = await B2BDatabaseService.updateVisitStatus(id, body.status as VisitStatus);
-      return NextResponse.json({ success: true, data: visit });
+    let visit;
+    if (newStatus && Object.keys(body).length === 1) {
+      visit = await B2BDatabaseService.updateVisitStatus(id, newStatus);
+    } else {
+      visit = await B2BDatabaseService.updateVisit(id, body);
     }
 
-    const visit = await B2BDatabaseService.updateVisit(id, body);
+    // Auto-report usage to Stripe when visit is completed
+    if (newStatus === 'completed' && existing.status !== 'completed' && visit.contract_id && !visit.billed) {
+      try {
+        const contract = await B2BDatabaseService.getContract(visit.contract_id);
+        if (contract?.stripe_subscription_id && result.tenant_id) {
+          const tenant = await B2BDatabaseService.getTenant(result.tenant_id);
+          if (tenant?.stripe_account_id) {
+            await StripeConnectService.reportUsage(
+              contract.stripe_subscription_id,
+              1,
+              tenant.stripe_account_id,
+              visit.id
+            );
+            // Re-fetch the visit to include updated billing fields
+            const updatedVisit = await B2BDatabaseService.getVisit(id);
+            if (updatedVisit) visit = updatedVisit;
+          }
+        }
+      } catch (billingError) {
+        console.error('Auto-billing error (visit still marked completed):', billingError);
+        // Don't fail the visit update if billing fails
+      }
+    }
+
     return NextResponse.json({ success: true, data: visit });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to update visit';

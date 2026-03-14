@@ -48,6 +48,7 @@ export default function ClientsTab() {
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
 
   const fetchClients = async () => {
     setLoading(true);
@@ -151,6 +152,30 @@ export default function ClientsTab() {
       }
     } catch (err) {
       console.error('Failed to delete client:', err);
+    }
+  };
+
+  const handleInvite = async (clientId: string, clientEmail: string | null) => {
+    if (!clientEmail) {
+      setInviteMessage('This client has no email address. Add an email first.');
+      return;
+    }
+
+    setInviteMessage('');
+    try {
+      const response = await fetch('/api/b2b/client/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setInviteMessage(result.data.message);
+      } else {
+        setInviteMessage(result.error || 'Failed to send invite');
+      }
+    } catch {
+      setInviteMessage('Something went wrong');
     }
   };
 
@@ -370,6 +395,14 @@ export default function ClientsTab() {
         </div>
       )}
 
+      {inviteMessage && (
+        <div className={`p-3 rounded text-sm ${
+          inviteMessage.includes('sent') || inviteMessage.includes('linked') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {inviteMessage}
+        </div>
+      )}
+
       {/* Client List */}
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading clients...</div>
@@ -403,6 +436,12 @@ export default function ClientsTab() {
                   </div>
                 </div>
                 <div className="flex gap-2 ml-4">
+                  <button
+                    onClick={() => handleInvite(client.id, client.email)}
+                    className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                  >
+                    Invite
+                  </button>
                   <button
                     onClick={() => openEditForm(client)}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"

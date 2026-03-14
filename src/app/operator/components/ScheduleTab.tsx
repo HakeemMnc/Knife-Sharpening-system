@@ -12,6 +12,8 @@ export default function ScheduleTab() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [generating, setGenerating] = useState(false);
+  const [generateMessage, setGenerateMessage] = useState('');
 
   const fetchVisits = async () => {
     setLoading(true);
@@ -94,6 +96,29 @@ export default function ScheduleTab() {
     return actions;
   };
 
+  const handleGenerateVisits = async () => {
+    setGenerating(true);
+    setGenerateMessage('');
+    try {
+      const response = await fetch('/api/b2b/visits/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ weeks_ahead: 4 }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setGenerateMessage(`Generated ${result.data.generated} visits from ${result.data.contracts?.length || 0} contracts`);
+        fetchVisits();
+      } else {
+        setGenerateMessage(result.error || 'Failed to generate visits');
+      }
+    } catch {
+      setGenerateMessage('Something went wrong');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const today = new Date().toISOString().split('T')[0];
 
   return (
@@ -135,8 +160,23 @@ export default function ScheduleTab() {
               Today
             </button>
           )}
+          <button
+            onClick={handleGenerateVisits}
+            disabled={generating}
+            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 font-medium disabled:opacity-50"
+          >
+            {generating ? 'Generating...' : 'Generate Visits'}
+          </button>
         </div>
       </div>
+
+      {generateMessage && (
+        <div className={`p-3 rounded text-sm ${
+          generateMessage.includes('Generated') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {generateMessage}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading schedule...</div>
@@ -184,6 +224,11 @@ export default function ScheduleTab() {
                     )}
                     {visit.status === 'completed' && visit.knives_sharpened !== null && (
                       <p className="text-green-700">{visit.knives_sharpened} knives sharpened</p>
+                    )}
+                    {visit.status === 'completed' && (
+                      <p className={visit.billed ? 'text-green-600 font-medium' : 'text-yellow-600'}>
+                        {visit.billed ? 'Billed' : 'Unbilled'}
+                      </p>
                     )}
                   </div>
                 </div>

@@ -55,6 +55,19 @@ export async function POST(request: NextRequest) {
       .update({ tenant_id: tenant.id })
       .eq('id', result.id);
 
+    // Create platform subscription for SaaS billing
+    try {
+      const { StripePlatformService } = await import('@/lib/stripe-platform');
+      const email = body.business_email || result.email;
+      const businessName = body.business_name || body.name;
+      const customerId = await StripePlatformService.createPlatformCustomer(tenant.id, email, businessName);
+      const plan = body.platform_plan || 'free';
+      await StripePlatformService.createPlatformSubscription(tenant.id, customerId, plan);
+    } catch (platformError) {
+      // Log but don't fail tenant creation if platform billing setup fails
+      console.error('Platform subscription setup failed:', platformError);
+    }
+
     return NextResponse.json({ success: true, data: tenant }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to create tenant';

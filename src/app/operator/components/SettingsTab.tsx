@@ -3,11 +3,25 @@
 import { useState, useEffect } from 'react';
 import type { Tenant } from '@/types/b2b';
 
+interface StripeStatus {
+  connected: boolean;
+  accountId?: string;
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  detailsSubmitted?: boolean;
+  onboardingComplete?: boolean;
+  dashboardUrl?: string | null;
+}
+
 export default function SettingsTab() {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+
+  const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [connectingStripe, setConnectingStripe] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -44,6 +58,64 @@ export default function SettingsTab() {
     };
     fetchTenant();
   }, []);
+
+  // Fetch Stripe Connect status
+  useEffect(() => {
+    if (!tenant) return;
+    fetchStripeStatus();
+  }, [tenant]);
+
+  // Handle Stripe redirect params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stripeResult = params.get('stripe');
+    if (stripeResult === 'success') {
+      setMessage('Stripe account connected successfully!');
+      fetchStripeStatus();
+    } else if (stripeResult === 'pending') {
+      setMessage('Stripe onboarding is not complete yet. Please finish setting up your account.');
+    } else if (stripeResult === 'error') {
+      setMessage('Something went wrong with Stripe setup. Please try again.');
+    }
+  }, []);
+
+  const fetchStripeStatus = async () => {
+    setStripeLoading(true);
+    try {
+      const response = await fetch('/api/b2b/stripe/connect');
+      const result = await response.json();
+      if (result.success) {
+        setStripeStatus(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Stripe status:', err);
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleConnectStripe = async () => {
+    setConnectingStripe(true);
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/b2b/stripe/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json();
+      if (result.success && result.data.onboardingUrl) {
+        window.location.href = result.data.onboardingUrl;
+      } else {
+        setMessage(result.error || 'Failed to start Stripe setup');
+        setConnectingStripe(false);
+      }
+    } catch {
+      setMessage('Something went wrong starting Stripe setup');
+      setConnectingStripe(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!tenant) return;
@@ -186,17 +258,65 @@ export default function SettingsTab() {
 
       {/* Stripe Connect Section */}
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium mb-2">Stripe Payments</h3>
-        {tenant.stripe_onboarding_complete ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-green-800 font-medium">Stripe Connected</p>
-            <p className="text-sm text-green-600 mt-1">Your Stripe account is active and ready to receive payments.</p>
+        <h3 className="text-lg font-medium mb-4">Stripe Payments</h3>
+
+        {stripeLoading ? (
+          <div className="text-sm text-gray-500">Checking Stripe status...</div>
+        ) : stripeStatus?.onboardingComplete ? (
+          <div className="space-y-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-800 font-medium">Stripe Connected</p>
+                  <p className="text-sm text-green-600 mt-1">Your Stripe account is active and ready to receive payments.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {stripeStatus.chargesEnabled && (
+                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">Charges</span>
+                  )}
+                  {stripeStatus.payoutsEnabled && (
+                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">Payouts</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {stripeStatus.dashboardUrl && (
+              <a
+                href={stripeStatus.dashboardUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium"
+              >
+                Open Stripe Dashboard
+              </a>
+            )}
+          </div>
+        ) : stripeStatus?.connected && stripeStatus?.detailsSubmitted === false ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-yellow-800 font-medium">Stripe Setup Incomplete</p>
+            <p className="text-sm text-yellow-600 mt-1">You started connecting your Stripe account but haven&apos;t finished. Click below to continue.</p>
+            <button
+              onClick={handleConnectStripe}
+              disabled={connectingStripe}
+              className="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 text-sm font-medium disabled:opacity-50"
+            >
+              {connectingStripe ? 'Redirecting...' : 'Continue Stripe Setup'}
+            </button>
           </div>
         ) : (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-yellow-800 font-medium">Stripe Not Connected</p>
-            <p className="text-sm text-yellow-600 mt-1">Connect your Stripe account to start billing clients automatically.</p>
-            <p className="text-xs text-gray-500 mt-2">Stripe Express Connect setup will be available in a future update.</p>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p className="text-gray-800 font-medium">Connect Your Stripe Account</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Connect your Stripe account to automatically bill clients for completed visits.
+              Stripe Express handles payments, invoicing, and payouts.
+            </p>
+            <button
+              onClick={handleConnectStripe}
+              disabled={connectingStripe}
+              className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+            >
+              {connectingStripe ? 'Redirecting to Stripe...' : 'Connect with Stripe'}
+            </button>
           </div>
         )}
       </div>

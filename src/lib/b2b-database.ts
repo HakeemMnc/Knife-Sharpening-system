@@ -306,7 +306,7 @@ export class B2BDatabaseService {
       .from('service_visits')
       .select(`
         *,
-        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude)
+        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude, access_instructions)
       `)
       .eq('tenant_id', tenantId)
       .eq('scheduled_date', date)
@@ -367,6 +367,103 @@ export class B2BDatabaseService {
   }
 
   // ============================================================
+  // CLIENT PORTAL
+  // ============================================================
+
+  static async getClientByEmail(email: string, tenantId: string): Promise<Client | null> {
+    const { data, error } = await supabaseAdmin
+      .from('clients')
+      .select('*')
+      .eq('email', email)
+      .eq('tenant_id', tenantId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return data;
+  }
+
+  static async getClientUpcomingVisits(clientId: string, limit = 10): Promise<ServiceVisit[]> {
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabaseAdmin
+      .from('service_visits')
+      .select('*')
+      .eq('client_id', clientId)
+      .gte('scheduled_date', today)
+      .in('status', ['scheduled', 'en_route', 'in_progress'])
+      .order('scheduled_date')
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getClientVisitHistory(clientId: string, limit = 20, offset = 0): Promise<ServiceVisit[]> {
+    const { data, error } = await supabaseAdmin
+      .from('service_visits')
+      .select('*')
+      .eq('client_id', clientId)
+      .in('status', ['completed', 'skipped', 'cancelled'])
+      .order('scheduled_date', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getClientActiveContract(clientId: string): Promise<ServiceContract | null> {
+    const { data, error } = await supabaseAdmin
+      .from('service_contracts')
+      .select('*')
+      .eq('client_id', clientId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return data;
+  }
+
+  static async getClientPortalStats(clientId: string): Promise<{
+    upcomingVisits: number;
+    completedVisits: number;
+    totalSpent: number;
+  }> {
+    const today = new Date().toISOString().split('T')[0];
+
+    const [upcoming, completed] = await Promise.all([
+      supabaseAdmin
+        .from('service_visits')
+        .select('id', { count: 'exact', head: true })
+        .eq('client_id', clientId)
+        .gte('scheduled_date', today)
+        .in('status', ['scheduled', 'en_route', 'in_progress']),
+      supabaseAdmin
+        .from('service_visits')
+        .select('visit_amount', { count: 'exact' })
+        .eq('client_id', clientId)
+        .eq('status', 'completed'),
+    ]);
+
+    const totalSpent = (completed.data || []).reduce(
+      (sum, v) => sum + (v.visit_amount || 0),
+      0
+    );
+
+    return {
+      upcomingVisits: upcoming.count || 0,
+      completedVisits: completed.count || 0,
+      totalSpent,
+    };
+  }
+
+  // ============================================================
   // DASHBOARD / ANALYTICS
   // ============================================================
 
@@ -391,7 +488,7 @@ export class B2BDatabaseService {
       .from('service_visits')
       .select(`
         *,
-        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude)
+        client:clients(id, business_name, contact_name, phone, address_line1, suburb, latitude, longitude, access_instructions)
       `)
       .eq('tenant_id', tenantId)
       .in('status', ['scheduled', 'en_route'])

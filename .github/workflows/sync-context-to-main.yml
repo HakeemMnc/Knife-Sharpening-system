@@ -21,16 +21,24 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin ${{ github.ref_name }}
-          # Merge the full branch (all code + context), not just context files
-          git merge origin/${{ github.ref_name }} --no-ff -m "Auto-merge from ${{ github.ref_name }}" || {
-            echo "Merge conflict — falling back to context-only sync"
+
+          # Try clean merge first
+          if git merge origin/${{ github.ref_name }} --no-ff -m "Auto-merge from ${{ github.ref_name }}"; then
+            echo "Clean merge successful"
+          else
+            # On conflict, prefer the feature branch version (it has the latest work)
             git merge --abort
-            git checkout origin/${{ github.ref_name }} -- CLAUDE.md docs/session-log.md .claude/rules/ .claude/skills/ .github/workflows/ 2>/dev/null || true
-            git add CLAUDE.md docs/session-log.md .claude/rules/ .claude/skills/ .github/workflows/
-            if git diff --staged --quiet; then
-              echo "No changes to sync"
-              exit 0
-            fi
-            git commit -m "Auto-sync context from ${{ github.ref_name }} (merge had conflicts)"
-          }
+            git merge origin/${{ github.ref_name }} --no-ff -X theirs -m "Auto-merge from ${{ github.ref_name }}" || {
+              # Last resort: copy all files from branch
+              echo "Strategy merge failed — doing full file sync"
+              git merge --abort 2>/dev/null || true
+              git checkout origin/${{ github.ref_name }} -- . 2>/dev/null || true
+              git add -A
+              if git diff --staged --quiet; then
+                echo "No changes to sync"
+                exit 0
+              fi
+              git commit -m "Auto-sync all files from ${{ github.ref_name }}"
+            }
+          fi
           git push origin main
