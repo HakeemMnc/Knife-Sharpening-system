@@ -1,17 +1,11 @@
-name: Sync session context to main
+name: Merge session work to main
 
 on:
   push:
     branches: ['claude/**']
-    paths:
-      - 'CLAUDE.md'
-      - 'docs/session-log.md'
-      - '.claude/rules/**'
-      - '.claude/skills/**'
-      - '.github/workflows/**'
 
 jobs:
-  sync:
+  merge:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -22,19 +16,21 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Copy context files from source branch
-        run: |
-          git fetch origin ${{ github.ref_name }}
-          git checkout origin/${{ github.ref_name }} -- CLAUDE.md docs/session-log.md .claude/rules/ .claude/skills/ .github/workflows/ 2>/dev/null || true
-
-      - name: Commit and push to main
+      - name: Merge branch into main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CLAUDE.md docs/session-log.md .claude/rules/ .claude/skills/ .github/workflows/
-          if git diff --staged --quiet; then
-            echo "No changes to sync"
-            exit 0
-          fi
-          git commit -m "Auto-sync session context from ${{ github.ref_name }}"
+          git fetch origin ${{ github.ref_name }}
+          # Merge the full branch (all code + context), not just context files
+          git merge origin/${{ github.ref_name }} --no-ff -m "Auto-merge from ${{ github.ref_name }}" || {
+            echo "Merge conflict — falling back to context-only sync"
+            git merge --abort
+            git checkout origin/${{ github.ref_name }} -- CLAUDE.md docs/session-log.md .claude/rules/ .claude/skills/ .github/workflows/ 2>/dev/null || true
+            git add CLAUDE.md docs/session-log.md .claude/rules/ .claude/skills/ .github/workflows/
+            if git diff --staged --quiet; then
+              echo "No changes to sync"
+              exit 0
+            fi
+            git commit -m "Auto-sync context from ${{ github.ref_name }} (merge had conflicts)"
+          }
           git push origin main

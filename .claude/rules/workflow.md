@@ -18,7 +18,7 @@
 ## Session Workflow
 - `/start-session` — always run at the start of every session
 - `/checkpoint` — save progress mid-session (build, commit, push)
-- `/end-session` — full debrief at end of session (context auto-syncs to main via GitHub Action)
+- `/end-session` — full debrief at end of session (push triggers GitHub Action to merge to main)
 
 ## Stage Completion Checkpoint (MANDATORY)
 
@@ -38,13 +38,9 @@ After completing any roadmap stage, ALWAYS perform these steps before moving on:
 Do NOT ask the user whether to checkpoint — just do it automatically after every stage completion.
 
 ## Git Rules
+- Work on whatever branch you're on (Claude Code auto-creates branches)
+- A GitHub Action auto-merges every push to `main`
 - Never force push
 - Never commit .env, credentials, or node_modules
 - Commit frequently with descriptive messages
 - Push with `git push -u origin $(git branch --show-current)`
-- Context files auto-sync to main — never manually push to main
-
-## Branch Detection
-1. Read `docs/session-log.md` → find "Branch" in "Current State"
-2. That is the active development branch — switch to it before any work
-3. If on `main`, you are NOT on the right branch
