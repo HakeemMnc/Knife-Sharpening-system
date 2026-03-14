@@ -4,6 +4,8 @@ A mobile knife-sharpening booking app (B2C) being transformed into a **recurring
 
 **End goal**: Fully automated, self-running B2B platform — operators sign up, onboard clients, manage routes, bill automatically via Stripe Express Connect.
 
+**Master PRD**: `docs/prd.md` — Full product vision, 6-stage roadmap with detailed requirements, architectural decisions, user flows, and security analysis. **Read this to understand the bigger picture.**
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router, Turbopack), TypeScript
@@ -22,16 +24,19 @@ src/app/              # Next.js App Router pages and API routes
   admin/              # Admin dashboard (orders, analytics, SMS, coupons)
     components/       # Extracted admin tab components
   api/                # API route handlers (payments, sms, cron, analytics, b2b/)
-  onboarding/         # Operator onboarding flow (3-step)
+  onboarding/         # Operator onboarding flow (4-step: plan, business, contact, settings)
+  signup/             # Operator self-signup (public)
   operator/           # B2B operator dashboard (clients, contracts, schedule, routes, settings)
     components/       # Operator tab components
+  platform-admin/     # Platform admin dashboard (analytics, tenant management)
+    components/       # Platform admin tab components
   knife-sharpening-*/ # 12 location-specific SEO landing pages
   login/              # Admin login page
 src/components/       # Shared UI components (booking, payments, SMS)
-src/lib/              # Core services (database, auth, stripe, sms, rate-limiter, b2b-database)
+src/lib/              # Core services (database, auth, stripe, stripe-platform, sms, rate-limiter, b2b-database)
 src/types/            # TypeScript types (b2b.ts)
 src/utils/            # Utilities (scheduling, route optimization)
-database/migrations/  # Supabase SQL migrations (001-010)
+database/migrations/  # Supabase SQL migrations (001-012)
 docs/                 # Session log (source of truth for continuity)
 .claude/skills/       # Custom slash commands (/checkpoint, /end-session, /start-session)
 ```
@@ -80,23 +85,30 @@ The session log at `docs/session-log.md` has: stage progress table, current stat
 
 ## Current State
 
-- **Stage**: 2 (Core B2B Features) — COMPLETE
-- **Build**: PASSING (0 ESLint/TypeScript errors, only Supabase env var runtime issue)
-- **Migrations**: 009 + 010 both run successfully on Supabase
-- **Priority 1**: Begin Stage 3 — Stripe Express Connect + metered billing
-- **Priority 2**: Auto-generate visits from active contracts
-- **Priority 3**: Route optimization for daily visits
+- **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE
+- **Build**: PASSING on Vercel
+- **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
+- **Migrations**: All run (009-012)
+- **All 6 stages complete** — platform is feature-complete
+- **Priority 1**: Post-deploy config (webhooks, remaining env vars, key rotation)
+- **Priority 2**: Route optimization enhancement (nearest-neighbor, auto route_order)
+- **Priority 3**: PWA support for mobile view (offline, push notifications)
 - See `docs/session-log.md` "Next Session Pickup Instructions" for details
 
 ## Key Files
 
+- `docs/prd.md` — **Master PRD** (product vision, full roadmap, requirements, decisions, security)
 - `docs/session-log.md` — Detailed project tracker and session history
 - `src/app/admin/page.tsx` — B2C admin dashboard (113 lines, 6 tabs)
 - `src/app/operator/page.tsx` — B2B operator dashboard (5 tabs)
-- `src/app/onboarding/page.tsx` — Operator onboarding (3-step form)
+- `src/app/signup/page.tsx` — Operator self-signup (public)
+- `src/app/onboarding/page.tsx` — Operator onboarding (4-step: plan, business, contact, settings)
+- `src/app/platform-admin/page.tsx` — Platform admin dashboard (analytics, tenant management)
 - `src/lib/database.ts` — Core database service (Supabase queries, audit logging)
 - `src/lib/b2b-database.ts` — B2B CRUD service (tenants, clients, contracts, zones, visits)
-- `src/types/b2b.ts` — TypeScript interfaces for all B2B entities
-- `src/lib/auth.ts` — Authentication helpers (Supabase Auth, tenant isolation)
-- `src/app/api/b2b/` — 10 B2B API routes with auth + tenant isolation
-- `database/migrations/010_b2b_data_model.sql` — B2B tables (run on Supabase)
+- `src/lib/stripe-platform.ts` — Platform SaaS billing service (subscriptions, plan management)
+- `src/types/b2b.ts` — TypeScript interfaces for all B2B + platform entities
+- `src/lib/auth.ts` — Auth helpers (Supabase Auth, tenant isolation, requireActiveSubscription)
+- `src/app/api/b2b/` — 20+ B2B API routes with auth + tenant isolation
+- `src/app/api/b2b/platform/` — Platform API routes (analytics, subscription, webhook)
+- `database/migrations/012_saas_multi_tenancy.sql` — SaaS tables + tenant isolation hardening
