@@ -80,12 +80,12 @@ The session log at `docs/session-log.md` has: stage progress table, current stat
 
 ## Current State
 
-- **Stage**: 2 (Core B2B Features) — COMPLETE
+- **Stage**: 3 (Billing & Subscriptions) — COMPLETE
 - **Build**: PASSING (0 ESLint/TypeScript errors, only Supabase env var runtime issue)
 - **Migrations**: 009 + 010 both run successfully on Supabase
-- **Priority 1**: Begin Stage 3 — Stripe Express Connect + metered billing
-- **Priority 2**: Auto-generate visits from active contracts
-- **Priority 3**: Route optimization for daily visits
+- **Priority 1**: Begin Stage 4 — Client Portal (self-service for B2B clients)
+- **Priority 2**: Route optimization for daily visits
+- **Priority 3**: Stage 5 — Mobile Admin (operator daily route view)
 - See `docs/session-log.md` "Next Session Pickup Instructions" for details
 
 ## Key Files

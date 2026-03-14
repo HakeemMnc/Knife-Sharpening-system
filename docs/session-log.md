@@ -19,7 +19,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 | 0 | Foundation & Security | **100%** | Complete — all ESLint fixed, all tabs extracted |
 | 1 | B2B Data Model | **100%** | Migrations run on Supabase, types + CRUD service complete |
 | 2 | Core B2B Features | **100%** | API routes, operator dashboard, onboarding, client/contract/schedule/route UI |
-| 3 | Billing & Subscriptions | Not started | Stripe Express Connect, metered billing |
+| 3 | Billing & Subscriptions | **100%** | Stripe Express Connect, metered billing, visit auto-generation |
 | 4 | Client Portal | Not started | self-service for B2B clients |
 | 5 | Mobile Admin | Not started | operator daily route view |
 | 6 | SaaS Multi-Tenancy | Not started | operator signup, tenant isolation |
@@ -28,10 +28,10 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 ## Current State
 
-- **Branch**: `claude/continue-previous-session-HpatX`
-- **Last commit**: `20ebf13` — Fix cross-session workflow: dynamic branch detection + sync context to main
+- **Branch**: `claude/review-and-plan-4QNQG`
+- **Last commit**: `795bef3` — Stage 3: Stripe Express Connect + metered billing + visit auto-generation
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
-- **Stage**: 2 (Core B2B Features) — COMPLETE
+- **Stage**: 3 (Billing & Subscriptions) — COMPLETE
 - **All work committed and pushed**: YES — safe on GitHub
 
 ### What's Working
@@ -53,13 +53,21 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
   - Contract management with pause/resume/cancel
   - Schedule view (day/week) with visit status workflow
   - Daily route view with visual progress tracking
-  - Settings page with Stripe Connect status placeholder
+- **Stage 3 — 100% complete**:
+  - Stripe Express Connect service (`src/lib/stripe-connect.ts`) — account creation, onboarding, metered billing
+  - 5 new API routes: connect, callback, subscriptions, usage, webhook
+  - Settings tab: real Connect UI with 3 states (not connected, incomplete, connected + dashboard link)
+  - Contract status changes auto-sync to Stripe subscriptions (pause/resume/cancel)
+  - Visit completion auto-reports usage to Stripe for metered billing
+  - Visit auto-generation from active contracts (weekly/fortnightly/monthly with deduplication)
+  - Schedule tab: "Generate Visits" button + billing status display on completed visits
+  - Contracts tab: billing status display (Billing Active / No billing linked)
 
 ### What's Incomplete
 - No Upstash Redis account/keys configured yet
-- Stripe Express Connect not yet functional (placeholder in Settings)
-- No auto-generation of visits from contracts (manual creation only)
-- Stage 3+ not started (see Next Session Pickup Instructions)
+- Stripe Express Connect requires Stripe Dashboard configuration (Platform settings) by founder
+- `NEXT_PUBLIC_APP_URL` env var needed for Stripe redirect URLs
+- Stage 4+ not started (see Next Session Pickup Instructions)
 
 ---
 
@@ -67,30 +75,73 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### Priority 1: Begin Stage 3 — Billing & Subscriptions
-Stage 2 is complete. The operator dashboard, API routes, and UI are built. Next:
-- Stripe Express Connect onboarding flow (operator connects their Stripe account)
-- Connect account creation and verification status tracking
-- Metered billing: auto-report completed visits as Stripe usage records
-- Invoice generation for completed service visits
+### Priority 1: Begin Stage 4 — Client Portal
+Stage 3 is complete. Billing infrastructure is built. Next:
+- Client self-service portal for B2B clients (restaurants, butchers, etc.)
+- Clients can view their visit history, upcoming scheduled visits
+- Clients can view invoices and billing status
+- Client login/auth flow (separate from operator auth)
 
-### Priority 2: Auto-Generate Visits from Contracts
-- Cron job or on-demand function to generate upcoming visits from active contracts
-- Based on contract frequency (weekly/fortnightly/monthly) and day_of_week
-- Avoid duplicates for already-scheduled dates
-
-### Priority 3: Route Optimization Enhancement
+### Priority 2: Route Optimization Enhancement
 - Apply existing nearest-neighbor algorithm (`src/utils/scheduling.ts`) to daily visits
 - Auto-assign route_order based on optimized path
 - Map integration with client geolocation data
 
+### Priority 3: Stage 5 — Mobile Admin
+- Operator daily route view optimized for mobile
+- Turn-by-turn navigation integration
+- Quick visit status updates from the field
+
 ### Environment Setup Needed (by founder, not Claude)
 - Create Upstash Redis account and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` env vars
-- Set up Stripe Express Connect application in Stripe Dashboard (for Stage 3)
+- Set up Stripe Express Connect application in Stripe Dashboard (Platform settings)
+- Set `NEXT_PUBLIC_APP_URL` env var (deployed URL, e.g. `https://yourdomain.com`)
+- Optionally set `STRIPE_CONNECT_WEBHOOK_SECRET` for Connect-specific webhook events
 
 ---
 
 ## Session Log
+
+### Session 8 — 2026-03-14
+
+**Summary**: Completed Stage 3 — Billing & Subscriptions. Built full Stripe Express Connect integration (account creation, onboarding, metered subscriptions, usage reporting, webhook handling). Created visit auto-generation from active contracts. Updated operator dashboard with real Stripe Connect UI, billing status displays, and Generate Visits button. 13 files changed, 1,079 lines added.
+
+**Files Changed**:
+
+Created:
+- `src/lib/stripe-connect.ts` — Stripe Connect service (Express accounts, metered pricing, subscriptions, usage reporting, lifecycle management)
+- `src/app/api/b2b/stripe/connect/route.ts` — POST: create Express account + onboarding URL, GET: account status
+- `src/app/api/b2b/stripe/connect/callback/route.ts` — Handle Stripe onboarding redirect
+- `src/app/api/b2b/stripe/subscriptions/route.ts` — POST: create metered subscription for contract
+- `src/app/api/b2b/stripe/usage/route.ts` — POST: report usage for completed visit
+- `src/app/api/b2b/stripe/webhook/route.ts` — Handle Connect webhook events (account.updated, invoice, subscription)
+- `src/utils/visit-generator.ts` — Generate visit dates from contracts (weekly/fortnightly/monthly, deduplication)
+- `src/app/api/b2b/visits/generate/route.ts` — POST: bulk generate upcoming visits from active contracts
+
+Modified:
+- `src/app/operator/components/SettingsTab.tsx` — Real Stripe Connect UI (3 states: not connected, incomplete, connected + dashboard link)
+- `src/app/operator/components/ContractsTab.tsx` — Billing status display (Billing Active / No billing linked)
+- `src/app/operator/components/ScheduleTab.tsx` — Billing status on completed visits + Generate Visits button
+- `src/app/api/b2b/contracts/[id]/route.ts` — Auto pause/resume/cancel Stripe subscription on contract status change
+- `src/app/api/b2b/visits/[id]/route.ts` — Auto-report usage to Stripe when visit completed
+
+**Git Activity**:
+- `795bef3` — Stage 3: Stripe Express Connect + metered billing + visit auto-generation
+- Branch: `claude/review-and-plan-4QNQG`
+
+**Milestones**:
+- Stage 3 (Billing & Subscriptions): **100% COMPLETE**
+- Build: PASSING (0 ESLint/TypeScript errors in new code)
+- 15 B2B API routes total (10 existing + 5 new Stripe routes)
+
+**Decisions Made**:
+- Stripe Express Connect (not Standard) for operator onboarding — simpler, Stripe-hosted UI
+- Metered billing via usage records (1 unit per completed visit) — auto-reported on visit completion
+- Visit generation on-demand via button (not cron) — operator controls when visits are scheduled
+- Graceful billing failures — visit status updates succeed even if Stripe billing fails
+- Webhook idempotency reuses existing `isWebhookProcessed` pattern from B2C webhook handler
+
+---
 
 ### Session 7 — 2026-03-13
 
