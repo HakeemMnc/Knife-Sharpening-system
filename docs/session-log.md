@@ -19,7 +19,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 | 2 | Core B2B Features | **100%** | API routes, operator dashboard, onboarding, client/contract/schedule/route UI |
 | 3 | Billing & Subscriptions | **100%** | Stripe Express Connect, metered billing, visit auto-generation |
 | 4 | Client Portal | **100%** | Client login, dashboard, visits, billing, profile, invite flow |
-| 5 | Mobile Admin | Not started | operator daily route view |
+| 5 | Mobile Admin | **100%** | Mobile-first route view, navigation, quick data entry |
 | 6 | SaaS Multi-Tenancy | Not started | operator signup, tenant isolation |
 
 ---
@@ -27,9 +27,9 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 ## Current State
 
 - **Branch**: `claude/review-and-plan-4QNQG`
-- **Last commit**: `30a82a6` — Add mandatory stage completion checkpoint rule to workflow
+- **Last commit**: `e0573f8` — Stage 5: Mobile Admin — operator daily route view for field use
 - **Build status**: PASSING (ESLint + TypeScript compilation). Only env var errors at page data collection.
-- **Stage**: 4 (Client Portal) — COMPLETE
+- **Stage**: 5 (Mobile Admin) — COMPLETE
 - **All work committed and pushed**: YES — safe on GitHub
 
 ### What's Working
@@ -60,13 +60,27 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
   - Visit auto-generation from active contracts (weekly/fortnightly/monthly with deduplication)
   - Schedule tab: "Generate Visits" button + billing status display on completed visits
   - Contracts tab: billing status display (Billing Active / No billing linked)
+- **Stage 4 — 100% complete**:
+  - Client login at `/client-login` (password + magic link OTP)
+  - Client portal at `/client-portal` with 4 tabs (Dashboard, Visits, Billing, Profile)
+  - Client data + contract + stats API, visit history API, Stripe invoice API
+  - Operator invite flow from ClientsTab
+  - Migration 011 for client portal RLS policies
+- **Stage 5 — 100% complete**:
+  - Mobile route view at `/operator/mobile` — touch-friendly, large buttons
+  - MobileRouteCard with status progression, navigate/call links, skip option
+  - MobileVisitDetail modal with quick knives count (grid + stepper) and notes
+  - Google Maps navigation per visit (coordinates or address fallback)
+  - Current stop highlight banner, route progress bar, completion celebration
+  - Desktop operator page links to mobile view on small screens
 
 ### What's Incomplete
 - Migration 011 needs to be run on Supabase (required for client portal)
 - No Upstash Redis account/keys configured yet
 - Stripe Express Connect requires Stripe Dashboard configuration (Platform settings) by founder
 - `NEXT_PUBLIC_APP_URL` env var needed for Stripe redirect URLs
-- Stage 5+ not started (see Next Session Pickup Instructions)
+- Stage 6 not started (see Next Session Pickup Instructions)
+- PWA support (offline, push notifications) not yet implemented for mobile view
 
 ---
 
@@ -74,24 +88,23 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### Priority 1: Begin Stage 5 — Mobile Admin
-Stages 3+4 are complete. Next:
-- Operator daily route view optimized for mobile (responsive, touch-friendly)
-- Turn-by-turn navigation integration (Google Maps / Apple Maps links)
-- Quick visit status updates from the field (swipe to complete)
-- GPS-based auto-arrival detection (optional)
-- See `docs/prd.md` Stage 5 section for full requirements
+### Priority 1: Begin Stage 6 — SaaS Multi-Tenancy
+Stages 0-5 are complete. This is the final stage:
+- Operator self-signup flow (public `/signup` page → email verify → onboarding → Stripe Connect)
+- SaaS subscription management (platform charges operators monthly fee)
+- Tenant isolation hardening (comprehensive RLS audit, API middleware)
+- Platform admin dashboard (tenant management, global analytics, support tools)
+- See `docs/prd.md` Stage 6 section for full requirements
 
 ### Priority 2: Route Optimization Enhancement
 - Apply existing nearest-neighbor algorithm (`src/utils/scheduling.ts`) to daily visits
 - Auto-assign route_order based on optimized path
 - Map integration with client geolocation data
 
-### Priority 3: Stage 6 — SaaS Multi-Tenancy
-- Operator self-signup flow (register → onboard → start using)
-- Tenant isolation hardening
-- Platform admin dashboard for managing all tenants
-- See `docs/prd.md` Stage 6 section for full requirements
+### Priority 3: PWA / Offline Support for Mobile
+- Service worker for offline access to today's route
+- Push notifications for upcoming visits
+- App install prompt on mobile devices
 
 ### Migrations Pending (by founder, not Claude)
 - Run `database/migrations/011_client_portal.sql` on Supabase — required for client portal to work
@@ -195,6 +208,31 @@ Decisions Made:
 
 **Additional Files Changed (end of session)**:
 - `.claude/rules/workflow.md` — Added "Stage Completion Checkpoint (MANDATORY)" section
+
+**Stage 5 — Mobile Admin (completed same session)**:
+
+Created:
+- `src/app/operator/mobile/page.tsx` — Mobile-first route page with touch UI, date nav, progress bar, current stop banner, completion celebration
+- `src/app/operator/mobile/components/MobileRouteCard.tsx` — Visit card with large status buttons, navigate/call links, skip option
+- `src/app/operator/mobile/components/MobileVisitDetail.tsx` — Quick data entry modal (knives grid + stepper, notes, complete button)
+
+Modified:
+- `src/app/operator/page.tsx` — Added "Switch to Mobile View" link on small screens
+- `src/lib/b2b-database.ts` — Extended client query to include access_instructions
+- `src/types/b2b.ts` — Added access_instructions to VisitWithClient Pick type
+
+Git Activity:
+- `e0573f8` — Stage 5: Mobile Admin — operator daily route view for field use
+
+Milestones:
+- Stage 5 (Mobile Admin): **100% COMPLETE**
+- Stages 0-5 all complete — only Stage 6 (SaaS Multi-Tenancy) remains
+
+Decisions Made:
+- Dedicated `/operator/mobile` page (not responsive redesign of existing `/operator`) — cleaner separation
+- Google Maps navigation via deep links (coordinates preferred, address fallback) — works on all devices
+- Quick count grid (5/10/15/20/25/30) + stepper for knives — optimized for speed in the field
+- Access instructions shown prominently in visit detail for field operators
 
 ---
 
