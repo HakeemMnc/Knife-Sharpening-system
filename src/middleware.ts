@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { apiRateLimiter, authRateLimiter, rateLimit } from '@/lib/rate-limiter';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -75,10 +72,45 @@ export async function middleware(request: NextRequest) {
     if (rateLimitResponse) return rateLimitResponse;
   }
 
-  // For protected routes, check authentication
-  const token = extractToken(request);
+  // Create a response that we can modify (to update cookies if needed)
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-  if (!token) {
+  // Create Supabase client that reads/writes cookies properly
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          // Update cookies on the request (for downstream handlers)
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          // Update cookies on the response (to send back to browser)
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // This will refresh the session if expired and set updated cookies
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
     // API routes return 401
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
@@ -92,72 +124,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Verify the token
-  try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    });
-
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { error: 'Invalid or expired token' },
-          { status: 401 }
-        );
-      }
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // User is authenticated — allow the request
-    // Role-based access is enforced at the API route level via requireRole()
-    const response = NextResponse.next();
-    // Pass user ID to downstream handlers via header
-    response.headers.set('x-user-id', user.id);
-    return response;
-
-  } catch {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Authentication error' },
-        { status: 401 }
-      );
-    }
-    const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
-  }
-}
-
-function extractToken(request: NextRequest): string | null {
-  // Try Authorization header first
-  const authHeader = request.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-
-  // Try Supabase auth cookie
-  const sbAccessToken = request.cookies.get('sb-access-token')?.value;
-  if (sbAccessToken) return sbAccessToken;
-
-  // Try supabase-auth-token cookie (Supabase's default cookie name varies)
-  for (const [name, cookie] of request.cookies) {
-    if (name.startsWith('sb-') && name.endsWith('-auth-token')) {
-      try {
-        const parsed = JSON.parse(cookie.value);
-        if (parsed?.access_token) return parsed.access_token;
-      } catch {
-        // Not JSON, try as plain token
-        if (cookie.value) return cookie.value;
-      }
-    }
-  }
-
-  return null;
+  // User is authenticated — allow the request
+  // Role-based access is enforced at the API route level via requireRole()
+  response.headers.set('x-user-id', user.id);
+  return response;
 }
 
 export const config = {
