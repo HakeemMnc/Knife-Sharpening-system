@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import type { Client, ServiceContract, ServiceVisit } from '@/types/b2b';
 import DashboardTab from './components/DashboardTab';
 import VisitsTab from './components/VisitsTab';
 import BillingTab from './components/BillingTab';
 
-const supabase = createClient(
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
