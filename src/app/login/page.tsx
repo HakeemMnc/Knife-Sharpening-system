@@ -12,12 +12,43 @@ const supabase = createBrowserClient(
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/admin';
+  const explicitRedirect = searchParams.get('redirect');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const getRedirectForRole = async (): Promise<string> => {
+    // If user was trying to access a specific page, send them there
+    if (explicitRedirect) return explicitRedirect;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return '/operator';
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, tenant_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) return '/operator';
+
+      switch (profile.role) {
+        case 'platform_admin':
+          return '/platform-admin';
+        case 'client':
+          return '/client-portal';
+        case 'operator':
+          return profile.tenant_id ? '/operator' : '/onboarding';
+        default:
+          return '/operator';
+      }
+    } catch {
+      return '/operator';
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +56,7 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -35,10 +66,9 @@ function LoginForm() {
         return;
       }
 
-      if (data.session) {
-        router.push(redirect);
-        router.refresh();
-      }
+      const redirect = await getRedirectForRole();
+      router.push(redirect);
+      router.refresh();
     } catch {
       setError('An unexpected error occurred');
     } finally {
@@ -52,9 +82,9 @@ function LoginForm() {
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">
-              Knife Sharpening Admin
+              Northern Rivers Knife Sharpening
             </h1>
-            <p className="text-gray-600 mt-2">Sign in to manage your operations</p>
+            <p className="text-gray-600 mt-2">Sign in to your account</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
