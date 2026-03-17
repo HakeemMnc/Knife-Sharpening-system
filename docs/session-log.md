@@ -26,7 +26,7 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 ## Current State
 
-- **Last commit**: ff23f63 — Fix Next.js 15 build errors: Suspense boundary + viewport export
+- **Last commit**: 6eb2969 — Fix login redirect: route users to correct dashboard based on role
 - **Build status**: PASSING on Vercel (deployed to production)
 - **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE. All 6 stages done.
 - **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
@@ -132,6 +132,35 @@ Live at `knife-sharpening-system.vercel.app` — deployed from `claude/resume-se
 ---
 
 ## Session Log
+
+### Session 11 — 2026-03-17
+
+**Summary**: Fixed login redirect. Login was hardcoded to redirect all users to `/admin` (legacy B2C dashboard). Added role-based routing: fetches user profile after login and redirects `platform_admin` → `/platform-admin`, `operator` (with tenant) → `/operator`, `operator` (no tenant) → `/onboarding`, `client` → `/client-portal`. Honors explicit `?redirect=` query param. Updated login page title to "Northern Rivers Knife Sharpening".
+
+**Files Changed**:
+
+Modified:
+- `src/app/login/page.tsx` — Role-based post-login redirect logic, updated page title/subtitle
+- `docs/session-log.md` — Session 11 entry
+
+**Git Activity**:
+- `cdceaa6` — Fix auth: use createBrowserClient from @supabase/ssr for cookie-based sessions
+- `cf74570` — Add @supabase/ssr dependency for cookie-based auth sessions
+- `4caa3f8` — Fix middleware to use @supabase/ssr for proper cookie-based auth
+- `6eb2969` — Fix login redirect: route users to correct dashboard based on role
+- Branch: `claude/resume-session-planning-tFUxj`
+
+**Milestones**:
+- Login auth fully working (cookie-based sessions via @supabase/ssr)
+- Role-based redirect eliminates hardcoded `/admin` fallback
+
+**Edge Cases Identified (for future sessions)**:
+- Operator can restart onboarding and create duplicate tenants (no idempotency)
+- `/admin` page has no client-side auth guard (any authenticated user sees page shell)
+- Client using `/login` instead of `/client-login` now correctly redirected to `/client-portal`
+- Subscription status not enforced on all B2B API routes (some only use `requireAuth`)
+
+---
 
 ### Session 10 — 2026-03-14
 
