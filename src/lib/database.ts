@@ -194,7 +194,7 @@ export class DatabaseService {
   }
 
   static async getAllOrders(): Promise<Order[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
