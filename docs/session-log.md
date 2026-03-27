@@ -26,10 +26,11 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 ## Current State
 
-- **Last commit**: 6eb2969 — Fix login redirect: route users to correct dashboard based on role
+- **Last commit**: be33d91 — Add APP_MODE env var for dual B2C/B2B deployment support
 - **Build status**: PASSING on Vercel (deployed to production)
 - **Stage**: 6 (SaaS Multi-Tenancy) — COMPLETE. All 6 stages done.
 - **Deployed**: YES — live at `knife-sharpening-system.vercel.app`
+- **Dual deployment**: APP_MODE env var enables separate B2C and B2B Vercel deployments from same codebase
 - **All work committed and pushed**: YES — `main` always has latest code (GitHub Action auto-merges)
 
 ### What's Working
@@ -107,24 +108,31 @@ Transforming a B2C knife-sharpening booking app (Next.js, Supabase, Stripe, Twil
 
 **Read this section first when starting a new session.**
 
-### App is DEPLOYED!
-Live at `knife-sharpening-system.vercel.app` — deployed from `claude/resume-session-bn6Mt`.
+### Dual Deployment Ready (APP_MODE)
+The codebase now supports two separate Vercel deployments via `APP_MODE` env var:
+- `APP_MODE=b2c` — B2C residential booking only (northernriversknifesharpening.com)
+- `APP_MODE=b2b` — B2B SaaS operator platform only (domain TBD)
+- `APP_MODE=full` (default) — All routes accessible (dev mode)
 
-### Priority 1: Post-Deploy Configuration (by founder)
-1. Update `NEXT_PUBLIC_APP_URL` in Vercel env vars to `https://knife-sharpening-system.vercel.app`
-2. Update Supabase Auth → Site URL to `https://knife-sharpening-system.vercel.app`
-3. Add `https://knife-sharpening-system.vercel.app/**` to Supabase Auth → Redirect URLs
-4. Create 3 Stripe webhooks (see deployment checklist in plan file) and add signing secrets to Vercel
-5. Add Stripe Secret Key, Twilio keys, and Resend API key to Vercel env vars
-6. Redeploy on Vercel after adding all env vars
-7. **Rotate Supabase API keys** (anon + service_role were exposed in conversation)
+### Priority 1: Set Up Dual Vercel Deployments
+1. **B2C project**: Set `APP_MODE=b2c` in existing Vercel project env vars + add custom domain `northernriversknifesharpening.com`
+2. **B2B project**: Create second Vercel project from same repo, set `APP_MODE=b2b` + all B2B env vars
+3. See env var checklist in session 12 notes below
 
-### Priority 2: Route Optimization Enhancement
+### Priority 2: Post-Deploy Configuration (still pending from previous sessions)
+1. Update `NEXT_PUBLIC_APP_URL` in Vercel env vars
+2. Update Supabase Auth → Site URL and Redirect URLs
+3. Create Stripe webhooks and add signing secrets to Vercel
+4. Add Stripe Secret Key, Twilio keys, and Resend API key
+5. Redeploy after adding all env vars
+6. **Rotate Supabase API keys** (anon + service_role were exposed in conversation)
+
+### Priority 3: Route Optimization Enhancement
 - Apply existing nearest-neighbor algorithm (`src/utils/scheduling.ts`) to daily visits
 - Auto-assign route_order based on optimized path
 - Map integration with client geolocation data
 
-### Priority 3: PWA / Offline Support for Mobile
+### Priority 4: PWA / Offline Support for Mobile
 - Service worker for offline access to today's route
 - Push notifications for upcoming visits
 - App install prompt on mobile devices
@@ -132,6 +140,37 @@ Live at `knife-sharpening-system.vercel.app` — deployed from `claude/resume-se
 ---
 
 ## Session Log
+
+### Session 12 — 2026-03-27
+
+**Summary**: Added APP_MODE environment variable support for dual Vercel deployments. User wants to run B2C residential knife sharpening (Northern Rivers, Australia) alongside the B2B SaaS platform (Melbourne, commercial kitchens). Business strategy: use B2B system personally first, then sell as SaaS subscription to other operators worldwide.
+
+**What was built**:
+- `src/lib/app-mode.ts` — Typed helper to read APP_MODE env var (b2c/b2b/full)
+- Updated `src/middleware.ts` — Route-level gating based on APP_MODE:
+  - B2C mode: blocks /operator, /signup, /onboarding, /platform-admin, /client-login, /client-portal, /api/b2b/*
+  - B2B mode: blocks /admin, /knife-sharpening-*, /api/payments/*, /api/sms/*, /api/coupons/*, /api/admin/*, /api/cron, /api/orders, /api/analytics, /api/contact
+  - B2B mode: root / redirects to /signup
+  - Full mode (default): all routes accessible (dev backwards compatible)
+  - Blocked API routes return 404 JSON, blocked pages rewrite to trigger Next.js 404
+
+**Key finding**: The entire B2C system was preserved through the B2B transformation — booking page, admin dashboard, 12 SEO landing pages, all payment/SMS/order APIs still fully functional.
+
+**Files Created**:
+- `src/lib/app-mode.ts`
+
+**Files Modified**:
+- `src/middleware.ts` — Added APP_MODE import, route ownership lists, isBlockedByAppMode function, gating check, B2B root redirect
+- `docs/session-log.md` — This entry
+
+**Git Activity**:
+- `be33d91` — Add APP_MODE env var for dual B2C/B2B deployment support
+
+**Env Var Checklist for Deployments**:
+- B2C: APP_MODE=b2c, SUPABASE_*, STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, TWILIO_*, ADMIN_PHONE_NUMBER, RESEND_API_KEY, CRON_SECRET, UPSTASH_* (optional)
+- B2B: APP_MODE=b2b, SUPABASE_*, STRIPE_SECRET_KEY, STRIPE_CONNECT_WEBHOOK_SECRET, STRIPE_PLATFORM_WEBHOOK_SECRET, STRIPE_PLATFORM_PRO_PRICE_ID, STRIPE_PLATFORM_ENTERPRISE_PRICE_ID, UPSTASH_* (optional)
+
+---
 
 ### Session 11 — 2026-03-17
 
