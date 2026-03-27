@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { apiRateLimiter, authRateLimiter, rateLimit } from '@/lib/rate-limiter';
+import { getAppMode } from '@/lib/app-mode';
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -30,6 +31,38 @@ function isPublicRoute(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix));
 }
 
+// Routes exclusive to B2C mode (blocked when APP_MODE=b2b)
+const B2C_ONLY_ROUTES = ['/admin', '/api/orders', '/api/analytics', '/api/contact'];
+const B2C_ONLY_PREFIXES = [
+  '/knife-sharpening-',
+  '/api/payments/',
+  '/api/sms/',
+  '/api/coupons/',
+  '/api/admin/',
+  '/api/cron',
+];
+
+// Routes exclusive to B2B mode (blocked when APP_MODE=b2c)
+const B2B_ONLY_ROUTES = ['/signup', '/onboarding', '/operator', '/platform-admin', '/client-login', '/client-portal'];
+const B2B_ONLY_PREFIXES = ['/operator/', '/api/b2b/'];
+
+function isBlockedByAppMode(pathname: string): boolean {
+  const mode = getAppMode();
+  if (mode === 'full') return false;
+
+  if (mode === 'b2c') {
+    if (B2B_ONLY_ROUTES.some(route => pathname === route)) return true;
+    if (B2B_ONLY_PREFIXES.some(prefix => pathname.startsWith(prefix))) return true;
+  }
+
+  if (mode === 'b2b') {
+    if (B2C_ONLY_ROUTES.some(route => pathname === route)) return true;
+    if (B2C_ONLY_PREFIXES.some(prefix => pathname.startsWith(prefix))) return true;
+  }
+
+  return false;
+}
+
 function isStaticAsset(pathname: string): boolean {
   return (
     pathname.startsWith('/_next') ||
@@ -49,6 +82,21 @@ export async function middleware(request: NextRequest) {
   // Skip static assets
   if (isStaticAsset(pathname)) {
     return NextResponse.next();
+  }
+
+  // Block routes that don't belong to this deployment mode
+  if (isBlockedByAppMode(pathname)) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = '/__blocked_by_app_mode';
+    return NextResponse.rewrite(url);
+  }
+
+  // In B2B mode, redirect root to signup page (operators, not residential customers)
+  if (pathname === '/' && getAppMode() === 'b2b') {
+    return NextResponse.redirect(new URL('/signup', request.url));
   }
 
   // Allow public routes (but apply rate limiting to public API endpoints)
